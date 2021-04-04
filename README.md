@@ -1,3 +1,3 @@
 # KLOC
 
-Code will available in the next couple of weeks
+Code will available in the next couple of weeks (Conference time)
