@@ -1,6 +1,6 @@
 ## KLOC
-We will make detailed steps and scripts modified specifically for running KLOC on CloudLab machines soon.
-
+We will soon add detailed steps and scripts modified specifically for running KLOC on CloudLab machines soon in next few weeks for 4.17 kernel.
+Currently we have added the kernel source (without the Cloudlab's e100 network driver support).
 
 #### Linux kernel
 
