@@ -1,3 +1,2 @@
 # KLOC
-
-Code will available shortly (conference time)
+We will make detailed steps and scripts for running KLOC on publically machines (CloudLab) machine soon.
