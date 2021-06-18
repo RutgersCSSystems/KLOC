@@ -1,7 +1,7 @@
 # KLOC
 
 
-# Please note that we are in the process of adding more scripts, other applications, and better documentation for easing the use of code! Expect more changes soon!
+## Please note that we are in the process of adding more scripts, other applications, and better documentation for easing the use of code! Expect more changes soon!
 
 
 ### KLOC Hardware and OS Environment
