@@ -180,8 +180,7 @@ Step 1: Run the throttling script
 
 ```
  source scripts/setvars.sh 
- $APPBENCH/install_quartz.sh
- $APPBENCH/throttle.sh
+ scripts/throttle.sh
 ```
 
 Step 2: For modifying bandwidth of throttled node, open the following file
