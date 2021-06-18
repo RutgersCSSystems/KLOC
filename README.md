@@ -1,6 +1,9 @@
 # KLOC
 
 
+## Please note that we are in the process of adding more scripts, other applications, and better documentation for easing the use of code! Expect more changes soon!
+
+
 ### KLOC Hardware and OS Environment
 
 To enable users to use generally available machine, this documentation will mainly focus on emulated Cloudlab platoform. Users can create a cloudlab instance to run our code (see details below). 
@@ -187,29 +190,13 @@ from inside the QEMU
  LD_PRELOAD=/usr/lib/libmigration.so ./APP
 ```
 
-### Installing appbench
-Below are the short steps; for more details, see appbench README
-
-Step 1: First, get the appbench, setup libraries, download datasets
-```
- git clone https://github.com/SudarsunKannan/appbench
- source scripts/setvars.sh
- cd $APPBENCH
- source setvars.sh
- $APPBENCH/setup.sh
- $APPBENCH/compile_all.sh
-```
-Step 2: For running a benchmark, say LevelDB
-
- $APPBENCH/leveldb/out-static/db_bench
-
 
 ### Changing bandwidth of a NUMA node 
 
 Step 1: Run the throttling script
 
 ```
- source scripts/setvars.sh "trusty"
+ source scripts/setvars.sh 
  $APPBENCH/install_quartz.sh
  $APPBENCH/throttle.sh
 ```
