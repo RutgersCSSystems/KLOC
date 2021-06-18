@@ -52,7 +52,7 @@
 #include <asm/cacheflush.h>
 #include "audit.h"	/* audit_signal_info() */
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 #include <linux/hetero.h>
 #endif
 
@@ -3266,8 +3266,8 @@ SYSCALL_DEFINE2(kill, pid_t, pid, int, sig)
 	info.si_code = SI_USER;
 	info.si_pid = task_tgid_vnr(current);
 	info.si_uid = from_kuid_munged(current_user_ns(), current_uid());
-#ifdef CONFIG_HETERO_ENABLE
-	//is_hetero_exit(current);
+#ifdef CONFIG_KLOC_ENABLE
+	//is_kloc_exit(current);
 #endif
 	return kill_something_info(sig, &info, pid);
 }

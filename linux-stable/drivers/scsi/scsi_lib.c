@@ -62,9 +62,9 @@ static void scsi_free_sense_buffer(bool unchecked_isa_dma,
 static unsigned char *scsi_alloc_sense_buffer(bool unchecked_isa_dma,
 	gfp_t gfp_mask, int numa_node)
 {
-#ifdef CONFIG_HETERO_ENABLE
-        if(is_hetero_buffer_set()) {
-        	return kmem_cache_alloc_node_hetero(scsi_select_sense_cache(unchecked_isa_dma),
+#ifdef CONFIG_KLOC_ENABLE
+        if(is_kloc_buffer_set()) {
+        	return kmem_cache_alloc_node_kloc(scsi_select_sense_cache(unchecked_isa_dma),
 					 gfp_mask, NUMA_HETERO_NODE);
         }
 #endif

@@ -293,8 +293,8 @@ int __radix_tree_create(struct radix_tree_root *, unsigned long index,
 			unsigned order, struct radix_tree_node **nodep,
 			void __rcu ***slotp);
 
-#if IS_ENABLED(CONFIG_HETERO_ENABLE)
-int __radix_tree_create_hetero(struct radix_tree_root *, unsigned long index,
+#ifdef CONFIG_KLOC_ENABLE
+int __radix_tree_create_kloc(struct radix_tree_root *, unsigned long index,
 			unsigned order, struct radix_tree_node **nodep,
 			void __rcu ***slotp, void *obj);
 #endif

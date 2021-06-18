@@ -55,9 +55,9 @@
 #define CREATE_TRACE_POINTS
 #include <trace/events/migrate.h>
 
-#ifdef CONFIG_HETERO_ENABLE
-int hetero_page_migrate_cnt=0;
-extern int g_nr_success_hetero_list;
+#ifdef CONFIG_KLOC_ENABLE
+int kloc_page_migrate_cnt=0;
+extern int g_nr_success_kloc_list;
 extern int g_freq_cnt;
 extern unsigned long g_migrated;
 extern int g_lock_step;
@@ -461,12 +461,6 @@ int migrate_page_move_mapping(struct address_space *mapping,
 	expected_count += is_device_public_page(page);
 
 	if (!mapping) {
-
-#ifdef CONFIG_HETERO_ENABLE
-	        if(page->hetero == HETERO_PG_FLAG)
-        	        hetero_dbg("%s:%d \n",__func__,__LINE__);
-#endif
-
 		/* Anonymous page without mapping */
 		if (page_count(page) != expected_count)
 			return -EAGAIN;
@@ -490,25 +484,12 @@ int migrate_page_move_mapping(struct address_space *mapping,
 
 	expected_count += hpage_nr_pages(page) + page_has_private(page);
 
-	/*if(page->hetero == HETERO_PG_FLAG)
-		hetero_dbg("%s:%d page count for migration: %d"
-			"hpage_nr_pages %d page_has_private %d "
-			"page_count(page) %d Not radix page %d \n", 
-			__func__,__LINE__, hetero_page_migrate_cnt, 
-			hpage_nr_pages(page), 
-			page_has_private(page), page_count(page), 
-			(radix_tree_deref_slot_protected(pslot,
-                                        &mapping->i_pages.xa_lock) != page));*/
-
 	if (page_count(page) != expected_count ||
 		radix_tree_deref_slot_protected(pslot,
 					&mapping->i_pages.xa_lock) != page) {
 		xa_unlock_irq(&mapping->i_pages);
 		return -EAGAIN;
 	}
-
-        /*if(page->hetero == HETERO_PG_FLAG)
-                hetero_dbg("%s:%d \n",__func__,__LINE__);*/
 
 	if (!page_ref_freeze(page, expected_count)) {
 		xa_unlock_irq(&mapping->i_pages);
@@ -528,9 +509,6 @@ int migrate_page_move_mapping(struct address_space *mapping,
 		xa_unlock_irq(&mapping->i_pages);
 		return -EAGAIN;
 	}
-
-        //if(page->hetero == HETERO_PG_FLAG)
-          //      hetero_dbg("%s:%d \n",__func__,__LINE__);
 
 	/*
 	 * Now we know that no one else is looking at the page:
@@ -556,11 +534,6 @@ int migrate_page_move_mapping(struct address_space *mapping,
 		SetPageDirty(newpage);
 	}
 
-#ifdef CONFIG_HETERO_ENABLE
-        if(page->hetero == HETERO_PG_FLAG)
-               hetero_dbg("%s:%d \n",__func__,__LINE__);
-#endif
-
 	radix_tree_replace_slot(&mapping->i_pages, pslot, newpage);
 	if (PageTransHuge(page)) {
 		int i;
@@ -574,17 +547,12 @@ int migrate_page_move_mapping(struct address_space *mapping,
 		}
 	}
 
-        //if(page->hetero == HETERO_PG_FLAG)
-          //      printk(KERN_ALERT "%s:%d \n", __func__,__LINE__);
 	/*
 	 * Drop cache reference from old page by unfreezing
 	 * to one less reference.
 	 * We know this isn't the last reference.
 	 */
 	page_ref_unfreeze(page, expected_count - hpage_nr_pages(page));
-
-        //if(page->hetero == HETERO_PG_FLAG)
-          //      printk(KERN_ALERT "%s:%d \n", __func__,__LINE__);
 
 	xa_unlock(&mapping->i_pages);
 	/* Leave irq disabled to prevent preemption while updating stats */
@@ -818,7 +786,7 @@ EXPORT_SYMBOL(migrate_page);
 /*
  * Copy the page to its new location
  */
-void hetero_migrate_page_states(struct page *newpage, struct page *page)
+void kloc_migrate_page_states(struct page *newpage, struct page *page)
 {
 	int cpupid;
 
@@ -875,9 +843,9 @@ void hetero_migrate_page_states(struct page *newpage, struct page *page)
 
 	mem_cgroup_migrate(page, newpage);
 }
-EXPORT_SYMBOL(hetero_migrate_page_states);
+EXPORT_SYMBOL(kloc_migrate_page_states);
 
-void hetero_migrate_page_copy(struct page *newpage, struct page *page)
+void kloc_migrate_page_copy(struct page *newpage, struct page *page)
 {
 	if (PageHuge(page) || PageTransHuge(page))
 		copy_huge_page(newpage, page);
@@ -886,7 +854,7 @@ void hetero_migrate_page_copy(struct page *newpage, struct page *page)
 
 	migrate_page_states(newpage, page);
 }
-EXPORT_SYMBOL(hetero_migrate_page_copy);
+EXPORT_SYMBOL(kloc_migrate_page_copy);
 
 /************************************************************
  *                    Migration functions
@@ -898,7 +866,7 @@ EXPORT_SYMBOL(hetero_migrate_page_copy);
  *
  * Pages are locked upon entry and exit.
  */
-int hetero_migrate_page(struct address_space *mapping,
+int kloc_migrate_page(struct address_space *mapping,
 		struct page *newpage, struct page *page,
 		enum migrate_mode mode)
 {
@@ -912,12 +880,12 @@ int hetero_migrate_page(struct address_space *mapping,
 		return rc;
 
 	if (mode != MIGRATE_SYNC_NO_COPY)
-		hetero_migrate_page_copy(newpage, page);
+		kloc_migrate_page_copy(newpage, page);
 	else
-		hetero_migrate_page_states(newpage, page);
+		kloc_migrate_page_states(newpage, page);
 	return MIGRATEPAGE_SUCCESS;
 }
-EXPORT_SYMBOL(hetero_migrate_page);
+EXPORT_SYMBOL(kloc_migrate_page);
 
 
 
@@ -1079,18 +1047,10 @@ static int move_to_new_page(struct page *newpage, struct page *page,
 
 	mapping = page_mapping(page);
 
-	//if(page->hetero == HETERO_PG_FLAG)
-	//	printk(KERN_ALERT "%s:%d \n", __func__,__LINE__);
-
 	if (likely(is_lru)) {
-
-		//if(page->hetero == HETERO_PG_FLAG)
-                //	printk(KERN_ALERT "%s:%d \n", __func__,__LINE__);	
 
 		if (!mapping) {
 			rc = migrate_page(mapping, newpage, page, mode);
-			//if(page->hetero == HETERO_PG_FLAG)
-                        //	printk(KERN_ALERT "%s:%d \n", __func__,__LINE__);
 		}
 		else if (mapping->a_ops->migratepage) {
 			/*
@@ -1102,20 +1062,10 @@ static int move_to_new_page(struct page *newpage, struct page *page,
 			 */
 			rc = mapping->a_ops->migratepage(mapping, newpage,
 							page, mode);
-
-			//if(page->hetero == HETERO_PG_FLAG) {
-				//printk(KERN_ALERT "callee function name is: %pf \n",   mapping->a_ops->migratepage);
-				//printk(KERN_ALERT "%s:%d \n", __func__,__LINE__);
-			//}
 		}
 		else {
 			rc = fallback_migrate_page(mapping, newpage,
 							page, mode);
-
-#ifdef CONFIG_HETERO_ENABLE
-			if(page->hetero == HETERO_PG_FLAG)
-                        	hetero_dbg("%s:%d \n",__func__,__LINE__);
-#endif
 		}
 	} else {
 		/*
@@ -1332,7 +1282,7 @@ static ICE_noinline int unmap_and_move(new_page_t get_new_page,
 	int rc = MIGRATEPAGE_SUCCESS;
 	struct page *newpage;
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 	if(!page) 
 		return -ENOMEM;
 #endif
@@ -1340,13 +1290,6 @@ static ICE_noinline int unmap_and_move(new_page_t get_new_page,
 	if (!thp_migration_supported() && PageTransHuge(page))
 		return -ENOMEM;
 
-#ifdef CONFIG_HETERO_ENABLE
-	//if(page && page->hetero == HETERO_PG_FLAG) {
-		//printk(KERN_ALERT "%s:%d\n", __func__,__LINE__);
-		//void *func = get_new_page;
-		//printk("func: %pF at address: %p\n", func, func);
-	//}
-#endif
 	newpage = get_new_page(page, private);
 	if (!newpage)
 		return -ENOMEM;
@@ -1540,7 +1483,7 @@ out:
 }
 
 
-int migrate_onepage_hetero(struct page *page, new_page_t get_new_page,
+int migrate_onepage_kloc(struct page *page, new_page_t get_new_page,
 		free_page_t put_new_page, unsigned long private,
 		enum migrate_mode mode, int reason, struct task_struct *task)
 {
@@ -1590,7 +1533,7 @@ retry:
 				//rc = split_huge_page_to_list(page, from);
 				unlock_page(page);
 				if (!rc) {
-					//list_safe_reset_next(page, page2, hetero_list);
+					//list_safe_reset_next(page, page2, kloc_list);
 					goto retry;
 				}
 			}
@@ -1619,8 +1562,6 @@ retry:
 	nr_failed += retry;
 	rc = nr_failed;
 out:
-	printk(KERN_ALERT "%s:%d FINISHED MIGRATIONS\n", __func__,__LINE__);
-
 	if (nr_succeeded)
 		count_vm_events(PGMIGRATE_SUCCESS, nr_succeeded);
 	if (nr_failed)
@@ -1635,8 +1576,8 @@ out:
 
 
 
-#ifdef CONFIG_HETERO_ENABLE
-int migrate_pages_hetero_rbtree(struct rb_root *root, new_page_t get_new_page,
+#ifdef CONFIG_KLOC_ENABLE
+int migrate_pages_kloc_rbtree(struct rb_root *root, new_page_t get_new_page,
 		free_page_t put_new_page, unsigned long private,
 		enum migrate_mode mode, int reason, struct task_struct *task)
 {
@@ -1648,13 +1589,13 @@ int migrate_pages_hetero_rbtree(struct rb_root *root, new_page_t get_new_page,
 	struct page *page;
 	int swapwrite = current->flags & PF_SWAPWRITE;
 	int rc;
-	int maxpages = task->mm->objaff_cache_len;
+	int maxpages = task->mm->knode_cache_len;
 	struct rb_node *n;
 
 	if (!swapwrite)
 		current->flags |= PF_SWAPWRITE;
 
-	hetero_page_migrate_cnt = 0;
+	kloc_page_migrate_cnt = 0;
 
 	for(pass = 0; pass < 1 && retry; pass++) {
 
@@ -1663,10 +1604,10 @@ int migrate_pages_hetero_rbtree(struct rb_root *root, new_page_t get_new_page,
 	        for (n = rb_first(root); n != NULL; n = rb_next(n)) {
         	        if(n == NULL) 
                 	        break;
-			if(maxpages <= hetero_page_migrate_cnt) {
+			if(maxpages <= kloc_page_migrate_cnt) {
 				printk(KERN_ALERT "%s:%d maxpages %d "
-					"hetero_page_migrate_cnt %d\n", __func__,__LINE__, 
-					maxpages, hetero_page_migrate_cnt);
+					"kloc_page_migrate_cnt %d\n", __func__,__LINE__, 
+					maxpages, kloc_page_migrate_cnt);
 				goto out;
 			}
                 
@@ -1674,7 +1615,7 @@ int migrate_pages_hetero_rbtree(struct rb_root *root, new_page_t get_new_page,
         	        if(!page)
 				continue;
 
-			hetero_page_migrate_cnt++;
+			kloc_page_migrate_cnt++;
 
 retry:
 			cond_resched();
@@ -1707,19 +1648,16 @@ retry:
 					//rc = split_huge_page_to_list(page, from);
 					unlock_page(page);
 					if (!rc) {
-						//list_safe_reset_next(page, page2, hetero_list);
+						//list_safe_reset_next(page, page2, kloc_list);
 						goto retry;
 					}
 				}
 				nr_failed++;
 				goto out;
 			case -EAGAIN:
-				//printk(KERN_ALERT "%s:%d \n", __func__,__LINE__);
 				retry++;
 				break;
 			case MIGRATEPAGE_SUCCESS:
-				printk(KERN_ALERT "%s:%d SUCCEEDED %d \n", __func__,__LINE__, 
-						nr_succeeded);
 				rb_erase(&page->rb_node, root);
 				nr_succeeded++;
 				if (nr_succeeded > 5) {
@@ -1727,7 +1665,6 @@ retry:
 				}
 				break;
 			default:
-				printk(KERN_ALERT "%s:%d \n", __func__,__LINE__);
 				/*
 				 * Permanent failure (-EBUSY, -ENOSYS, etc.):
 				 * unlike -EAGAIN case, the failed page is
@@ -1742,8 +1679,6 @@ retry:
 	nr_failed += retry;
 	rc = nr_failed;
 out:
-	printk(KERN_ALERT "%s:%d FINISHED MIGRATIONS\n", __func__,__LINE__);
-
 	if (nr_succeeded)
 		count_vm_events(PGMIGRATE_SUCCESS, nr_succeeded);
 	if (nr_failed)
@@ -1760,7 +1695,7 @@ out:
 
 
 /*
- * migrate_pages_hetero- migrate the pages specified in a list, to the free pages
+ * migrate_pages_kloc- migrate the pages specified in a list, to the free pages
  *		   supplied as the target for the page migration
  *
  * @from:		The list of pages to be migrated.
@@ -1801,7 +1736,7 @@ gen_list_from_rbtree(struct rb_root *root, struct list_head *list_pages) {
                 new = rb_entry(n, struct page, rb_node);
                 if(new) {
                         if (trylock_page(new)) {
-                                hetero_add_to_list(new, list_pages);
+                                kloc_add_to_list(new, list_pages);
                                 unlock_page(new);
                                 count++;
                         }
@@ -1817,7 +1752,7 @@ gen_list_from_rbtree(struct rb_root *root, struct list_head *list_pages) {
         return 0;
 }
 
-int migrate_pages_hetero(struct list_head *from, new_page_t get_new_page,
+int migrate_pages_kloc(struct list_head *from, new_page_t get_new_page,
 		free_page_t put_new_page, unsigned long private,
 		enum migrate_mode mode, int reason, struct rb_root *root)
 {
@@ -1837,7 +1772,7 @@ int migrate_pages_hetero(struct list_head *from, new_page_t get_new_page,
 	for(pass = 0; pass < 1 && retry; pass++) {
 		retry = 0;
 
-		list_for_each_entry_safe(page, page2, from, hetero_list) {
+		list_for_each_entry_safe(page, page2, from, kloc_list) {
 retry:
 			cond_resched();
 
@@ -1871,7 +1806,7 @@ retry:
 					rc = split_huge_page_to_list(page, from);
 					unlock_page(page);
 					if (!rc) {
-						list_safe_reset_next(page, page2, hetero_list);
+						list_safe_reset_next(page, page2, kloc_list);
 						goto retry;
 					}
 				}
@@ -2029,7 +1964,7 @@ out:
 
 
 
-int migrate_hetero_single_page(struct page *page, new_page_t get_new_page,
+int migrate_kloc_single_page(struct page *page, new_page_t get_new_page,
 		free_page_t put_new_page, unsigned long private,
 		enum migrate_mode mode, int reason)
 {
@@ -3712,12 +3647,7 @@ int unmap_and_move_vmap_page(unsigned long vmap_start, unsigned long vmap_end,
 		goto exit;
 	}
 
-	g_lock_step = 2;
-
 	lock_page(dst_page);
-
-	g_lock_step = 3;
-
 
 	for (i = 0; addr < vmap_end; addr += PAGE_SIZE, i++) {
 
@@ -3741,9 +3671,6 @@ int unmap_and_move_vmap_page(unsigned long vmap_start, unsigned long vmap_end,
 			unlock_page(dst_page);
 			return -ENODEV;
 		}
-
-		g_lock_step = 4;
-
 		pte = pte_offset_map_lock(&init_mm, pmd, addr, &ptl);
 
 		if (!pte_present(*pte)) {
@@ -3752,44 +3679,22 @@ int unmap_and_move_vmap_page(unsigned long vmap_start, unsigned long vmap_end,
 			return -ENODEV;
 		}
 
-		g_lock_step = 5;
-
 		ptent = ptep_get_and_clear(&init_mm, addr, pte);
-
-		g_lock_step = 6;
 
 		/* set migration entry */
 		entry = make_migration_entry(src_page + i, pte_write(ptent));
 		swp_pte = swp_entry_to_pte(entry);
 
-		g_lock_step = 7;
-
-
 		set_pte_at(&init_mm, addr, pte, swp_pte);
-
-		g_lock_step = 8;
-
+		//FIXME:Should we flush TLB for kernel pages?
 		//flush_tlb_kernel_range(vmap_start, vmap_end);
-
-		g_lock_step = 9;
-
 		pte_unmap_unlock(pte, ptl);
-
-		g_lock_step = 11;
-
 	}
-
-	g_lock_step = 12;
 
 	for (i = 0; i < hpage_nr_pages(src_page); i++)
 		copy_highpage(dst_page + i, src_page + i);
 
-	g_lock_step = 13;
-
 	change_vmap_struct(addr, dst_page);
-
-	g_lock_step = 14;
-
 exit:
 	return 0;
 }
@@ -3877,23 +3782,13 @@ int migrate_vmalloc_pages(const void *addr, new_page_t get_new_page,
 	if (!is_vmalloc_addr((void *)vmap_start))
 		return -ENODEV;
 
-
-	g_lock_step = 994;
-
 	src_page = vmalloc_to_page((void *)vmap_start);
-	//printk(KERN_ALERT "%s:%d SRC_PAGE %lu\n", __func__, __LINE__, (unsigned long)src_page);
 
 	if(!src_page)
 		return -EINVAL;
 
-	g_lock_step = 995;
-
-
 	src_head = compound_head(src_page);
 	nr_pages = hpage_nr_pages(src_head);
-
-	g_lock_step = 996;
-
 
 	if (src_head != src_page) {
 		vmap_start = vmap_start - (src_page - src_head) * PAGE_SIZE;
@@ -3910,8 +3805,6 @@ int migrate_vmalloc_pages(const void *addr, new_page_t get_new_page,
 	if(bad_reason != NULL)
 		return -ENODEV;
 
-	g_lock_step = 997;
-
 	va = find_vmap_area(vmap_start);
 	if (unlikely(!va)) {
 		WARN(1, KERN_ERR "Trying to migrate nonexistent vmap (%p)\n",
@@ -3919,17 +3812,12 @@ int migrate_vmalloc_pages(const void *addr, new_page_t get_new_page,
 		return -ENODEV;
 	}
 
-	g_lock_step = 998;
-
-
 	area = va->vm;
 	if (unlikely(!area)) {
 		WARN(1, KERN_ERR "Trying to migrate nonexistent vm area (%p)\n",
 				addr);
 		return -ENODEV;
 	}
-
-	g_lock_step = 999;
 
 	/* make sure to-be-migrated pages are vmapped */
 	vmap_end = clamp_t(unsigned long, vmap_end, va->va_start, va->va_end);
@@ -3941,10 +3829,6 @@ int migrate_vmalloc_pages(const void *addr, new_page_t get_new_page,
 	if(page_to_nid(src_page) == private)
 		return -EINVAL;
 
-	g_lock_step = 1000;
-
-        g_lock_step = 1001;
-
 	if (!get_new_page)
 		get_new_page = alloc_new_vmap_page;
 
@@ -3953,29 +3837,19 @@ int migrate_vmalloc_pages(const void *addr, new_page_t get_new_page,
 	if (!dst_page)
 		return -ENOMEM;
 
-	g_lock_step = 1;
-
-
-	//printk(KERN_ALERT "%s:%d \n", __func__, __LINE__);
 	status = unmap_and_move_vmap_page(vmap_start, vmap_end, src_head, dst_page);
 	if (status)
 		return -ENODEV;
 
-	g_lock_step = 10;
-
-	//printk(KERN_ALERT "%s:%d \n", __func__, __LINE__);
 	status = remove_vmap_migration_entry(vmap_start, vmap_end, src_head, dst_page);
-	//printk(KERN_ALERT "%s:%d migration success? %d\n", __func__, __LINE__, status);
-
-	g_lock_step = 100;
 
 	return status;
 }
 EXPORT_SYMBOL(migrate_vmalloc_pages);
 
 
-#ifdef CONFIG_HETERO_ENABLE
-int migrate_pages_hetero_list(struct list_head *from, new_page_t get_new_page,
+#ifdef CONFIG_KLOC_ENABLE
+int migrate_pages_kloc_list(struct list_head *from, new_page_t get_new_page,
 		free_page_t put_new_page, unsigned long private,
 		enum migrate_mode mode, int reason, struct mm_struct *mm, 
 		unsigned int pagecnt)
@@ -3990,7 +3864,7 @@ int migrate_pages_hetero_list(struct list_head *from, new_page_t get_new_page,
 	int rc = 0;
 	int pages_iterated = 0;
 
-	if(mm->hetero_task != HETERO_PROC)
+	if(mm->kloc_task != HETERO_PROC)
 		return rc;
 
 	if (!swapwrite)
@@ -4011,119 +3885,6 @@ int migrate_pages_hetero_list(struct list_head *from, new_page_t get_new_page,
 	}
 	
 
-#if 0 //def CONFIG_HETERO_RBTREE
-	/* Get the KLOC object */
-	struct inode *inode = NULL;
-	struct rb_root kloc_rblarge;
-	int rb_pages_itr = 0;
-	int rb_nr_failed = 0;
-
-	/*FIXME: A whacky way to access the RBtree of an inode
-	 * Use a better approach
-	 */
-#if 0
-	list_for_each_entry_safe(page, page2, from, lru) {
-		if(page->kloc_obj != NULL) {
-			inode = (struct inode *)page->kloc_obj;
-			if(inode->kloc_rblarge_init) {
-				kloc_rblarge = inode->kloc_rblarge;
-				break;
-			}
-		}	
-	}
-#endif
-
-	//for(pass = 0; pass < 1 && retry; pass++) {
-	struct rb_node *rb_inode;
-	inode = NULL;
-
-	//printk(KERN_ALERT "%s:%d: current inodes %u \n",
-	//	__func__,__LINE__, current->kloc_rbinode_cnt);
-	for (rb_inode = rb_first(&current->kloc_rbinode); 
-			rb_inode; rb_inode = rb_next(rb_inode))
-	{
-		if(!rb_inode)
-			continue;
-
-		struct hetero_rbinode *hetero_rbinode = 
-			rb_entry(rb_inode, struct hetero_rbinode, rbnode);
-
-		struct rb_node *node = NULL;
-
-		if(!hetero_rbinode)
-			continue;
-		
-		inode = hetero_rbinode->inode;
-		if(!inode)
-			continue;
-
-		//printk(KERN_ALERT "%s:%d: inode totals %u, inode->ino %u \n",
-		//		__func__,__LINE__, current->kloc_rbinode_cnt, 
-		//		inode->i_ino);
-
-		kloc_rblarge = inode->kloc_rblarge;
-		retry_rbtree = 0;
-		page = NULL;
-
-		for (node = rb_first(&kloc_rblarge); node; node = rb_next(node)) 
-		{
-
-		struct hetero_rbnode *rbnode = rb_entry(node, struct hetero_rbnode, lru_node);
-		if(rbnode && rbnode->page) {
-			page = rbnode->page;
-		}
-		if(!page)	
-			continue;
-
-		//if (unlikely(page_ref_count(page) != 0))
-		//	continue;
-
-		rb_pages_itr++;
-retry_rbtree:
-		cond_resched();
-
-		/* Check if the node is slow mem node */
-		if (page_to_nid(page) == get_slowmem_node()) {
-			rb_nr_failed++;
-			continue;
-		}
-#if 0
-		/* Not a Hetero page */
-		if ((page->hetero != HETERO_PG_FLAG)) {
-                        if(!page_anon_vma(page)) 
-				break;
-			else {
-				rb_nr_failed++;
-				continue;
-			}
-			continue;
-		}
-#endif
-		rc = unmap_and_move(get_new_page, put_new_page,
-					private, page, pass > 2, mode,
-					reason);
-		switch(rc) {
-			case -ENOMEM:
-				rb_nr_failed++;
-				goto out;
-			case -EAGAIN:
-				retry_rbtree++;
-				break;
-			case MIGRATEPAGE_SUCCESS:
-				nr_succeeded++;
-				incr_global_stats(&g_migrated);
-				break;
-			default:
-				rb_nr_failed++;
-				break;
-			}
-		}
-		printk(KERN_ALERT "RBTREE: nr_succeeded pages migrated %u rb_nr_failed %u " 
-			    "retry %d  rb_pages_itr %d\n", 
-			    nr_succeeded, rb_nr_failed, retry_rbtree, rb_pages_itr);
-	}
-	return rc;
-#endif
 	for(pass = 0; pass < 2 && retry; pass++) {
 		retry = 0;
 
@@ -4131,16 +3892,14 @@ retry_rbtree:
 retry:
 		cond_resched();
 
-#if 1 //def _DISABLE_HETERO_CHECKING
 		if (page_to_nid(page) == get_slowmem_node()) {
 			nr_failed++;
 			continue;
 		}
-#endif
 
 		/* Not a Hetero page */
 #ifdef _DISABLE_HETERO_CHECKING  //_USE_HETERO_PG_FLAG
-		if ((page->hetero != HETERO_PG_FLAG)) {
+		if ((page->kloc != HETERO_PG_FLAG)) {
                 	//struct address_space *mapping = NULL;
                         //mapping = page_mapping_file(page);
                         if(!page_anon_vma(page)) { 
@@ -4209,10 +3968,6 @@ retry:
 				break;
 			}
 		}
-		hetero_dbg("nr_succeeded pages migrated %u nr_failed %u " 
-			    "retry %d  pages_iterated %d\n", 
-			    nr_succeeded, nr_failed, retry,  pages_iterated);
-
 		/*
 		 * We have collected free pages, so lets not get greedy and exit
 		 */
@@ -4224,10 +3979,10 @@ retry:
 	rc = nr_failed;
 out:
 	mm->pages_migrated += nr_succeeded;
-	hetero_page_migrate_cnt += nr_succeeded;
+	kloc_page_migrate_cnt += nr_succeeded;
 
 	if(nr_succeeded || nr_failed)
-		hetero_force_dbg("%s:%d migrated %u nr_failed %u " 
+		kloc_force_dbg("%s:%d migrated %u nr_failed %u " 
 			    "retry %d  pages_iterated %d "
                             "pagecnt %u\n", __func__,__LINE__,
 			    mm->pages_migrated, nr_failed, retry,  
@@ -4240,13 +3995,12 @@ out:
 	trace_mm_migrate_pages(nr_succeeded, nr_failed, mode, reason);
 
 	/*Update the heteromem stats*/
-	mm->objaff_cache_len -= nr_succeeded;	
+	mm->knode_cache_len -= nr_succeeded;	
 
 	if (!swapwrite)
 		current->flags &= ~PF_SWAPWRITE;
 
 	return rc;
 }
-
 #endif
 

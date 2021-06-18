@@ -691,16 +691,16 @@ struct task_struct {
 	/* Per-thread vma caching: */
 	struct vmacache			vmacache;
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 	void *kloc_obj;
-#ifdef CONFIG_HETERO_RBTREE
+#ifdef CONFIG_KLOC_RBTREE
         struct rb_root kloc_rbinode;
         int kloc_rbinode_init;
         unsigned int kloc_rbinode_cnt;
 	spinlock_t kloc_rblock;
 
-#endif //CONFIG_HETERO_RBTREE
-#endif //CONFIG_HETERO_ENABLE
+#endif //CONFIG_KLOC_RBTREE
+#endif //CONFIG_KLOC_ENABLE
 
 
 #ifdef SPLIT_RSS_COUNTING

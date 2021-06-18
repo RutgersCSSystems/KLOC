@@ -268,14 +268,11 @@ void ext4_end_io_rsv_work(struct work_struct *work)
 
 ext4_io_end_t *ext4_init_io_end(struct inode *inode, gfp_t flags)
 {
-#ifdef CONFIG_HETERO_ENABLE
-	ext4_io_end_t *io = kmem_cache_zalloc_hetero(io_end_cachep, flags);
+#ifdef CONFIG_KLOC_ENABLE
+	ext4_io_end_t *io = kmem_cache_zalloc_kloc(io_end_cachep, flags);
 #else 
 	ext4_io_end_t *io = kmem_cache_zalloc(io_end_cachep, flags);
 #endif
-	//if (global_flag == PFN_TRACE)
-	//	add_to_hashtable_ext4_io_end_t(io);
-
 	if (io) {
 		io->inode = inode;
 		INIT_LIST_HEAD(&io->list);
@@ -395,26 +392,26 @@ static int io_submit_init_bio(struct ext4_io_submit *io,
 			      struct buffer_head *bh)
 {
 	struct bio *bio = NULL;
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 	struct page *page = NULL;
 #endif
 
-#ifdef CONFIG_HETERO_OBJAFF
+#ifdef CONFIG_KLOC_KNODE
 	page = bh->b_page;
 	bio = NULL;
 
-        if (is_hetero_buffer_set())
-#ifdef CONFIG_HETERO_OBJAFF
-		if(is_hetero_cacheobj(page->kloc_obj)) {
+        if (is_kloc_buffer_set())
+#ifdef CONFIG_KLOC_KNODE
+		if(is_kloc_cacheobj(page->kloc_obj)) {
 			//debug_kloc_obj(page->kloc_obj);
 			/* We will just pass the page->kloc_obj and extract KLOC 
 			 * from the page
 			 */
-			bio = bio_alloc_hetero(GFP_NOIO, BIO_MAX_PAGES, 
+			bio = bio_alloc_kloc(GFP_NOIO, BIO_MAX_PAGES, 
 				page->kloc_obj);
 		}
 #else
-		bio = bio_alloc_hetero(GFP_NOIO, BIO_MAX_PAGES, NULL);
+		bio = bio_alloc_kloc(GFP_NOIO, BIO_MAX_PAGES, NULL);
 #endif
 	if(!bio)
 #endif

@@ -220,17 +220,16 @@ static struct ext4_new_flex_group_data *alloc_flex_gd(unsigned long flexbg_size)
 {
 	struct ext4_new_flex_group_data *flex_gd;
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 	flex_gd = NULL;
-	if(is_hetero_buffer_set()) {
-		printk(KERN_ALERT "%s:%d \n", __func__, __LINE__);
-#ifdef CONFIG_HETERO_MIGRATEXX
-	        flex_gd = kmalloc_hetero_migrate(sizeof(*flex_gd), GFP_NOFS);
+	if(is_kloc_buffer_set()) {
+#ifdef CONFIG_KLOC_MIGRATEXX
+	        flex_gd = kloc_kmalloc_migrate(sizeof(*flex_gd), GFP_NOFS);
 #endif
 		if(!flex_gd)
-			flex_gd = kmalloc_hetero(sizeof(*flex_gd), GFP_NOFS);
+			flex_gd = kmalloc_kloc(sizeof(*flex_gd), GFP_NOFS);
 	}
-#endif //CONFIG_HETERO_ENABLE
+#endif //CONFIG_KLOC_ENABLE
 
 	if(!flex_gd)
 		flex_gd = kmalloc(sizeof(*flex_gd), GFP_NOFS);
@@ -242,20 +241,19 @@ static struct ext4_new_flex_group_data *alloc_flex_gd(unsigned long flexbg_size)
 		goto out2;
 	flex_gd->count = flexbg_size;
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 	flex_gd->groups = NULL;
-	if(is_hetero_buffer_set()) {
+	if(is_kloc_buffer_set()) {
 		flex_gd->groups = NULL;
-		printk(KERN_ALERT "%s:%d \n", __func__, __LINE__);
-#ifdef CONFIG_HETERO_MIGRATEXX
-		flex_gd->groups = kmalloc_hetero_migrate(sizeof(struct ext4_new_group_data) *
+#ifdef CONFIG_KLOC_MIGRATEXX
+		flex_gd->groups = kloc_kmalloc_migrate(sizeof(struct ext4_new_group_data) *
 				  flexbg_size, GFP_NOFS);
 		if(!flex_gd->groups)
 #endif
-		flex_gd->groups = kmalloc_hetero(sizeof(struct ext4_new_group_data) *
+		flex_gd->groups = kmalloc_kloc(sizeof(struct ext4_new_group_data) *
 				  flexbg_size, GFP_NOFS);
 	}
-#endif //CONFIG_HETERO_ENABLE
+#endif //CONFIG_KLOC_ENABLE
 
 	if(!flex_gd->groups)
 	flex_gd->groups = kmalloc(sizeof(struct ext4_new_group_data) *
@@ -264,15 +262,14 @@ static struct ext4_new_flex_group_data *alloc_flex_gd(unsigned long flexbg_size)
 	if (flex_gd->groups == NULL)
 		goto out2;
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 	flex_gd->bg_flags = NULL;
-	if(is_hetero_buffer_set()) {
-		printk(KERN_ALERT "%s:%d \n", __func__, __LINE__);
-#ifdef CONFIG_HETERO_MIGRATEXX
-		flex_gd->bg_flags = kmalloc_hetero_migrate(flexbg_size * sizeof(__u16), GFP_NOFS);
+	if(is_kloc_buffer_set()) {
+#ifdef CONFIG_KLOC_MIGRATEXX
+		flex_gd->bg_flags = kloc_kmalloc_migrate(flexbg_size * sizeof(__u16), GFP_NOFS);
 #endif
 		if(!flex_gd->bg_flags)
-			flex_gd->bg_flags = kmalloc_hetero(flexbg_size * sizeof(__u16), GFP_NOFS);
+			flex_gd->bg_flags = kmalloc_kloc(flexbg_size * sizeof(__u16), GFP_NOFS);
 	}
 #endif
 	if(!flex_gd->bg_flags)
@@ -1046,8 +1043,8 @@ static int reserve_backup_gdb(handle_t *handle, struct inode *inode,
 	int res, i;
 	int err;
 
-#ifdef CONFIG_HETERO_ENABLE
-	primary = kmalloc_hetero(reserved_gdb * sizeof(*primary), GFP_NOFS);
+#ifdef CONFIG_KLOC_ENABLE
+	primary = kmalloc_kloc(reserved_gdb * sizeof(*primary), GFP_NOFS);
 #else 
 	primary = kmalloc(reserved_gdb * sizeof(*primary), GFP_NOFS);
 #endif

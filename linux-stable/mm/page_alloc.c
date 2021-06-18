@@ -76,8 +76,8 @@
 #include <linux/hetero.h>
 
 extern int global_flag;
-extern int hetero_usrpg_cnt;
-extern int hetero_kernpg_cnt;
+extern int kloc_usrpg_cnt;
+extern int kloc_kernpg_cnt;
 
 /* prevent >1 _updater_ of zone percpu pageset ->high and ->batch fields */
 static DEFINE_MUTEX(pcp_batch_high_lock);
@@ -570,9 +570,9 @@ out:
 void free_compound_page(struct page *page)
 {
 	__free_pages_ok(page, compound_order(page));
-#ifdef CONFIG_HETERO_ENABLE
-                if(page != NULL && is_hetero_buffer_set()) {
-                        update_hetero_pgbuff_stat(get_fastmem_node(), page, 1);
+#ifdef CONFIG_KLOC_ENABLE
+                if(page != NULL && is_kloc_buffer_set()) {
+                        kloc_update_pgbuff_stat(get_fastmem_node(), page, 1);
                 }
 #endif
 }
@@ -925,8 +925,8 @@ static void free_pages_check_bad(struct page *page)
 		bad_flags = PAGE_FLAGS_CHECK_AT_FREE;
 	}
 
-#ifdef CONFIG_HETERO_RBTREE
-	if(page->hetero == HETERO_PG_FLAG) {
+#ifdef CONFIG_KLOC_RBTREE
+	if(page->kloc == HETERO_PG_FLAG) {
 		printk(KERN_ALERT "ERROR %s \n", bad_reason); 
 	}
 #endif
@@ -3389,13 +3389,10 @@ try_this_zone:
 	return NULL;
 }
 
-#ifdef CONFIG_HETERO_ENABLE
-
-
+#ifdef CONFIG_KLOC_ENABLE
 int check_free_fastmem_node(gfp_t gfp_mask, unsigned int order, int alloc_flags, 
 					const struct alloc_context *ac)
 {
-
 	struct zoneref *z = ac->preferred_zoneref;
 	struct zone *zone;
 
@@ -3419,11 +3416,11 @@ int check_free_fastmem_node(gfp_t gfp_mask, unsigned int order, int alloc_flags,
 }
 
 /*
- * hetero_get_page_from_freelist goes through the zonelist trying to allocate
+ * kloc_get_page_from_freelist goes through the zonelist trying to allocate
  * a page.
  */
 static struct page *
-hetero_get_page_from_freelist(gfp_t gfp_mask, unsigned int order, int alloc_flags,
+kloc_get_page_from_freelist(gfp_t gfp_mask, unsigned int order, int alloc_flags,
 						const struct alloc_context *ac)
 {
 	struct zoneref *z = ac->preferred_zoneref;
@@ -3480,8 +3477,6 @@ hetero_get_page_from_freelist(gfp_t gfp_mask, unsigned int order, int alloc_flag
 
 		if((zone_to_nid(zone) != get_fastmem_node()) 
 			&& alloc_from_fastmem) {
-			printk(KERN_ALERT "HETERO zone_to_nid %d \n",
-				zone_to_nid(zone));
 			continue;
 		}
 
@@ -4514,8 +4509,8 @@ static inline bool prepare_alloc_pages(gfp_t gfp_mask, unsigned int order,
 	return true;
 }
 
-#ifdef CONFIG_HETERO_ENABLE
-static inline bool prepare_alloc_pages_hetero(gfp_t gfp_mask, unsigned int order,
+#ifdef CONFIG_KLOC_ENABLE
+static inline bool prepare_alloc_pages_kloc(gfp_t gfp_mask, unsigned int order,
                 int preferred_nid, nodemask_t *nodemask,
                 struct alloc_context *ac, gfp_t *alloc_mask,
                 unsigned int *alloc_flags)
@@ -4524,18 +4519,6 @@ static inline bool prepare_alloc_pages_hetero(gfp_t gfp_mask, unsigned int order
         ac->zonelist = node_zonelist(preferred_nid, gfp_mask);
         ac->nodemask = nodemask;
         ac->migratetype = gfpflags_to_migratetype(gfp_mask);
-
-        if (cpusets_enabled()) {
-         
-#if 0
-                printk(KERN_ALERT "%s : %d  \n", __func__, __LINE__);
-                *alloc_mask |= __GFP_HARDWALL;
-                if (!ac->nodemask)
-                        ac->nodemask = &cpuset_current_mems_allowed;
-                else
-                        *alloc_flags |= ALLOC_CPUSET;
-#endif
-        }
 
         fs_reclaim_acquire(gfp_mask);
         fs_reclaim_release(gfp_mask);
@@ -4568,7 +4551,7 @@ static inline void finalise_ac(gfp_t gfp_mask,
 					ac->high_zoneidx, ac->nodemask);
 }
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 #define K(x) ((x) << (PAGE_SHIFT - 10))
 
 #define THRESHOLD 100000
@@ -4609,7 +4592,7 @@ __alloc_pages_nodemask(gfp_t gfp_mask, unsigned int order, int preferred_nid,
 	/* First allocation attempt */
 	page = get_page_from_freelist(alloc_mask, order, alloc_flags, &ac);
 	if (likely(page)) {
-#ifdef CONFIG_HETERO_STATS
+#ifdef CONFIG_KLOC_STATS
  	       incr_tot_app_pages();
 #endif
 		goto out;
@@ -4644,9 +4627,9 @@ out:
 }
 EXPORT_SYMBOL(__alloc_pages_nodemask);
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 struct page *
-__alloc_pages_nodemask_hetero(gfp_t gfp_mask, unsigned int order, int preferred_nid,
+__alloc_pages_nodemask_kloc(gfp_t gfp_mask, unsigned int order, int preferred_nid,
 							nodemask_t *nodemask)
 {
 	struct page *page = NULL;
@@ -4659,38 +4642,22 @@ __alloc_pages_nodemask_hetero(gfp_t gfp_mask, unsigned int order, int preferred_
         struct sysinfo i;
 	int nid = get_fastmem_node();
 
-#if 0	
-	if(!node_checkfreq) {
-	        si_meminfo_node(&i, nid);
-		if(K(i.freeram) < THRESHOLD) {
-			node_checkfreq = FREQCHECK;
-			preferred_nid = get_slowmem_node();	
-			//printk(KERN_ALERT "%s : %d  \n", __func__, __LINE__);
-			//goto default_alloc;
-		}
-		node_checkfreq = FREQCHECK;
-	}else {
-		node_checkfreq--;
-	}
-#endif
 
-	if (!prepare_alloc_pages_hetero(gfp_mask, order, preferred_nid, 
+	if (!prepare_alloc_pages_kloc(gfp_mask, order, preferred_nid, 
 				nodemask, &ac, &alloc_mask, &alloc_flags))
 		return NULL;
-
-	//ac.spread_dirty_pages = false;
 
 	finalise_ac(gfp_mask, order, &ac);
 
 	/* First allocation attempt from freelist and is a hetero page*/
 	page = get_page_from_freelist(alloc_mask, order, alloc_flags, &ac);
-	//page = hetero_get_page_from_freelist(alloc_mask, order, alloc_flags, &ac);
+	//page = kloc_get_page_from_freelist(alloc_mask, order, alloc_flags, &ac);
 	if (likely(page)) {
-#ifdef CONFIG_HETERO_STATS
+#ifdef CONFIG_KLOC_STATS
 	        incr_tot_app_pages();
 #endif
 		if(check_fastmem_node(page)) {
-			page->hetero = HETERO_PG_FLAG;
+			page->kloc = HETERO_PG_FLAG;
 		}
 		goto out;
 
@@ -4721,19 +4688,8 @@ default_alloc:
         }*/
 
 	if(page && check_fastmem_node(page)) {
-		page->hetero = HETERO_PG_FLAG;
+		page->kloc = HETERO_PG_FLAG;
 	}
-#ifdef CONFIG_HETERO_ENABLE
-#if 0
-        if(is_hetero_buffer_set()) {
-                if ((alloc_mask & __GFP_MOVABLE)) {
-                        hetero_usrpg_cnt++;
-                }else {
-                         hetero_kernpg_cnt++;
-                }
-        }
-#endif
-#endif
 
 out:
 	if (memcg_kmem_enabled() && (gfp_mask & __GFP_ACCOUNT) && page &&
@@ -4744,7 +4700,7 @@ out:
 	trace_mm_page_alloc(page, order, alloc_mask, ac.migratetype);
 	return page;
 }
-EXPORT_SYMBOL(__alloc_pages_nodemask_hetero);
+EXPORT_SYMBOL(__alloc_pages_nodemask_kloc);
 #endif
 
 /*
@@ -4783,9 +4739,9 @@ void __free_pages(struct page *page, unsigned int order)
 		else
 			__free_pages_ok(page, order);
 
-#ifdef CONFIG_HETERO_ENABLE
-		if(page != NULL && is_hetero_buffer_set()) {
-			update_hetero_pgbuff_stat(get_fastmem_node(), page, 1);
+#ifdef CONFIG_KLOC_ENABLE
+		if(page != NULL && is_kloc_buffer_set()) {
+			kloc_update_pgbuff_stat(get_fastmem_node(), page, 1);
 		}
 #endif
 	}
@@ -4820,15 +4776,13 @@ static struct page *__page_frag_cache_refill(struct page_frag_cache *nc,
 	struct page *page = NULL;
 	gfp_t gfp = gfp_mask;
 
-	printk(KERN_ALERT "%s : %d  \n", __func__, __LINE__);
-
 #if (PAGE_SIZE < PAGE_FRAG_CACHE_MAX_SIZE)
 	gfp_mask |= __GFP_COMP | __GFP_NOWARN | __GFP_NORETRY |
 		    __GFP_NOMEMALLOC;
 
-#ifdef CONFIG_HETERO_ENABLE
-	if(is_hetero_buffer_set()) {
-		page = alloc_pages_hetero_node(get_fastmem_node(), gfp_mask,
+#ifdef CONFIG_KLOC_ENABLE
+	if(is_kloc_buffer_set()) {
+		page = alloc_pages_kloc_node(get_fastmem_node(), gfp_mask,
 				PAGE_FRAG_CACHE_MAX_ORDER);
 	}	
 	if(!page)
@@ -4839,9 +4793,8 @@ static struct page *__page_frag_cache_refill(struct page_frag_cache *nc,
 #endif
 
 	if (unlikely(!page))
-#ifdef CONFIG_HETERO_ENABLE
-		if(is_hetero_buffer_set()) {
-			printk(KERN_ALERT "%s : %d  \n", __func__, __LINE__);
+#ifdef CONFIG_KLOC_ENABLE
+		if(is_kloc_buffer_set()) {
 			page = alloc_pages_node(get_fastmem_node(), gfp, 0);
 		}
 		if(!page)
@@ -4865,9 +4818,10 @@ void __page_frag_cache_drain(struct page *page, unsigned int count)
 		else {
 			__free_pages_ok(page, order);
 		}
-#ifdef CONFIG_HETERO_ENABLE
-                if(page != NULL && is_hetero_buffer_set()) {
-                        update_hetero_pgbuff_stat(get_fastmem_node(), page, 1);
+
+#ifdef CONFIG_KLOC_ENABLE
+                if(page != NULL && is_kloc_buffer_set()) {
+                        kloc_update_pgbuff_stat(get_fastmem_node(), page, 1);
                 }
 #endif
 	}
@@ -4939,9 +4893,9 @@ void page_frag_free(void *addr)
 
 	if (unlikely(put_page_testzero(page))) {
 		__free_pages_ok(page, compound_order(page));
-#ifdef CONFIG_HETERO_ENABLE
-                if(page != NULL && is_hetero_buffer_set()) {
-                        update_hetero_pgbuff_stat(get_fastmem_node(), page, 1);
+#ifdef CONFIG_KLOC_ENABLE
+                if(page != NULL && is_kloc_buffer_set()) {
+                        kloc_update_pgbuff_stat(get_fastmem_node(), page, 1);
                 }
 #endif
 	}

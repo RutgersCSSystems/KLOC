@@ -328,26 +328,16 @@ static void ext4_es_list_del(struct inode *inode)
 	spin_unlock(&sbi->s_es_lock);
 }
 
-#if 0
-void add_to_hashtable_extent_status(struct extent_status *es) {
-	unsigned long pfn = (__pa(es) >> PAGE_SHIFT);
-	if (pfn <= max_pfn)
-		insert_pfn_hashtable(pfn);
-}
-#endif
-
 static struct extent_status *
 ext4_es_alloc_extent(struct inode *inode, ext4_lblk_t lblk, ext4_lblk_t len,
 		     ext4_fsblk_t pblk)
 {
 	struct extent_status *es;
-#ifdef CONFIG_HETERO_ENABLE
-	es = kmem_cache_alloc_hetero(ext4_es_cachep, GFP_ATOMIC);
+#ifdef CONFIG_KLOC_ENABLE
+	es = kmem_cache_alloc_kloc(ext4_es_cachep, GFP_ATOMIC);
 #else 
 	es = kmem_cache_alloc(ext4_es_cachep, GFP_ATOMIC);
 #endif 
-	//if (global_flag == PFN_TRACE)
-	//	add_to_hashtable_extent_status(es);
 
 	if (es == NULL)
 		return NULL;

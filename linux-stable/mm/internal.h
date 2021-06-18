@@ -92,8 +92,8 @@ extern unsigned long highest_memmap_pfn;
 extern int isolate_lru_page(struct page *page);
 extern void putback_lru_page(struct page *page);
 
-#ifdef CONFIG_HETERO_ENABLE
-extern int hetero_isolate_lru_page(struct page *page);
+#ifdef CONFIG_KLOC_ENABLE
+extern int kloc_isolate_lru_page(struct page *page);
 #endif
 
 

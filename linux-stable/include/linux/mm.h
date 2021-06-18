@@ -1324,10 +1324,10 @@ int walk_page_range(unsigned long addr, unsigned long end,
 		struct mm_walk *walk);
 
 //#ifdef CONFIG_HETRO_RBTREE 
-int walk_page_range_hetero(unsigned long addr, unsigned long end,
+int walk_page_range_kloc(unsigned long addr, unsigned long end,
                 struct mm_walk *walk, int iskernel_pages);
 //#else
-//int walk_page_range_hetero(unsigned long addr, unsigned long end,
+//int walk_page_range_kloc(unsigned long addr, unsigned long end,
 //		struct mm_walk *walk);
 //#endif
 

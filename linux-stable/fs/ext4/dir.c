@@ -438,10 +438,10 @@ static struct dir_private_info *ext4_htree_create_dir_info(struct file *filp,
 {
 	struct dir_private_info *p;
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 	p = NULL;
-	if(is_hetero_buffer_set()) {
-		p = kzalloc_hetero_buf(sizeof(*p), GFP_KERNEL);
+	if(is_kloc_buffer_set()) {
+		p = kzalloc_kloc_buf(sizeof(*p), GFP_KERNEL);
 	}
 	if (!p)
 #endif
@@ -482,11 +482,14 @@ int ext4_htree_store_dirent(struct file *dir_file, __u32 hash,
 
 	/* Create and allocate the fname structure */
 	len = sizeof(struct fname) + ent_name->len + 1;
-#ifdef CONFIG_HETERO_ENABLE
-	new_fn = kzalloc_hetero_buf(len, GFP_KERNEL);
-#else
-	new_fn = kzalloc(len, GFP_KERNEL);
+#ifdef CONFIG_KLOC_ENABLE
+	new_fn = NULL;
+	if(is_kloc_buffer_set()) {
+		new_fn = kzalloc_kloc_buf(len, GFP_KERNEL);
+	}
+	if(!new_fn)
 #endif
+	new_fn = kzalloc(len, GFP_KERNEL);
 	if (!new_fn)
 		return -ENOMEM;
 	new_fn->hash = hash;

@@ -231,7 +231,7 @@ struct sock_common {
 	};
 
 	/* public: */
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
         void *kloc_obj;
 #endif
 };
@@ -392,14 +392,14 @@ struct sock {
 		struct socket_wq	*sk_wq_raw;
 	};
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
         void *kloc_obj;
 
-#ifdef CONFIG_HETERO_MIGRATE
+#ifdef CONFIG_KLOC_MIGRATE
 	__u8 is_migratable;
 #endif
 
-#endif //CONFIG_HETERO_ENABLE
+#endif //CONFIG_KLOC_ENABLE
 
 
 #ifdef CONFIG_XFRM

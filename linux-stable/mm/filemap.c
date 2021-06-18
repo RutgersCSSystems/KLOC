@@ -123,7 +123,7 @@
  */
 
 extern int global_flag;
-struct page *__page_cache_alloc_hetero(gfp_t gfp, struct address_space *x);
+struct page *__page_cache_alloc_kloc(gfp_t gfp, struct address_space *x);
 
 static int page_cache_tree_insert(struct address_space *mapping,
 				  struct page *page, void **shadowp)
@@ -132,16 +132,15 @@ static int page_cache_tree_insert(struct address_space *mapping,
 	void **slot;
 	int error;
 
-#ifdef CONFIG_HETERO_OBJAFF
+#ifdef CONFIG_KLOC_KNODE
 	error = 1;
 	/* Set page to Hetero Object */
-	if (is_hetero_buffer_set()) {
+	if (is_kloc_buffer_set()) {
 
-#ifdef CONFIG_HETERO_OBJAFF
-		if(is_hetero_cacheobj(mapping->kloc_obj))
+		if(is_kloc_cacheobj(mapping->kloc_obj))
 			page->kloc_obj = mapping->kloc_obj;	
-#endif
-		error = __radix_tree_create_hetero(&mapping->i_pages, 
+
+		error = __radix_tree_create_kloc(&mapping->i_pages, 
 						   page->index, 0,
 					           &node, &slot, 
 						   (mapping->kloc_obj));
@@ -290,9 +289,9 @@ static void unaccount_page_cache_page(struct address_space *mapping,
 void __delete_from_page_cache(struct page *page, void *shadow)
 {
 	struct address_space *mapping = page->mapping;
-#ifdef CONFIG_HETERO_ENABLE
-        if (page && is_hetero_pgcache_set() ) {
-        	update_hetero_pgcache(get_fastmem_node(), page, 1);
+#ifdef CONFIG_KLOC_ENABLE
+        if (page && is_kloc_pgcache_set() ) {
+        	kloc_update_pgcache(get_fastmem_node(), page, 1);
 	}
 #endif
 	trace_mm_filemap_delete_from_page_cache(page);
@@ -306,9 +305,9 @@ static void page_cache_free_page(struct address_space *mapping,
 {
 	void (*freepage)(struct page *);
 
-#ifdef CONFIG_HETERO_ENABLE
-        if (page && is_hetero_pgcache_set() ) {
-        	update_hetero_pgcache(get_fastmem_node(), page, 1);
+#ifdef CONFIG_KLOC_ENABLE
+        if (page && is_kloc_pgcache_set() ) {
+        	kloc_update_pgcache(get_fastmem_node(), page, 1);
 	}
 #endif
 	freepage = mapping->a_ops->freepage;
@@ -348,7 +347,7 @@ void delete_from_page_cache(struct page *page)
 EXPORT_SYMBOL(delete_from_page_cache);
 
 
-void delete_from_page_cache_hetero(struct page *page)
+void delete_from_page_cache_kloc(struct page *page)
 {
 	struct address_space *mapping = page_mapping(page);
 	unsigned long flags;
@@ -360,7 +359,7 @@ void delete_from_page_cache_hetero(struct page *page)
 	//xa_unlock_irqrestore(&mapping->i_pages, flags);
 	page_cache_free_page(mapping, page);
 }
-EXPORT_SYMBOL(delete_from_page_cache_hetero);
+EXPORT_SYMBOL(delete_from_page_cache_kloc);
 
 
 /*
@@ -884,7 +883,7 @@ EXPORT_SYMBOL_GPL(replace_page_cache_page);
 
 
 
-int replace_page_cache_page_hetero(struct page *old, struct page *new, gfp_t gfp_mask)
+int replace_page_cache_page_kloc(struct page *old, struct page *new, gfp_t gfp_mask)
 {
 	int error;
 
@@ -915,7 +914,7 @@ int replace_page_cache_page_hetero(struct page *old, struct page *new, gfp_t gfp
 		xa_lock_irqsave(&mapping->i_pages, flags);
 		__delete_from_page_cache(old, NULL);
 		//unlock_page(old);
-		//delete_from_page_cache_hetero(old);
+		//delete_from_page_cache_kloc(old);
 		//delete_from_page_cache(old);
 
 		printk("%s:%d  \n", __func__, __LINE__);
@@ -940,7 +939,7 @@ int replace_page_cache_page_hetero(struct page *old, struct page *new, gfp_t gfp
 
 	return error;
 }
-EXPORT_SYMBOL_GPL(replace_page_cache_page_hetero);
+EXPORT_SYMBOL_GPL(replace_page_cache_page_kloc);
 
 
 static int __add_to_page_cache_locked(struct page *page,
@@ -1058,15 +1057,14 @@ struct page *__page_cache_alloc(gfp_t gfp)
 		do {
 			cpuset_mems_cookie = read_mems_allowed_begin();
 			n = cpuset_mem_spread_node();
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 			/*Check if we have enable customized HETERO allocation for 
 			page cache*/
-			if (is_hetero_pgcache_set()) {
+			if (is_kloc_pgcache_set()) {
 				n = get_fastmem_node();
-				page = __alloc_pages_node_hetero(n, gfp, 0);
-                                //printk(KERN_ALERT "%s : %d Node: %d \n", __func__, __LINE__, page_to_nid(page));
+				page = __alloc_pages_node_kloc(n, gfp, 0);
 				if(page)	
-				        update_hetero_pgcache(get_fastmem_node(), page, 0);
+				        kloc_update_pgcache(get_fastmem_node(), page, 0);
 			}
 			else {
 				page = __alloc_pages_node(n, gfp, 0);
@@ -1081,21 +1079,21 @@ struct page *__page_cache_alloc(gfp_t gfp)
 
 	allocpage = alloc_pages(gfp, 0);
 
-#ifdef CONFIG_HETERO_ENABLE
-	if(allocpage && is_hetero_pgcache_set())	
-		update_hetero_pgcache(get_fastmem_node(), allocpage, 0);
+#ifdef CONFIG_KLOC_ENABLE
+	if(allocpage && is_kloc_pgcache_set())	
+		kloc_update_pgcache(get_fastmem_node(), allocpage, 0);
 #endif
 	return allocpage;
 }
 EXPORT_SYMBOL(__page_cache_alloc);
 
 
-#ifdef CONFIG_HETERO_DEBUG
+#ifdef CONFIG_KLOC_DEBUG
 void dgb_target_kloc_obj(struct address_space *x){
 
-	struct inode *curr_inode = NULL, *hetero_inode = NULL;
-	struct dentry *curr_dentry = NULL, *hetero_dentry = NULL;
-	struct address_space *hetero_map = NULL;
+	struct inode *curr_inode = NULL, *kloc_inode = NULL;
+	struct dentry *curr_dentry = NULL, *kloc_dentry = NULL;
+	struct address_space *kloc_map = NULL;
 
 	if(x)
 	        curr_inode = x->host;
@@ -1104,20 +1102,20 @@ void dgb_target_kloc_obj(struct address_space *x){
 		curr_dentry = d_find_any_alias(curr_inode);
 	        printk("%s:%d Proc name %s page cache %d hetero obj %d "
 		       "inode %lu", __func__,__LINE__, current->comm, 
-		       is_hetero_pgcache_set(), is_kloc_obj(x->kloc_obj), 
+		       is_kloc_pgcache_set(), is_kloc_obj(x->kloc_obj), 
 		       curr_inode->i_ino, curr_dentry->d_iname);
 	}
 	else 
 		goto error;
 
-	hetero_inode = (struct inode *)current->kloc_obj;
-	if(hetero_inode) {
-	        hetero_dentry = d_find_any_alias(hetero_inode);
-     	        if(hetero_dentry && curr_dentry)
+	kloc_inode = (struct inode *)current->kloc_obj;
+	if(kloc_inode) {
+	        kloc_dentry = d_find_any_alias(kloc_inode);
+     	        if(kloc_dentry && curr_dentry)
 		        printk("fname %s hetero fname %s \n", 
-		               curr_dentry->d_iname, hetero_dentry->d_iname);
+		               curr_dentry->d_iname, kloc_dentry->d_iname);
 	}else {
-		printk("fname %s hetero_inode NULL \n", 
+		printk("fname %s kloc_inode NULL \n", 
 				curr_dentry->d_iname);		
 	}
 error:
@@ -1126,32 +1124,32 @@ error:
 #endif
 
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 /* Hetero Cache allocation */
-struct page *__page_cache_alloc_hetero(gfp_t gfp, 
+struct page *__page_cache_alloc_kloc(gfp_t gfp, 
 			struct address_space *x)
 {
 	int n;
-	int is_hetero_alloc = 0;
+	int is_kloc_alloc = 0;
 	struct page *page, *allocpage = NULL;
 	/*By default, allocate to HETERO_NODE */
         n = get_fastmem_node();
 
-	if (!is_hetero_pgcache_set()) {
+	if (!is_kloc_pgcache_set()) {
 		return __page_cache_alloc(gfp);		
 	}
 
-#ifdef CONFIG_HETERO_STATS
+#ifdef CONFIG_KLOC_STATS
 	incr_tot_cache_pages();
 #endif
 
-#ifdef CONFIG_HETERO_RBTREE
+#ifdef CONFIG_KLOC_RBTREE
 	/* Check if  HETERO allocation enabled for page cache 
 	 * enabled 
          */
 	if (is_kloc_obj(x->kloc_obj)) {
 		n = get_fastmem_node();
-		is_hetero_alloc = 1;
+		is_kloc_alloc = 1;
 	}
 	else if(x && !is_kloc_obj(x->kloc_obj)) {
 		set_fsmap_kloc_obj(x);
@@ -1163,30 +1161,30 @@ struct page *__page_cache_alloc_hetero(gfp_t gfp,
 		do {
 			cpuset_mems_cookie = read_mems_allowed_begin();
 			n = cpuset_mem_spread_node();
-			page = __alloc_pages_node_hetero(n, gfp, 0);
+			page = __alloc_pages_node_kloc(n, gfp, 0);
 		} while (!page && read_mems_allowed_retry(cpuset_mems_cookie));
 		allocpage = page;
 	}
 
-        if(!allocpage && is_hetero_alloc) {
-		allocpage = __alloc_pages_node_hetero(n, gfp, 0);
+        if(!allocpage && is_kloc_alloc) {
+		allocpage = __alloc_pages_node_kloc(n, gfp, 0);
 	}
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 	if(allocpage) {
-	    update_hetero_pgcache(get_fastmem_node(), allocpage, 0);
+	    kloc_update_pgcache(get_fastmem_node(), allocpage, 0);
 	}
 #endif
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 	if(allocpage) {
-		try_hetero_migration((void *)x,
+		kloc_try_migration((void *)x,
 			 mapping_gfp_constraint(x, GFP_KERNEL), 0);
 	}
 #endif
 	return allocpage;
 }
-EXPORT_SYMBOL(__page_cache_alloc_hetero);
-#endif //CONFIG_HETERO_ENABLE
+EXPORT_SYMBOL(__page_cache_alloc_kloc);
+#endif //CONFIG_KLOC_ENABLE
 #endif //CONFIG_NUMA
 
 
@@ -1819,9 +1817,9 @@ no_page:
 		if (fgp_flags & FGP_NOFS)
 			gfp_mask &= ~__GFP_FS;
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
                 page = NULL;
-                page = __page_cache_alloc_hetero(gfp_mask, mapping);
+                page = __page_cache_alloc_kloc(gfp_mask, mapping);
                 if(!page)
 #endif
 		page = __page_cache_alloc(gfp_mask);
@@ -2520,8 +2518,8 @@ no_cached_page:
 		 * Ok, it wasn't cached, so we need to create a new
 		 * page..
 		 */
-#ifdef CONFIG_HETERO_ENABLE
-                page = page_cache_alloc_hetero(mapping);
+#ifdef CONFIG_KLOC_ENABLE
+                page = page_cache_alloc_kloc(mapping);
                 if(!page)
 #endif
 		page = page_cache_alloc(mapping);
@@ -2637,8 +2635,8 @@ static int page_cache_read(struct file *file, pgoff_t offset, gfp_t gfp_mask)
 
 	do {
 
-#ifdef CONFIG_HETERO_ENABLE
-                page = __page_cache_alloc_hetero(gfp_mask, mapping);
+#ifdef CONFIG_KLOC_ENABLE
+                page = __page_cache_alloc_kloc(gfp_mask, mapping);
                 if(!page)
 #endif
 		page = __page_cache_alloc(gfp_mask);
@@ -2881,7 +2879,7 @@ void filemap_map_pages(struct vm_fault *vmf,
 	struct page *head, *page;
 
         /*Mark the mapping to Hetero target object*/
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
         //set_fsmap_kloc_obj(mapping);
 #endif
 	rcu_read_lock();
@@ -3052,9 +3050,9 @@ static struct page *do_read_cache_page(struct address_space *mapping,
 repeat:
 	page = find_get_page(mapping, index);
 	if (!page) {
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
                 page = NULL;
-                page = __page_cache_alloc_hetero(gfp, mapping);
+                page = __page_cache_alloc_kloc(gfp, mapping);
                 if(!page)
 #endif
 		page = __page_cache_alloc(gfp);
@@ -3354,14 +3352,6 @@ struct page *grab_cache_page_write_begin(struct address_space *mapping,
 	if (flags & AOP_FLAG_NOFS)
 		fgp_flags |= FGP_NOFS;
 
-        /*Mark the mapping to Hetero target object*/
-#ifdef CONFIG_HETERO_ENABLE
-	/*mapping->kloc_obj = NULL;
-	if(is_hetero_buffer_set()){
-		mapping->kloc_obj = (void *)mapping->host;
-		current->kloc_obj = (void *)mapping->host;
-	}*/
-#endif
 	page = pagecache_get_page(mapping, index, fgp_flags,
 			mapping_gfp_mask(mapping));
 

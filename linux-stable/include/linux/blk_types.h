@@ -168,11 +168,11 @@ struct bio {
 	 */
 	struct bio_vec		bi_inline_vecs[0];
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 	void 			*kloc_obj;
 #endif
 
-#ifdef CONFIG_HETERO_MIGRATE
+#ifdef CONFIG_KLOC_MIGRATE
         __u8                    is_migratable;
 #endif
 };

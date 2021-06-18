@@ -846,7 +846,7 @@ struct sk_buff {
 				*data;
 	unsigned int		truesize;
 	refcount_t		users;
-#ifdef CONFIG_HETERO_MIGRATE
+#ifdef CONFIG_KLOC_MIGRATE
         __u8                    is_migratable;
 #endif
 };
@@ -985,9 +985,9 @@ struct sk_buff *__alloc_skb(unsigned int size, gfp_t priority, int flags,
 struct sk_buff *__build_skb(void *data, unsigned int frag_size);
 struct sk_buff *build_skb(void *data, unsigned int frag_size);
 
-#ifdef CONFIG_HETERO_NET_ENABLE
-struct sk_buff *__build_skb_hetero(void *data, unsigned int frag_size, void *kloc_obj);
-struct sk_buff *build_skb_hetero(void *data, unsigned int frag_size, void *kloc_obj);
+#ifdef CONFIG_KLOC_NET
+struct sk_buff *__build_skb_kloc(void *data, unsigned int frag_size, void *kloc_obj);
+struct sk_buff *build_skb_kloc(void *data, unsigned int frag_size, void *kloc_obj);
 #endif
 
 static inline struct sk_buff *alloc_skb(unsigned int size,
@@ -1038,21 +1038,21 @@ static inline struct sk_buff *alloc_skb_fclone(unsigned int size,
 	return __alloc_skb(size, priority, SKB_ALLOC_FCLONE, NUMA_NO_NODE);
 }
 
-#ifdef CONFIG_HETERO_ENABLE
-struct sk_buff *__alloc_skb_hetero(unsigned int size, gfp_t priority, int flags,
+#ifdef CONFIG_KLOC_ENABLE
+struct sk_buff *__alloc_skb_kloc(unsigned int size, gfp_t priority, int flags,
                             int node, void *kloc_obj);
 
-static inline struct sk_buff *alloc_skb_hetero(unsigned int size,
+static inline struct sk_buff *alloc_skb_kloc(unsigned int size,
 					gfp_t priority, void *kloc_obj)
 {
-	return __alloc_skb_hetero(size, priority, 0, get_fastmem_node(), 
+	return __alloc_skb_kloc(size, priority, 0, get_fastmem_node(), 
 				kloc_obj);
 }
 
-static inline struct sk_buff *alloc_skb_fclone_hetero(unsigned int size,
+static inline struct sk_buff *alloc_skb_fclone_kloc(unsigned int size,
 					       gfp_t priority, void *kloc_obj)
 {
-	return __alloc_skb_hetero(size, priority, 0, get_fastmem_node(), 
+	return __alloc_skb_kloc(size, priority, 0, get_fastmem_node(), 
 				kloc_obj);
 }
 #endif
@@ -2681,13 +2681,13 @@ void napi_consume_skb(struct sk_buff *skb, int budget);
 void __kfree_skb_flush(void);
 void __kfree_skb_defer(struct sk_buff *skb);
 
-#ifdef CONFIG_HETERO_NET_ENABLE
-struct sk_buff *__napi_alloc_skb_hetero(struct napi_struct *napi,
+#ifdef CONFIG_KLOC_NET
+struct sk_buff *__napi_alloc_skb_kloc(struct napi_struct *napi,
 				 unsigned int length, gfp_t gfp_mask, void *kloc_obj);
-static inline struct sk_buff *napi_alloc_skb_hetero(struct napi_struct *napi,
+static inline struct sk_buff *napi_alloc_skb_kloc(struct napi_struct *napi,
 					     unsigned int length, void *kloc_obj)
 {
-	return __napi_alloc_skb_hetero(napi, length, GFP_ATOMIC, kloc_obj);
+	return __napi_alloc_skb_kloc(napi, length, GFP_ATOMIC, kloc_obj);
 }
 #endif
 

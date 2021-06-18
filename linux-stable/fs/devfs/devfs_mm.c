@@ -54,7 +54,7 @@ struct page *devfs_alloc_page(gfp_t gfp, int order, int node)
         clear_user_highpage(page,0);
         //page->nvdirty = PAGE_MIGRATED;
 
-        //hetero_add_to_nvlist_mm(page);
+        //kloc_add_to_nvlist_mm(page);
         return page;
 
 pagemisses:

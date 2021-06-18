@@ -170,9 +170,9 @@ void bvec_free(mempool_t *pool, struct bio_vec *bv, unsigned int idx)
 	BIO_BUG_ON(idx >= BVEC_POOL_NR);
 
 	if (idx == BVEC_POOL_MAX) {
-#ifdef CONFIG_HETERO_ENABLE
-        if(is_hetero_buffer_set()) {
-                mempool_free_hetero(bv, pool);
+#ifdef CONFIG_KLOC_ENABLE
+        if(is_kloc_buffer_set()) {
+                mempool_free_kloc(bv, pool);
         }
 #else
 		mempool_free(bv, pool);
@@ -222,10 +222,10 @@ struct bio_vec *bvec_alloc(gfp_t gfp_mask, int nr, unsigned long *idx,
 	if (*idx == BVEC_POOL_MAX) {
 fallback:
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 		bvl = NULL;
-	        if(is_hetero_buffer_set() && is_hetero_bio()) {
-			bvl = mempool_alloc_hetero(pool, gfp_mask, NULL);
+	        if(is_kloc_buffer_set() && is_kloc_bio()) {
+			bvl = mempool_alloc_kloc(pool, gfp_mask, NULL);
 		}
 	        if(!bvl)
 #endif
@@ -241,10 +241,10 @@ fallback:
 		 */
 		__gfp_mask |= __GFP_NOMEMALLOC | __GFP_NORETRY | __GFP_NOWARN;
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 		bvl = NULL;
-	        if(is_hetero_buffer_set() && is_hetero_bio()) {
-			bvl = kmem_cache_alloc_hetero(bvs->slab, __gfp_mask);
+	        if(is_kloc_buffer_set() && is_kloc_bio()) {
+			bvl = kmem_cache_alloc_kloc(bvs->slab, __gfp_mask);
 		}
 	        if(!bvl)
 #endif
@@ -274,11 +274,6 @@ static void bio_free(struct bio *bio)
 	struct bio_set *bs = bio->bi_pool;
 	void *p;
 
-	if(bio && bio->is_migratable == HETERO_INIT) 
-        	printk(KERN_ALERT "%s:%d \n", __func__, __LINE__);
-	/*else if(is_vmalloc_addr(bio))
-        	printk(KERN_ALERT "%s:%d \n", __func__, __LINE__);*/
-
 	bio_uninit(bio);
 
 	if (bs) {
@@ -289,33 +284,28 @@ static void bio_free(struct bio *bio)
 		p = bio;
 		p -= bs->front_pad;
 
-#ifdef CONFIG_HETERO_ENABLE
-                if(is_hetero_buffer_set()) {
-			mempool_free_hetero(p, bs->bio_pool);
+#ifdef CONFIG_KLOC_ENABLE
+                if(is_kloc_buffer_set()) {
+			mempool_free_kloc(p, bs->bio_pool);
                 }
 #else
 		mempool_free(p, bs->bio_pool);
 #endif
 	} else {
 
-#ifdef CONFIG_HETERO_ENABLE
-#ifdef CONFIG_HETERO_MIGRATE
-                //if(bio->is_migratable == HETERO_INIT) {
+#ifdef CONFIG_KLOC_ENABLE
+#ifdef CONFIG_KLOC_MIGRATE
 		struct page *page = vmalloc_to_page(bio);
                 bio->is_migratable = 0;
-		if(page && page->is_hetero_vmalloc == HETERO_INIT) {
-			//printk(KERN_ALERT "%s:%d \n", __func__, __LINE__);
-			//remove_kaddr_rbtree(page, bio);
-			//vfree_hetero(bio);
-			vfree_hetero_page(bio);
+		if(page && page->is_kloc_vmalloc == HETERO_INIT) {
+			kloc_vfree_page(bio);
 			return;
                 }else if(is_vmalloc_addr(bio)) {
-			//printk(KERN_ALERT "%s:%d \n", __func__, __LINE__);
                         vfree(bio);
 			return;	
                 }
-#endif //CONFIG_HETERO_MIGRATEXX
-#endif //CONFIG_HETERO_ENABLE		
+#endif //CONFIG_KLOC_MIGRATEXX
+#endif //CONFIG_KLOC_ENABLE		
                 kfree(bio);
         }
 }
@@ -582,9 +572,9 @@ EXPORT_SYMBOL(bio_alloc_bioset);
 
 
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 /**
- * bio_alloc_bioset_hetero - allocate a bio for I/O
+ * bio_alloc_bioset_kloc - allocate a bio for I/O
  * @gfp_mask:   the GFP_* mask given to the slab allocator
  * @nr_iovecs:	number of iovecs to pre-allocate
  * @bs:		the bio_set to allocate from.
@@ -618,7 +608,7 @@ EXPORT_SYMBOL(bio_alloc_bioset);
  *   RETURNS:
  *   Pointer to new bio on success, NULL on failure.
  */
-struct bio *bio_alloc_bioset_hetero(gfp_t gfp_mask, unsigned int nr_iovecs,
+struct bio *bio_alloc_bioset_kloc(gfp_t gfp_mask, unsigned int nr_iovecs,
 			     struct bio_set *bs, void *kloc_obj)
 {
 	gfp_t saved_gfp = gfp_mask;
@@ -636,21 +626,19 @@ struct bio *bio_alloc_bioset_hetero(gfp_t gfp_mask, unsigned int nr_iovecs,
 
                 p = NULL;
 
-#ifdef CONFIG_HETERO_ENABLE
-		if(is_hetero_buffer_set() && is_hetero_bio()) {
+#ifdef CONFIG_KLOC_ENABLE
+		if(is_kloc_buffer_set() && is_kloc_bio()) {
 
-#ifdef CONFIG_HETERO_MIGRATE
-                        p = kmalloc_hetero_migrate(sizeof(struct bio) + 
+#ifdef CONFIG_KLOC_MIGRATE
+                        p = kloc_kmalloc_migrate(sizeof(struct bio) + 
 			    nr_iovecs * sizeof(struct bio_vec), 
 			    gfp_mask); 
 
 			/* Insert the page to KLOC RBTREE */
 			if(p) {
 				page = vmalloc_to_page(p);
-				if(page && page->is_hetero_vmalloc == HETERO_INIT) 
+				if(page && page->is_kloc_vmalloc == HETERO_INIT) 
 				{
-					//printk(KERN_ALERT "%s:%d is_hetero_vmalloc %d\n", 
-					//	__func__, __LINE__, page->is_hetero_vmalloc);
 				        is_migratable = HETERO_INIT;	
 					/* tag the page with the kloc object */
 					page->kloc_obj = kloc_obj;
@@ -659,7 +647,7 @@ struct bio *bio_alloc_bioset_hetero(gfp_t gfp_mask, unsigned int nr_iovecs,
 			}
 			if(!p)
 #endif
-		        p = kmalloc_hetero(sizeof(struct bio) +
+		        p = kmalloc_kloc(sizeof(struct bio) +
 			    nr_iovecs * sizeof(struct bio_vec),
 			    gfp_mask);
 
@@ -704,10 +692,10 @@ struct bio *bio_alloc_bioset_hetero(gfp_t gfp_mask, unsigned int nr_iovecs,
 		    bs->rescue_workqueue)
 			gfp_mask &= ~__GFP_DIRECT_RECLAIM;
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
                 p = NULL;
-                if(is_hetero_buffer_set() && is_hetero_bio()) {
-                       p = mempool_alloc_hetero(bs->bio_pool, gfp_mask, 
+                if(is_kloc_buffer_set() && is_kloc_bio()) {
+                       p = mempool_alloc_kloc(bs->bio_pool, gfp_mask, 
 						 kloc_obj);
                 }
 #endif
@@ -718,8 +706,8 @@ struct bio *bio_alloc_bioset_hetero(gfp_t gfp_mask, unsigned int nr_iovecs,
 			punt_bios_to_rescuer(bs);
 			gfp_mask = saved_gfp;
 			p = NULL;
-			if(is_hetero_buffer_set()) {
-				p = mempool_alloc_hetero(bs->bio_pool, gfp_mask, 
+			if(is_kloc_buffer_set()) {
+				p = mempool_alloc_kloc(bs->bio_pool, gfp_mask, 
 							 kloc_obj);
 			}
 			if(!p)
@@ -735,7 +723,7 @@ struct bio *bio_alloc_bioset_hetero(gfp_t gfp_mask, unsigned int nr_iovecs,
 	bio = p + front_pad;
 	bio_init(bio, NULL, 0);
 
-#ifdef CONFIG_HETERO_MIGRATE
+#ifdef CONFIG_KLOC_MIGRATE
 	bio->is_migratable = is_migratable;
 #endif
 
@@ -761,30 +749,27 @@ struct bio *bio_alloc_bioset_hetero(gfp_t gfp_mask, unsigned int nr_iovecs,
 	bio->bi_pool = bs;
 	bio->bi_max_vecs = nr_iovecs;
 	bio->bi_io_vec = bvl;
-#ifdef CONFIG_HETERO_ENABLE
-	if(is_hetero_buffer_set() && is_hetero_bio() && kloc_obj) {
+#ifdef CONFIG_KLOC_ENABLE
+	if(is_kloc_buffer_set() && is_kloc_bio() && kloc_obj) {
                 bio->kloc_obj = kloc_obj;
 		bio->is_migratable = HETERO_INIT;
-		//printk(KERN_ALERT "%s:%d is_hetero_vmalloc %d\n", 
-		//	__func__, __LINE__, page->is_hetero_vmalloc);
 		//if(bs)
 		  //  bs->kloc_obj = kloc_obj;
-		//debug_kloc_obj(kloc_obj);
         }
 #endif
 	return bio;
 
 err_free:
-#ifdef CONFIG_HETERO_ENABLE
-	if(is_hetero_buffer_set()) {
-		mempool_free_hetero(p, bs->bio_pool);
+#ifdef CONFIG_KLOC_ENABLE
+	if(is_kloc_buffer_set()) {
+		mempool_free_kloc(p, bs->bio_pool);
 	}
 #else
 	mempool_free(p, bs->bio_pool);
 #endif
 	return NULL;
 }
-EXPORT_SYMBOL(bio_alloc_bioset_hetero);
+EXPORT_SYMBOL(bio_alloc_bioset_kloc);
 #endif
 
 
@@ -813,10 +798,6 @@ EXPORT_SYMBOL(zero_fill_bio);
  **/
 void bio_put(struct bio *bio)
 {
-	if(bio && bio->is_migratable == HETERO_INIT) 
-        	printk(KERN_ALERT "%s:%d \n", __func__, __LINE__);
-
-
 	if (!bio_flagged(bio, BIO_REFFED)) 
 		bio_free(bio);
 	else {
@@ -951,7 +932,7 @@ struct bio *bio_clone_bioset(struct bio *bio_src, gfp_t gfp_mask,
 	bio->bi_write_hint	= bio_src->bi_write_hint;
 	bio->bi_iter.bi_sector	= bio_src->bi_iter.bi_sector;
 	bio->bi_iter.bi_size	= bio_src->bi_iter.bi_size;
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 	bio->kloc_obj = NULL;
 #endif
 	switch (bio_op(bio)) {
@@ -1307,15 +1288,14 @@ static struct bio_map_data *bio_alloc_map_data(struct iov_iter *data,
 	if (data->nr_segs > UIO_MAXIOV)
 		return NULL;
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 	bmd = NULL;
-	if(is_hetero_buffer_set() && is_hetero_bio()) {
-#ifdef CONFIG_HETERO_MIGRATEXX
-		printk(KERN_ALERT "%s : %d \n",__func__, __LINE__);
-		bmd = vmalloc_hetero(sizeof(struct bio_map_data) + sizeof(struct iovec) * data->nr_segs);
+	if(is_kloc_buffer_set() && is_kloc_bio()) {
+#ifdef CONFIG_KLOC_MIGRATEXX
+		bmd = vmalloc_kloc(sizeof(struct bio_map_data) + sizeof(struct iovec) * data->nr_segs);
 		if(!bmd)
 #endif
-		bmd = kmalloc_hetero(sizeof(struct bio_map_data) + 
+		bmd = kmalloc_kloc(sizeof(struct bio_map_data) + 
 				sizeof(struct iovec) * data->nr_segs, gfp_mask);
         }
         if(!bmd)
@@ -1428,11 +1408,10 @@ int bio_uncopy_user(struct bio *bio)
 			bio_free_pages(bio);
 	}
 
-#ifdef CONFIG_HETERO_ENABLE
-        if(is_hetero_buffer_set()) {
-                printk(KERN_ALERT "%s : %d \n",__func__, __LINE__);
-#ifdef CONFIG_HETERO_MIGRATEXX		
-                vfree_hetero(bmd);
+#ifdef CONFIG_KLOC_ENABLE
+        if(is_kloc_buffer_set()) {
+#ifdef CONFIG_KLOC_MIGRATEXX		
+                kloc_vfree(bmd);
 #else
 		kfree(bmd);
 #endif		
@@ -2143,10 +2122,9 @@ mempool_t *biovec_create_pool(int pool_entries)
 {
 	struct biovec_slab *bp = bvec_slabs + BVEC_POOL_MAX;
 
-#ifdef CONFIG_HETERO_ENABLE
-	if(is_hetero_buffer_set()) {
-		printk(KERN_ALERT "%s : %d \n", __func__, __LINE__);
-		return mempool_create_slab_pool_hetero(pool_entries, bp->slab);
+#ifdef CONFIG_KLOC_ENABLE
+	if(is_kloc_buffer_set()) {
+		return mempool_create_slab_pool_kloc(pool_entries, bp->slab);
 	}
 #endif
 
@@ -2211,10 +2189,10 @@ struct bio_set *bioset_create(unsigned int pool_size,
 		return NULL;
 	}
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 	bs->bio_pool = NULL;
-        if(is_hetero_buffer_set() && is_hetero_bio()) {
-                bs->bio_pool = mempool_create_slab_pool_hetero(pool_size, bs->bio_slab);
+        if(is_kloc_buffer_set() && is_kloc_bio()) {
+                bs->bio_pool = mempool_create_slab_pool_kloc(pool_size, bs->bio_slab);
         }
 	if(!bs->bio_pool)
 #endif

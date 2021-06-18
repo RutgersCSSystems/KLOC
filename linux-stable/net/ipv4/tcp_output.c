@@ -3597,10 +3597,10 @@ void tcp_send_ack(struct sock *sk)
 	 * tcp_transmit_skb() will set the ownership to this
 	 * sock.
 	 */
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
         buff = NULL;
         if(sk && (is_kloc_obj(sk->kloc_obj))){
-		buff = alloc_skb_hetero(MAX_TCP_HEADER,
+		buff = alloc_skb_kloc(MAX_TCP_HEADER,
 			 sk_gfp_mask(sk, GFP_ATOMIC | __GFP_NOWARN), 
 			 sk->kloc_obj);
         }

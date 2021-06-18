@@ -445,9 +445,9 @@ ssize_t vfs_read(struct file *file, char __user *buf, size_t count, loff_t *pos)
 	if (unlikely(!access_ok(VERIFY_WRITE, buf, count)))
 		return -EFAULT;
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
         if(current && current->mm &&
-                current->mm->hetero_task == HETERO_PROC) {
+                current->mm->kloc_task == HETERO_PROC) {
 		struct inode *inode = file_inode(file);
                 if(!execute_ok(inode))
                        set_fsmap_kloc_obj(inode->i_mapping);
@@ -562,15 +562,12 @@ ssize_t vfs_write(struct file *file, const char __user *buf, size_t count, loff_
 		inc_syscw(current);
 		file_end_write(file);
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
         if(current && current->mm &&
-                current->mm->hetero_task == HETERO_PROC) {
+                current->mm->kloc_task == HETERO_PROC) {
 		struct inode *inode = file_inode(file);
 		
 		if(inode && inode->i_mapping) {
-
-			//if(!is_kloc_obj(inode->i_mapping))
-			//	debug_kloc_obj(inode->i_mapping);
 	                if(!execute_ok(inode))
         	           	set_fsmap_kloc_obj(inode->i_mapping);
 		}
@@ -1006,12 +1003,10 @@ ssize_t vfs_readv(struct file *file, const struct iovec __user *vec,
 	struct iov_iter iter;
 	ssize_t ret;
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
         if(current && current->mm &&
-                current->mm->hetero_task == HETERO_PROC) {
+                current->mm->kloc_task == HETERO_PROC) {
 		struct inode *inode = file_inode(file);
-                //if(!execute_ok(inode))
-                       //set_fsmap_kloc_obj(inode->i_mapping);
         }
 #endif
 	ret = import_iovec(READ, vec, vlen, ARRAY_SIZE(iovstack), &iov, &iter);
@@ -1031,9 +1026,9 @@ static ssize_t vfs_writev(struct file *file, const struct iovec __user *vec,
 	struct iov_iter iter;
 	ssize_t ret;
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
         if(current && current->mm &&
-                current->mm->hetero_task == HETERO_PROC) {
+                current->mm->kloc_task == HETERO_PROC) {
                 struct inode *inode = file_inode(file);
                 //if(!execute_ok(inode))
                   //      set_fsmap_kloc_obj(inode->i_mapping);

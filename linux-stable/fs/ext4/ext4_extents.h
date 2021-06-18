@@ -116,7 +116,7 @@ struct ext4_ext_path {
 	struct ext4_extent_idx		*p_idx;
 	struct ext4_extent_header	*p_hdr;
 	struct buffer_head		*p_bh;
-#ifdef CONFIG_HETERO_MIGRATE
+#ifdef CONFIG_KLOC_MIGRATE
 	__u8				is_migratable;
 #endif
 };

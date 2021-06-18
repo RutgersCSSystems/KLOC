@@ -222,20 +222,20 @@ static inline int page_cache_add_speculative(struct page *page, int count)
 
 #ifdef CONFIG_NUMA
 extern struct page *__page_cache_alloc(gfp_t gfp);
-extern struct page *__page_cache_alloc_hetero(gfp_t gfp, struct address_space *x);
+extern struct page *__page_cache_alloc_kloc(gfp_t gfp, struct address_space *x);
 #else
 static inline struct page *__page_cache_alloc(gfp_t gfp)
 {
 	return alloc_pages(gfp, 0);
 }
-#ifdef CONFIG_HETERO_ENABLE
-static inline struct page *__page_cache_alloc_hetero(gfp_t gfp,
+#ifdef CONFIG_KLOC_ENABLE
+static inline struct page *__page_cache_alloc_kloc(gfp_t gfp,
 					struct address_space *x)
 {
-	if(!is_hetero_buffer_set())
+	if(!is_kloc_buffer_set())
 		return alloc_pages(gfp, 0);
 
-	return alloc_pages_hetero(gfp, 0);
+	return alloc_pages_kloc(gfp, 0);
 }
 #endif
 #endif
@@ -244,13 +244,13 @@ static inline struct page *page_cache_alloc(struct address_space *x)
 {
 	return __page_cache_alloc(mapping_gfp_mask(x));
 }
-#ifdef CONFIG_HETERO_ENABLE
-static inline struct page *page_cache_alloc_hetero(struct address_space *x)
+#ifdef CONFIG_KLOC_ENABLE
+static inline struct page *page_cache_alloc_kloc(struct address_space *x)
 {
-	if(!is_hetero_buffer_set())
+	if(!is_kloc_buffer_set())
 		return __page_cache_alloc(mapping_gfp_mask(x));
 
-        return __page_cache_alloc_hetero(mapping_gfp_mask(x), x);
+        return __page_cache_alloc_kloc(mapping_gfp_mask(x), x);
 }
 #endif
 
@@ -639,10 +639,10 @@ int add_to_page_cache_locked(struct page *page, struct address_space *mapping,
 int add_to_page_cache_lru(struct page *page, struct address_space *mapping,
 				pgoff_t index, gfp_t gfp_mask);
 extern void delete_from_page_cache(struct page *page);
-extern void delete_from_page_cache_hetero(struct page *page);
+extern void delete_from_page_cache_kloc(struct page *page);
 extern void __delete_from_page_cache(struct page *page, void *shadow);
 int replace_page_cache_page(struct page *old, struct page *new, gfp_t gfp_mask);
-int replace_page_cache_page_hetero(struct page *old, struct page *new, gfp_t gfp_mask);
+int replace_page_cache_page_kloc(struct page *old, struct page *new, gfp_t gfp_mask);
 
 void delete_from_page_cache_batch(struct address_space *mapping,
 				  struct pagevec *pvec);

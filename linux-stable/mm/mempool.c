@@ -449,9 +449,9 @@ void *mempool_alloc_slab(gfp_t gfp_mask, void *pool_data)
 {
 	struct kmem_cache *mem = pool_data;
 	VM_BUG_ON(mem->ctor);
-#ifdef CONFIG_HETERO_ENABLE
-        if(is_hetero_buffer_set()) {
-		return kmem_cache_alloc_hetero(mem, gfp_mask);
+#ifdef CONFIG_KLOC_ENABLE
+        if(is_kloc_buffer_set()) {
+		return kmem_cache_alloc_kloc(mem, gfp_mask);
         }
 #endif
 	return kmem_cache_alloc(mem, gfp_mask);
@@ -472,12 +472,12 @@ EXPORT_SYMBOL(mempool_free_slab);
 void *mempool_kmalloc(gfp_t gfp_mask, void *pool_data)
 {
 	size_t size = (size_t)pool_data;
-#ifdef CONFIG_HETERO_ENABLE
-        if(is_hetero_buffer_set()) {
-#ifdef CONFIG_HETERO_MIGRATEXX
-		return kmalloc_hetero_migrate(size, gfp_mask);
+#ifdef CONFIG_KLOC_ENABLE
+        if(is_kloc_buffer_set()) {
+#ifdef CONFIG_KLOC_MIGRATEXX
+		return kloc_kmalloc_migrate(size, gfp_mask);
 #else
-		return kmalloc_hetero(size, gfp_mask);
+		return kmalloc_kloc(size, gfp_mask);
 #endif
         }
 #endif
@@ -493,7 +493,7 @@ void mempool_kfree(void *element, void *pool_data)
 EXPORT_SYMBOL(mempool_kfree);
 
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 
 /**
  * mempool_alloc - allocate an element from a specific memory pool
@@ -507,7 +507,7 @@ EXPORT_SYMBOL(mempool_kfree);
  * fail if called from an IRQ context.)
  * Note: using __GFP_ZERO is not supported.
  */
-void *mempool_alloc_hetero(mempool_t *pool, gfp_t gfp_mask, void *kloc_obj)
+void *mempool_alloc_kloc(mempool_t *pool, gfp_t gfp_mask, void *kloc_obj)
 {
 	void *element;
 	unsigned long flags;
@@ -524,13 +524,13 @@ void *mempool_alloc_hetero(mempool_t *pool, gfp_t gfp_mask, void *kloc_obj)
 	gfp_temp = gfp_mask & ~(__GFP_DIRECT_RECLAIM|__GFP_IO);
 
 repeat_alloc:
-#ifdef CONFIG_HETERO_ENABLE
-        if (kloc_obj && is_hetero_buffer_set() && is_hetero_cacheobj(kloc_obj)){
+#ifdef CONFIG_KLOC_ENABLE
+        if (kloc_obj && is_kloc_buffer_set() && is_kloc_cacheobj(kloc_obj)){
 		struct kmem_cache *s = (struct kmem_cache *)pool->pool_data;
 		if(s) {
 			update_kloc_obj(s, kloc_obj);
 		}else {
-		        hetero_warn("%s:%d ERROR... \n", __func__, __LINE__);
+		        kloc_warn("%s:%d ERROR... \n", __func__, __LINE__);
 		}
         }
 #endif
@@ -584,7 +584,7 @@ repeat_alloc:
 	finish_wait(&pool->wait, &wait);
 	goto repeat_alloc;
 }
-EXPORT_SYMBOL(mempool_alloc_hetero);
+EXPORT_SYMBOL(mempool_alloc_kloc);
 
 /**
  * mempool_free - return an element to the pool.
@@ -594,7 +594,7 @@ EXPORT_SYMBOL(mempool_alloc_hetero);
  *
  * this function only sleeps if the free_fn() function sleeps.
  */
-void mempool_free_hetero(void *element, mempool_t *pool)
+void mempool_free_kloc(void *element, mempool_t *pool)
 {
 	unsigned long flags;
 
@@ -646,42 +646,41 @@ void mempool_free_hetero(void *element, mempool_t *pool)
 	}
 	pool->free(element, pool->pool_data);
 }
-EXPORT_SYMBOL(mempool_free_hetero);
+EXPORT_SYMBOL(mempool_free_kloc);
 
 
 
 /*
  * A commonly used alloc and free fn.
  */
-void *mempool_alloc_slab_hetero(gfp_t gfp_mask, void *pool_data)
+void *mempool_alloc_slab_kloc(gfp_t gfp_mask, void *pool_data)
 {
 	struct kmem_cache *mem = pool_data;
 	VM_BUG_ON(mem->ctor);
-	return kmem_cache_alloc_hetero(mem, gfp_mask);
+	return kmem_cache_alloc_kloc(mem, gfp_mask);
 }
-EXPORT_SYMBOL(mempool_alloc_slab_hetero);
+EXPORT_SYMBOL(mempool_alloc_slab_kloc);
 
-void mempool_free_slab_hetero(void *element, void *pool_data)
+void mempool_free_slab_kloc(void *element, void *pool_data)
 {
 	struct kmem_cache *mem = pool_data;
 	kmem_cache_free(mem, element);
 }
-EXPORT_SYMBOL(mempool_free_slab_hetero);
+EXPORT_SYMBOL(mempool_free_slab_kloc);
 
 
-void *mempool_kmalloc_hetero(gfp_t gfp_mask, void *pool_data)
+void *mempool_kmalloc_kloc(gfp_t gfp_mask, void *pool_data)
 {
 	size_t size = (size_t)pool_data;
-	printk(KERN_ALERT  "%s:%d\n", __FUNCTION__, __LINE__);
-	return kmalloc_hetero(size, gfp_mask);
+	return kmalloc_kloc(size, gfp_mask);
 }
-EXPORT_SYMBOL(mempool_kmalloc_hetero);
+EXPORT_SYMBOL(mempool_kmalloc_kloc);
 
-void mempool_kfree_hetero(void *element, void *pool_data)
+void mempool_kfree_kloc(void *element, void *pool_data)
 {
 	kfree(element);
 }
-EXPORT_SYMBOL(mempool_kfree_hetero);
+EXPORT_SYMBOL(mempool_kfree_kloc);
 #endif
 
 
@@ -692,10 +691,9 @@ EXPORT_SYMBOL(mempool_kfree_hetero);
 void *mempool_alloc_pages(gfp_t gfp_mask, void *pool_data)
 {
 	int order = (int)(long)pool_data;
-#ifdef CONFIG_HETERO_ENABLE
-	if(is_hetero_buffer_set()){
-		printk(KERN_ALERT "%s:%d \n", __func__, __LINE__);
-		return alloc_pages_hetero(gfp_mask, order, 0);
+#ifdef CONFIG_KLOC_ENABLE
+	if(is_kloc_buffer_set()){
+		return alloc_pages_kloc(gfp_mask, order, 0);
 	}
 #endif
 	return alloc_pages(gfp_mask, order);

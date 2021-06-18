@@ -534,10 +534,10 @@ struct page *devfs_get_cache_page(struct address_space *mapping,
 #endif
 
 #if defined(_DEVFS_MEMGMT)
-	//page = hetero_alloc_IO(gfp_mask & ~gfp_notmask, 0, 0);
+	//page = kloc_alloc_IO(gfp_mask & ~gfp_notmask, 0, 0);
 	page = devfs_alloc_page(gfp_mask & ~gfp_notmask, 0, 0);
 	if(!page) {
-		printk("hetero_alloc failed \n");	
+		printk("kloc_alloc failed \n");	
 		page = __page_cache_alloc(gfp_mask & ~gfp_notmask);
 	}
 #else

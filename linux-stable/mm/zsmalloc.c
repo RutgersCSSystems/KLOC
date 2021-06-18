@@ -2553,7 +2553,7 @@ static void __exit zs_exit(void)
 
 
 #ifdef _HETERO_ZSMALLOC
-static struct zspage *isolate_zspage_hetero(struct size_class *class, bool source)
+static struct zspage *isolate_zspage_kloc(struct size_class *class, bool source)
 {
 	int i;
 	struct zspage *zspage;
@@ -2583,7 +2583,7 @@ static struct zspage *isolate_zspage_hetero(struct size_class *class, bool sourc
  * Based on the number of unused allocated objects calculate
  * and return the number of pages that we can free.
  */
-static unsigned long zs_can_migrate_hetero(struct size_class *class)
+static unsigned long zs_can_migrate_kloc(struct size_class *class)
 {
 	unsigned long obj_wasted;
 	unsigned long obj_allocated = zs_stat_get(class, OBJ_ALLOCATED);
@@ -2598,7 +2598,7 @@ static unsigned long zs_can_migrate_hetero(struct size_class *class)
 	return obj_wasted * class->pages_per_zspage;
 }
 
-static int migrate_zspage_hetero(struct zs_pool *pool, struct size_class *class,
+static int migrate_zspage_kloc(struct zs_pool *pool, struct size_class *class,
 				struct zs_compact_control *cc)
 {
 	unsigned long used_obj, free_obj;
@@ -2653,7 +2653,7 @@ static int migrate_zspage_hetero(struct zs_pool *pool, struct size_class *class,
 }
 
 
-static void __zs_migrate_hetero(struct zs_pool *pool, struct size_class *class)
+static void __zs_migrate_kloc(struct zs_pool *pool, struct size_class *class)
 {
 	struct zs_compact_control cc;
 	struct zspage *src_zspage;
@@ -2661,11 +2661,11 @@ static void __zs_migrate_hetero(struct zs_pool *pool, struct size_class *class)
 
 	spin_lock(&class->lock);
 
-	while ((src_zspage = isolate_zspage_hetero(class, true))) {
+	while ((src_zspage = isolate_zspage_kloc(class, true))) {
 
 
 #ifdef _ENABLE_OBJ_HETERO_CHECK
-		if (!zs_can_migrate_hetero(class)) {
+		if (!zs_can_migrate_kloc(class)) {
 			//printk(KERN_ALERT "%s:%d \n", __func__, __LINE__);
 			break;
 		}
@@ -2673,7 +2673,7 @@ static void __zs_migrate_hetero(struct zs_pool *pool, struct size_class *class)
 		cc.obj_idx = 0;
 		cc.s_page = get_first_page(src_zspage);
 
-		while ((dst_zspage = isolate_zspage_hetero(class, false))) {
+		while ((dst_zspage = isolate_zspage_kloc(class, false))) {
 
 			cc.d_page = get_first_page(dst_zspage);
 
@@ -2681,7 +2681,7 @@ static void __zs_migrate_hetero(struct zs_pool *pool, struct size_class *class)
 			 * If there is no more space in dst_page, resched
 			 * and see if anyone had allocated another zspage.
 			 */
-			if (!migrate_zspage_hetero(pool, class, &cc)) {
+			if (!migrate_zspage_kloc(pool, class, &cc)) {
 				printk(KERN_ALERT "%s:%d Migration failed \n",
 					 __func__,  __LINE__);
 				break;
@@ -2718,7 +2718,7 @@ static void __zs_migrate_hetero(struct zs_pool *pool, struct size_class *class)
 	spin_unlock(&class->lock);
 }
 
-unsigned long zs_migrate_hetero(struct zs_pool *pool)
+unsigned long zs_migrate_kloc(struct zs_pool *pool)
 {
 	int i;
 	struct size_class *class;
@@ -2735,7 +2735,7 @@ unsigned long zs_migrate_hetero(struct zs_pool *pool)
 		if (class->index != i)
 			continue;
 		//printk("%s:%d \n", __func__, __LINE__);
-		__zs_migrate_hetero(pool, class);
+		__zs_migrate_kloc(pool, class);
 	}
 	/*if(pool->stats.pages_compacted)
 		printk("%s:%d page compacted %d \n", __func__, __LINE__, 
@@ -2743,7 +2743,7 @@ unsigned long zs_migrate_hetero(struct zs_pool *pool)
 
 	return pool->stats.pages_compacted;
 }
-EXPORT_SYMBOL_GPL(zs_migrate_hetero);
+EXPORT_SYMBOL_GPL(zs_migrate_kloc);
 
 
 
@@ -2755,7 +2755,7 @@ EXPORT_SYMBOL_GPL(zs_migrate_hetero);
  * the pool (not yet implemented). This function returns fullness
  * status of the given page.
  */
-static enum fullness_group get_fullness_group_hetero(struct size_class *class,
+static enum fullness_group get_fullness_group_kloc(struct size_class *class,
 						struct zspage *zspage)
 {
 	int inuse, objs_per_zspage;
@@ -2782,7 +2782,7 @@ static enum fullness_group get_fullness_group_hetero(struct size_class *class,
 /*
  * Allocate a zspage for the given size class
  */
-static struct zspage *alloc_zspage_hetero(struct zs_pool *pool,
+static struct zspage *alloc_zspage_kloc(struct zs_pool *pool,
 					struct size_class *class,
 					gfp_t gfp)
 {
@@ -2800,7 +2800,7 @@ static struct zspage *alloc_zspage_hetero(struct zs_pool *pool,
 	for (i = 0; i < class->pages_per_zspage; i++) {
 		struct page *page;
 
-		page = alloc_pages_hetero(gfp, 0);
+		page = alloc_pages_kloc(gfp, 0);
 		if (!page) {
 			while (--i >= 0) {
 				dec_zone_page_state(pages[i], NR_ZSPAGES);
@@ -2817,7 +2817,7 @@ static struct zspage *alloc_zspage_hetero(struct zs_pool *pool,
 	init_zspage(class, zspage);
 
 	/*Set hetero page */
-	zspage->heteropg = 1;
+	zspage->klocpg = 1;
 
 	return zspage;
 }
@@ -2834,7 +2834,7 @@ static struct zspage *alloc_zspage_hetero(struct zs_pool *pool,
  * otherwise 0.
  * Allocation requests with size > ZS_MAX_ALLOC_SIZE will fail.
  */
-struct zspage *zs_fill_hetero_pages(struct zs_pool *pool, 
+struct zspage *zs_fill_kloc_pages(struct zs_pool *pool, 
 				gfp_t gfp, 
 				unsigned int pages)
 {
@@ -2878,7 +2878,7 @@ struct zspage *zs_fill_hetero_pages(struct zs_pool *pool,
 
 	for (idx = 0; idx < pages; idx++) {
 		zspage = NULL;
-		zspage = alloc_zspage_hetero(pool, class, gfp);
+		zspage = alloc_zspage_kloc(pool, class, gfp);
 		if (!zspage) {
 #if 0
 			cache_free_handle(pool, handle);
@@ -2889,7 +2889,7 @@ struct zspage *zs_fill_hetero_pages(struct zs_pool *pool,
 #if 0	
 		obj = obj_malloc(class, zspage, handle);
 #endif
-		newfg = get_fullness_group_hetero(class, zspage);
+		newfg = get_fullness_group_kloc(class, zspage);
 		insert_zspage(class, zspage, newfg);
 		set_zspage_mapping(zspage, class->index, newfg);
 #if 0
@@ -2906,7 +2906,7 @@ struct zspage *zs_fill_hetero_pages(struct zs_pool *pool,
 	spin_unlock(&class->lock);
 	return zspage;
 }
-EXPORT_SYMBOL_GPL(zs_fill_hetero_pages);
+EXPORT_SYMBOL_GPL(zs_fill_kloc_pages);
 #endif
 
 

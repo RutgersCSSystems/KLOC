@@ -136,7 +136,7 @@ bool slab_is_available(void);
 
 extern bool usercopy_fallback;
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 void update_kloc_obj(struct kmem_cache *s, void *obj);
 #endif
 
@@ -187,8 +187,8 @@ void * __must_check __krealloc(const void *, size_t, gfp_t);
 void * __must_check krealloc(const void *, size_t, gfp_t);
 
 void kfree(const void *);
-#ifdef CONFIG_HETERO_MIGRATE
-void kfree_hetero_migrate(const void *);
+#ifdef CONFIG_KLOC_MIGRATE
+void kfree_kloc_migrate(const void *);
 #endif
 void kzfree(const void *);
 size_t ksize(const void *);
@@ -310,13 +310,13 @@ extern struct kmem_cache *kmalloc_caches[KMALLOC_SHIFT_HIGH + 1];
 extern struct kmem_cache *kmalloc_dma_caches[KMALLOC_SHIFT_HIGH + 1];
 #endif
 
-#ifdef CONFIG_HETERO_ENABLE
-void *__kmalloc_hetero(size_t size, gfp_t flags) __assume_kmalloc_alignment __malloc;
-void *kmem_cache_alloc_hetero(struct kmem_cache *, gfp_t flags) __assume_slab_alignment __malloc;
-void *kmem_cache_alloc_hetero_buf(struct kmem_cache *, gfp_t flags) __assume_slab_alignment __malloc;
-static __always_inline void *kmalloc_hetero(size_t size, gfp_t flags);
-static inline void *kzalloc_hetero(size_t size, gfp_t flags);
-static inline void *kmem_cache_zalloc_hetero(struct kmem_cache *k, gfp_t flags);
+#ifdef CONFIG_KLOC_ENABLE
+void *__kmalloc_kloc(size_t size, gfp_t flags) __assume_kmalloc_alignment __malloc;
+void *kmem_cache_alloc_kloc(struct kmem_cache *, gfp_t flags) __assume_slab_alignment __malloc;
+void *kmem_cache_alloc_kloc_buf(struct kmem_cache *, gfp_t flags) __assume_slab_alignment __malloc;
+static __always_inline void *kmalloc_kloc(size_t size, gfp_t flags);
+static inline void *kzalloc_kloc(size_t size, gfp_t flags);
+static inline void *kmem_cache_zalloc_kloc(struct kmem_cache *k, gfp_t flags);
 #endif
 
 
@@ -398,15 +398,15 @@ static __always_inline void kfree_bulk(size_t size, void **p)
 #ifdef CONFIG_NUMA
 
 void *__kmalloc_node(size_t size, gfp_t flags, int node) __assume_kmalloc_alignment __malloc;
-void *__kmalloc_node_hetero(size_t size, gfp_t flags, int node) __assume_kmalloc_alignment __malloc;
+void *__kmalloc_node_kloc(size_t size, gfp_t flags, int node) __assume_kmalloc_alignment __malloc;
 
 void *kmem_cache_alloc_node(struct kmem_cache *, gfp_t flags, int node) __assume_slab_alignment __malloc;
-void *kmem_cache_alloc_node_hetero(struct kmem_cache *, gfp_t flags, int node) __assume_slab_alignment __malloc;
+void *kmem_cache_alloc_node_kloc(struct kmem_cache *, gfp_t flags, int node) __assume_slab_alignment __malloc;
 #else
 
-static __always_inline void *__kmalloc_node_hetero(size_t size, gfp_t flags, int node)
+static __always_inline void *__kmalloc_node_kloc(size_t size, gfp_t flags, int node)
 {
-	return __kmalloc_hetero(size, flags);
+	return __kmalloc_kloc(size, flags);
 }
 
 static __always_inline void *__kmalloc_node(size_t size, gfp_t flags, int node)
@@ -419,22 +419,22 @@ static __always_inline void *kmem_cache_alloc_node(struct kmem_cache *s, gfp_t f
 	return kmem_cache_alloc(s, flags);
 }
 
-static __always_inline void *kmem_cache_alloc_node_hetero(struct kmem_cache *s, gfp_t flags, int node)
+static __always_inline void *kmem_cache_alloc_node_kloc(struct kmem_cache *s, gfp_t flags, int node)
 {
-	return kmem_cache_alloc_hetero(s, flags);
+	return kmem_cache_alloc_kloc(s, flags);
 }
 
 #endif
 
 #ifdef CONFIG_TRACING
 extern void *kmem_cache_alloc_trace(struct kmem_cache *, gfp_t, size_t) __assume_slab_alignment __malloc;
-extern void *kmem_cache_alloc_trace_hetero(struct kmem_cache *, gfp_t, size_t) __assume_slab_alignment __malloc;
+extern void *kmem_cache_alloc_trace_kloc(struct kmem_cache *, gfp_t, size_t) __assume_slab_alignment __malloc;
 #ifdef CONFIG_NUMA
 extern void *kmem_cache_alloc_node_trace(struct kmem_cache *s,
 					   gfp_t gfpflags,
 					   int node, size_t size) __assume_slab_alignment __malloc;
 
-extern void *kmem_cache_alloc_node_trace_hetero(struct kmem_cache *s,
+extern void *kmem_cache_alloc_node_trace_kloc(struct kmem_cache *s,
                                            gfp_t gfpflags,
                                            int node, size_t size) __assume_slab_alignment __malloc;
 #else
@@ -447,11 +447,11 @@ kmem_cache_alloc_node_trace(struct kmem_cache *s,
 }
 
 static __always_inline void *
-kmem_cache_alloc_node_trace_hetero(struct kmem_cache *s,
+kmem_cache_alloc_node_trace_kloc(struct kmem_cache *s,
 			      gfp_t gfpflags,
 			      int node, size_t size)
 {
-	return kmem_cache_alloc_trace_hetero(s, gfpflags, size);
+	return kmem_cache_alloc_trace_kloc(s, gfpflags, size);
 }
 
 #endif /* CONFIG_NUMA */
@@ -552,11 +552,6 @@ static __always_inline void *kmalloc_large(size_t size, gfp_t flags)
 static __always_inline void *kmalloc(size_t size, gfp_t flags)
 {
 
-#ifdef CONFIG_HETERO_ENABLEXX
-        if(is_hetero_buffer_set()) {
-            return kmalloc_hetero(size, flags);
-	}
-#endif
 	if (__builtin_constant_p(size)) {
 		if (size > KMALLOC_MAX_CACHE_SIZE)
 			return kmalloc_large(size, flags);
@@ -615,7 +610,7 @@ static __always_inline void *kmalloc_node(size_t size, gfp_t flags, int node)
 }
 
 
-static __always_inline void *kmalloc_node_hetero(size_t size, gfp_t flags, int node)
+static __always_inline void *kmalloc_node_kloc(size_t size, gfp_t flags, int node)
 {
 #ifndef CONFIG_SLOB
 	if (__builtin_constant_p(size) &&
@@ -628,7 +623,7 @@ static __always_inline void *kmalloc_node_hetero(size_t size, gfp_t flags, int n
 		return kmem_cache_alloc_node_trace(kmalloc_caches[i],flags, node, size);
 	}
 #endif
-	return __kmalloc_node_hetero(size, flags, node);
+	return __kmalloc_node_kloc(size, flags, node);
 }
 
 
@@ -703,10 +698,6 @@ int memcg_update_all_caches(int num_memcgs);
 static inline void *kmalloc_array(size_t n, size_t size, gfp_t flags)
 {
 
-#ifdef CONFIG_HETERO_ENABLE
-        if(is_hetero_buffer_set()) {
-        }
-#endif
 	if (size != 0 && n > SIZE_MAX / size)
 		return NULL;
 	if (__builtin_constant_p(n) && __builtin_constant_p(size))
@@ -722,10 +713,6 @@ static inline void *kmalloc_array(size_t n, size_t size, gfp_t flags)
  */
 static inline void *kcalloc(size_t n, size_t size, gfp_t flags)
 {
-#ifdef CONFIG_HETERO_ENABLE
-        if(is_hetero_buffer_set()) {
-        }
-#endif
 	return kmalloc_array(n, size, flags | __GFP_ZERO);
 }
 
@@ -741,19 +728,14 @@ extern void *__kmalloc_track_caller(size_t, gfp_t, unsigned long);
 #define kmalloc_track_caller(size, flags) \
 	__kmalloc_track_caller(size, flags, _RET_IP_)
 
-extern void *__kmalloc_track_caller_hetero(size_t, gfp_t, unsigned long);
-#define kmalloc_track_caller_hetero(size, flags) \
-	__kmalloc_track_caller_hetero(size, flags, _RET_IP_)
+extern void *__kmalloc_track_caller_kloc(size_t, gfp_t, unsigned long);
+#define kmalloc_track_caller_kloc(size, flags) \
+	__kmalloc_track_caller_kloc(size, flags, _RET_IP_)
 
 
 static inline void *kmalloc_array_node(size_t n, size_t size, gfp_t flags,
 				       int node)
 {
-#ifdef CONFIG_HETERO_ENABLE
-        if(is_hetero_buffer_set()) {
-		 printk(KERN_ALERT "%s : %d \n", __func__, __LINE__);
-        }
-#endif
 	if (size != 0 && n > SIZE_MAX / size)
 		return NULL;
 	if (__builtin_constant_p(n) && __builtin_constant_p(size))
@@ -763,11 +745,6 @@ static inline void *kmalloc_array_node(size_t n, size_t size, gfp_t flags,
 
 static inline void *kcalloc_node(size_t n, size_t size, gfp_t flags, int node)
 {
-#ifdef CONFIG_HETERO_ENABLE
-        if(is_hetero_buffer_set()) {
-		printk(KERN_ALERT "%s : %d \n", __func__, __LINE__);
-        }
-#endif
 	return kmalloc_array_node(n, size, flags | __GFP_ZERO, node);
 }
 
@@ -779,9 +756,9 @@ extern void *__kmalloc_node_track_caller(size_t, gfp_t, int, unsigned long);
 			_RET_IP_)
 
 
-extern void *__kmalloc_node_track_caller_hetero(size_t, gfp_t, int, unsigned long);
-#define kmalloc_node_track_caller_hetero(size, flags, node) \
-	__kmalloc_node_track_caller_hetero(size, flags, node, \
+extern void *__kmalloc_node_track_caller_kloc(size_t, gfp_t, int, unsigned long);
+#define kmalloc_node_track_caller_kloc(size, flags, node) \
+	__kmalloc_node_track_caller_kloc(size, flags, node, \
 			_RET_IP_)
 
 
@@ -790,8 +767,8 @@ extern void *__kmalloc_node_track_caller_hetero(size_t, gfp_t, int, unsigned lon
 #define kmalloc_node_track_caller(size, flags, node) \
 	kmalloc_track_caller(size, flags)
 
-#define kmalloc_node_track_caller_hetero(size, flags, node) \
-	kmalloc_track_caller_hetero(size, flags)
+#define kmalloc_node_track_caller_kloc(size, flags, node) \
+	kmalloc_track_caller_kloc(size, flags)
 
 
 #endif /* CONFIG_NUMA */
@@ -802,10 +779,6 @@ extern void *__kmalloc_node_track_caller_hetero(size_t, gfp_t, int, unsigned lon
 
 static inline void *kmem_cache_zalloc(struct kmem_cache *k, gfp_t flags)
 {
-#ifdef CONFIG_HETERO_ENABLEXX
-        if(is_hetero_buffer_set())
-            return kmem_cache_zalloc_hetero(k, flags);
-#endif
 	return kmem_cache_alloc(k, flags | __GFP_ZERO);
 }
 
@@ -818,10 +791,6 @@ static inline void *kmem_cache_zalloc(struct kmem_cache *k, gfp_t flags)
 
 static inline void *kzalloc(size_t size, gfp_t flags)
 {
-#ifdef CONFIG_HETERO_ENABLEXX
-        if(is_hetero_buffer_set())
-            return kzalloc_hetero(size, flags);
-#endif
 	return kmalloc(size, flags | __GFP_ZERO);
 }
 
@@ -833,24 +802,20 @@ static inline void *kzalloc(size_t size, gfp_t flags)
  */
 static inline void *kzalloc_node(size_t size, gfp_t flags, int node)
 {
-#ifdef CONFIG_HETERO_ENABLEXX
-        if(is_hetero_buffer_set()) {
-        }
-#endif
 	return kmalloc_node(size, flags | __GFP_ZERO, node);
 }
 
 /**
- * kzalloc_hetero_node - allocate zeroed memory from a particular memory node.
+ * kzalloc_kloc_node - allocate zeroed memory from a particular memory node.
  * @size: how many bytes of memory are required.
  * @flags: the type of memory to allocate (see kmalloc).
  * @node: memory node from which to allocate
  */
-static inline void *kzalloc_node_hetero(size_t size, gfp_t flags, int node)
+static inline void *kzalloc_node_kloc(size_t size, gfp_t flags, int node)
 {
-#ifdef CONFIG_HETERO_ENABLE
-        if(is_hetero_buffer_set()) {
-		return kmalloc_node_hetero(size, flags | __GFP_ZERO, node);
+#ifdef CONFIG_KLOC_ENABLE
+        if(is_kloc_buffer_set()) {
+		return kmalloc_node_kloc(size, flags | __GFP_ZERO, node);
         }
 #endif
 	return kmalloc_node(size, flags | __GFP_ZERO, node);
@@ -869,20 +834,19 @@ int slab_dead_cpu(unsigned int cpu);
 #endif
 
 /* HeteroOS code : Customized Heterogeneous memory allocation*/
-#ifdef CONFIG_HETERO_ENABLE
-
+#ifdef CONFIG_KLOC_ENABLE
 /* Enable migration support */
 static 
-__always_inline void *kmalloc_hetero_migrate_kloc(size_t size, gfp_t flags, void *kloc_obj)
+__always_inline void *kloc_kmalloc_migrate_kloc(size_t size, gfp_t flags, void *kloc_obj)
 {
 
-#ifdef CONFIG_HETERO_MIGRATE
-	return  vmalloc_hetero_gfp(size, flags);
+#ifdef CONFIG_KLOC_MIGRATE
+	return  vmalloc_kloc_gfp(size, flags);
 
-#ifdef CONFIG_HETERO_STATS
+#ifdef CONFIG_KLOC_STATS
         incr_tot_vmalloc_pages();
 #endif
-	return __kmalloc_hetero(size, flags);
+	return __kmalloc_kloc(size, flags);
 #endif
 	if (__builtin_constant_p(size)) {
 		if (size > KMALLOC_MAX_CACHE_SIZE)
@@ -894,27 +858,27 @@ __always_inline void *kmalloc_hetero_migrate_kloc(size_t size, gfp_t flags, void
 			if (!index)
 				return ZERO_SIZE_PTR;
 
-			return kmem_cache_alloc_trace_hetero(kmalloc_caches[index],
+			return kmem_cache_alloc_trace_kloc(kmalloc_caches[index],
 					flags, size);
 		}
 #endif
 	}
-	return __kmalloc_hetero(size, flags);
+	return __kmalloc_kloc(size, flags);
 }
 
 
 /* Enable migration support */
 static 
-__always_inline void *kmalloc_hetero_migrate(size_t size, gfp_t flags)
+__always_inline void *kloc_kmalloc_migrate(size_t size, gfp_t flags)
 {
 
-#ifdef CONFIG_HETERO_MIGRATE
-	return  vmalloc_hetero_gfp(size, flags);
+#ifdef CONFIG_KLOC_MIGRATE
+	return  vmalloc_kloc_gfp(size, flags);
 
-#ifdef CONFIG_HETERO_STATS
+#ifdef CONFIG_KLOC_STATS
         incr_tot_vmalloc_pages();
 #endif
-	return __kmalloc_hetero(size, flags);
+	return __kmalloc_kloc(size, flags);
 #endif
 	if (__builtin_constant_p(size)) {
 		if (size > KMALLOC_MAX_CACHE_SIZE)
@@ -926,18 +890,18 @@ __always_inline void *kmalloc_hetero_migrate(size_t size, gfp_t flags)
 			if (!index)
 				return ZERO_SIZE_PTR;
 
-			return kmem_cache_alloc_trace_hetero(kmalloc_caches[index],
+			return kmem_cache_alloc_trace_kloc(kmalloc_caches[index],
 					flags, size);
 		}
 #endif
 	}
-	return __kmalloc_hetero(size, flags);
+	return __kmalloc_kloc(size, flags);
 }
 
 
-static __always_inline void *kmalloc_hetero(size_t size, gfp_t flags)
+static __always_inline void *kmalloc_kloc(size_t size, gfp_t flags)
 {
-	if(!is_hetero_buffer_set()) {
+	if(!is_kloc_buffer_set()) {
 
 	}
 	
@@ -951,20 +915,20 @@ static __always_inline void *kmalloc_hetero(size_t size, gfp_t flags)
 			if (!index)
 				return ZERO_SIZE_PTR;
 
-			return kmem_cache_alloc_trace_hetero(kmalloc_caches[index],
+			return kmem_cache_alloc_trace_kloc(kmalloc_caches[index],
 					flags, size);
 		}
 #endif
 	}
-	return __kmalloc_hetero(size, flags);
+	return __kmalloc_kloc(size, flags);
 }
 
 /* This function is used for kernel structures and data structures buffer memory*/
-static __always_inline void *kmalloc_hetero_buff(size_t size, gfp_t flags)
+static __always_inline void *kmalloc_kloc_buff(size_t size, gfp_t flags)
 {
 
-	/* If hetero_buffer not set, then continue in the default path*/
-       if(!is_hetero_buffer_set()) {
+	/* If kloc_buffer not set, then continue in the default path*/
+       if(!is_kloc_buffer_set()) {
            return kmalloc(size, flags);
 	}
 
@@ -978,36 +942,36 @@ static __always_inline void *kmalloc_hetero_buff(size_t size, gfp_t flags)
 			if (!index)
 				return ZERO_SIZE_PTR;
 
-			return kmem_cache_alloc_trace_hetero(kmalloc_caches[index],
+			return kmem_cache_alloc_trace_kloc(kmalloc_caches[index],
 					flags, size);
 		}
 #endif
 	}
-	return __kmalloc_hetero(size, flags);
+	return __kmalloc_kloc(size, flags);
 }
 
 /*Allocations specifically used for kernel structures and data structure buffers */
-static inline void *kmem_cache_zalloc_hetero(struct kmem_cache *k, gfp_t flags)
+static inline void *kmem_cache_zalloc_kloc(struct kmem_cache *k, gfp_t flags)
 {
-        /* If hetero_buffer not set, then continue in the default path*/
-       if(!is_hetero_buffer_set()) {
+        /* If kloc_buffer not set, then continue in the default path*/
+       if(!is_kloc_buffer_set()) {
            return kmem_cache_zalloc(k, flags | __GFP_ZERO);
         }
-        return kmem_cache_alloc_hetero(k, flags | __GFP_ZERO);
+        return kmem_cache_alloc_kloc(k, flags | __GFP_ZERO);
 }
 
-static inline void *kzalloc_hetero(size_t size, gfp_t flags)
+static inline void *kzalloc_kloc(size_t size, gfp_t flags)
 {
-	return kmalloc_hetero(size, flags | __GFP_ZERO);
+	return kmalloc_kloc(size, flags | __GFP_ZERO);
 }
 
-static inline void *kzalloc_hetero_buf(size_t size, gfp_t flags)
+static inline void *kzalloc_kloc_buf(size_t size, gfp_t flags)
 {
-        /* If hetero_buffer not set, then continue in the default path*/
-       if(!is_hetero_buffer_set()) {
+        /* If kloc_buffer not set, then continue in the default path*/
+       if(!is_kloc_buffer_set()) {
            return kzalloc(size, flags | __GFP_ZERO);
         }
-	return kmalloc_hetero(size, flags | __GFP_ZERO);
+	return kmalloc_kloc(size, flags | __GFP_ZERO);
 }
 #endif
 

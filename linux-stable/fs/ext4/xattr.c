@@ -1934,9 +1934,9 @@ ext4_xattr_block_set(handle_t *handle, struct inode *inode,
 
 			unlock_buffer(bs->bh);
 			ea_bdebug(bs->bh, "cloning");
-#ifdef CONFIG_HETERO_ENABLE 
-			if(is_hetero_buffer_set()) {
-				s->base = kmalloc_hetero(bs->bh->b_size, GFP_NOFS);
+#ifdef CONFIG_KLOC_ENABLE 
+			if(is_kloc_buffer_set()) {
+				s->base = kmalloc_kloc(bs->bh->b_size, GFP_NOFS);
 			}else
 #endif
 			s->base = kmalloc(bs->bh->b_size, GFP_NOFS);
@@ -1985,8 +1985,8 @@ ext4_xattr_block_set(handle_t *handle, struct inode *inode,
 		}
 	} else {
 		/* Allocate a buffer where we construct the new block. */
-#ifdef CONFIG_HETERO_ENABLE
-		s->base = kzalloc_hetero_buf(sb->s_blocksize, GFP_NOFS);
+#ifdef CONFIG_KLOC_ENABLE
+		s->base = kzalloc_kloc_buf(sb->s_blocksize, GFP_NOFS);
 #else 
 		s->base = kzalloc(sb->s_blocksize, GFP_NOFS);
 #endif
@@ -2624,34 +2624,34 @@ static int ext4_xattr_move_to_block(handle_t *handle, struct inode *inode,
 	struct ext4_xattr_ibody_header *header = IHDR(inode, raw_inode);
 	int error;
 
-#ifdef CONFIG_HETERO_ENABLE 
+#ifdef CONFIG_KLOC_ENABLE 
 	is = NULL;
-	if(is_hetero_buffer_set()) 
-		is = kzalloc_hetero_buf(sizeof(struct ext4_xattr_ibody_find), GFP_NOFS);
+	if(is_kloc_buffer_set()) 
+		is = kzalloc_kloc_buf(sizeof(struct ext4_xattr_ibody_find), GFP_NOFS);
 	if(!is)
 #endif
 	is = kzalloc(sizeof(struct ext4_xattr_ibody_find), GFP_NOFS);
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 	bs = NULL;
-	if(is_hetero_buffer_set()) 
-		bs = kzalloc_hetero_buf(sizeof(struct ext4_xattr_block_find), GFP_NOFS);
+	if(is_kloc_buffer_set()) 
+		bs = kzalloc_kloc_buf(sizeof(struct ext4_xattr_block_find), GFP_NOFS);
 	if(!bs)
 #endif
 	bs = kzalloc(sizeof(struct ext4_xattr_block_find), GFP_NOFS);
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 	buffer = NULL;
-        if(is_hetero_buffer_set()) 
-		buffer = kmalloc_hetero(value_size, GFP_NOFS);
+        if(is_kloc_buffer_set()) 
+		buffer = kmalloc_kloc(value_size, GFP_NOFS);
 	if(!buffer)
 #endif
 	buffer = kmalloc(value_size, GFP_NOFS);
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 	b_entry_name = NULL;
-        if(is_hetero_buffer_set()) 
-		b_entry_name = kmalloc_hetero(entry->e_name_len + 1, GFP_NOFS);
+        if(is_kloc_buffer_set()) 
+		b_entry_name = kmalloc_kloc(entry->e_name_len + 1, GFP_NOFS);
 	if(!b_entry_name)
 #endif
 	b_entry_name = kmalloc(entry->e_name_len + 1, GFP_NOFS);
@@ -2894,9 +2894,9 @@ ext4_expand_inode_array(struct ext4_xattr_inode_array **ea_inode_array,
 		 * Start with 15 inodes, so it fits into a power-of-two size.
 		 * If *ea_inode_array is NULL, this is essentially offsetof()
 		 */
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 		(*ea_inode_array) =
-			kmalloc_hetero(offsetof(struct ext4_xattr_inode_array,
+			kmalloc_kloc(offsetof(struct ext4_xattr_inode_array,
 					 inodes[EIA_MASK]),
 				GFP_NOFS);
 #else 
@@ -2912,10 +2912,9 @@ ext4_expand_inode_array(struct ext4_xattr_inode_array **ea_inode_array,
 		/* expand the array once all 15 + n * 16 slots are full */
 		struct ext4_xattr_inode_array *new_array = NULL;
 		int count = (*ea_inode_array)->count;
-
 		/* if new_array is NULL, this is essentially offsetof() */
-#ifdef CONFIG_HETERO_ENABLE
-		new_array = kmalloc_hetero(
+#ifdef CONFIG_KLOC_ENABLE
+		new_array = kmalloc_kloc(
 				offsetof(struct ext4_xattr_inode_array,
 					 inodes[count + EIA_INCR]),
 				GFP_NOFS);
@@ -2935,6 +2934,7 @@ ext4_expand_inode_array(struct ext4_xattr_inode_array **ea_inode_array,
 	(*ea_inode_array)->inodes[(*ea_inode_array)->count++] = inode;
 	return 0;
 }
+
 
 /*
  * ext4_xattr_delete_inode()

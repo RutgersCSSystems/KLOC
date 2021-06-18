@@ -66,7 +66,7 @@ extern int migrate_page(struct address_space *mapping,
 			struct page *newpage, struct page *page,
 			enum migrate_mode mode);
 
-extern int hetero_migrate_page(struct address_space *mapping,
+extern int kloc_migrate_page(struct address_space *mapping,
                         struct page *newpage, struct page *page,
                         enum migrate_mode mode);
 
@@ -75,19 +75,19 @@ extern int hetero_migrate_page(struct address_space *mapping,
 extern int migrate_pages(struct list_head *l, new_page_t new, free_page_t free,
 		unsigned long private, enum migrate_mode mode, int reason);
 
-extern int migrate_pages_hetero(struct rb_root *root, new_page_t get_new_page,
+extern int migrate_pages_kloc(struct rb_root *root, new_page_t get_new_page,
                 free_page_t put_new_page, unsigned long private,
                 enum migrate_mode mode, int reason, struct task_struct *task);
 
-extern int migrate_hetero_single_page(struct page *page, new_page_t get_new_page,
+extern int migrate_kloc_single_page(struct page *page, new_page_t get_new_page,
                 free_page_t put_new_page, unsigned long private,
                 enum migrate_mode mode, int reason);
 
-int migrate_onepage_hetero(struct page *page, new_page_t get_new_page,
+int migrate_onepage_kloc(struct page *page, new_page_t get_new_page,
                 free_page_t put_new_page, unsigned long private,
                 enum migrate_mode mode, int reason, struct task_struct *task);
 
-int migrate_pages_hetero_list(struct list_head *l, new_page_t get_new_page,
+int migrate_pages_kloc_list(struct list_head *l, new_page_t get_new_page,
                 free_page_t put_new_page, unsigned long private,
                 enum migrate_mode mode, int reason, struct mm_struct *mm, 
 		unsigned int list_cnt);

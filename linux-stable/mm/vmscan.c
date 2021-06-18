@@ -1618,9 +1618,9 @@ int isolate_lru_page(struct page *page)
 }
 
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 /**
- * hetero_isolate_lru_page - tries to isolate a page from its LRU list
+ * kloc_isolate_lru_page - tries to isolate a page from its LRU list
  * @page: page to isolate from its LRU list
  *
  * Isolates a @page from an LRU list, clears PageLRU and adjusts the
@@ -1645,7 +1645,7 @@ int isolate_lru_page(struct page *page)
  * (2) the lru_lock must not be held.
  * (3) interrupts must be enabled.
  */
-int hetero_isolate_lru_page(struct page *page)
+int kloc_isolate_lru_page(struct page *page)
 {
 	int ret = -EBUSY;
 	int isolated_pages = 0;
@@ -1653,15 +1653,14 @@ int hetero_isolate_lru_page(struct page *page)
 	VM_BUG_ON_PAGE(!page_count(page), page);
 	WARN_RATELIMIT(PageTail(page), "trying to isolate tail page");
 
-	if(page && page->hetero == HETERO_PG_FLAG) {
+	if(page && page->kloc == HETERO_PG_FLAG) {
 		if(page && PageActive(page) && !PageLRU(page) && !PageDirty(page)) {
-			hetero_deactivate_file_page(page);
+			kloc_deactivate_file_page(page);
 			//printk(KERN_ALERT "LRU page %s:%d \n", __func__, __LINE__);
 		}
 	}
 
 	if (PageLRU(page)) {
-		//printk(KERN_ALERT "PageLRU(page) LRU page %s:%d \n", __func__, __LINE__);
 		struct zone *zone = page_zone(page);
 		struct lruvec *lruvec;
 
@@ -1680,7 +1679,7 @@ int hetero_isolate_lru_page(struct page *page)
 		//	__func__, __LINE__, isolated_pages);
 	}
 #if 0
-	else if(page && page->hetero == HETERO_PG_FLAG) {
+	else if(page && page->kloc == HETERO_PG_FLAG) {
 
 		//struct zone *zone = page_zone(page);
 		//spin_lock_irq(zone_lru_lock(zone));
@@ -1711,7 +1710,7 @@ int hetero_isolate_lru_page(struct page *page)
 			//printk(KERN_ALERT "Writeback page %s:%d \n", __func__, __LINE__);
 		}*/
 		if(page && PageActive(page) && !PageLRU(page) && !PageDirty(page) )
-			hetero_deactivate_file_page(page);
+			kloc_deactivate_file_page(page);
 
 		//spin_unlock_irq(zone_lru_lock(zone));
 

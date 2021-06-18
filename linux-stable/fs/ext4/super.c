@@ -195,17 +195,11 @@ void ext4_superblock_csum_set(struct super_block *sb)
 void *ext4_kvmalloc(size_t size, gfp_t flags)
 {
 	void *ret;
-#ifdef CONFIG_HETERO_ENABLE
-	if(is_hetero_buffer_set()) {
-		printk(KERN_ALERT "%s : %d \n", __func__, __LINE__);
-	}
-	ret = kmalloc_hetero(size, flags | __GFP_NOWARN);
+#ifdef CONFIG_KLOC_ENABLE
+	ret = kmalloc_kloc(size, flags | __GFP_NOWARN);
 #else 
 	ret = kmalloc(size, flags | __GFP_NOWARN);
 #endif
-	//if (global_flag == PFN_TRACE)
-	//	add_to_hashtable_void(ret);
-
 	if (!ret)
 		ret = __vmalloc(size, flags, PAGE_KERNEL);
 	return ret;
@@ -214,14 +208,11 @@ void *ext4_kvmalloc(size_t size, gfp_t flags)
 void *ext4_kvzalloc(size_t size, gfp_t flags)
 {
 	void *ret;
-#ifdef CONFIG_HETERO_ENABLE
-	ret = kzalloc_hetero_buf(size, flags | __GFP_NOWARN);
+#ifdef CONFIG_KLOC_ENABLE
+	ret = kzalloc_kloc_buf(size, flags | __GFP_NOWARN);
 #else 
 	ret = kzalloc(size, flags | __GFP_NOWARN);
 #endif
-	//if (global_flag == PFN_TRACE)
-	//	add_to_hashtable_void(ret);
-	
 	if (!ret)
 		ret = __vmalloc(size, flags | __GFP_ZERO, PAGE_KERNEL);
 	return ret;
@@ -1026,14 +1017,11 @@ static struct inode *ext4_alloc_inode(struct super_block *sb)
 {
 	struct ext4_inode_info *ei;
 
-#ifdef CONFIG_HETERO_ENABLE
-	ei = kmem_cache_alloc_hetero(ext4_inode_cachep, GFP_NOFS);
+#ifdef CONFIG_KLOC_ENABLE
+	ei = kmem_cache_alloc_kloc(ext4_inode_cachep, GFP_NOFS);
 #else 
 	ei = kmem_cache_alloc(ext4_inode_cachep, GFP_NOFS);
 #endif
-	//if (global_flag == PFN_TRACE)
-	//	add_to_hashtable_ext4_inode_info(ei);
-
 	if (!ei)
 		return NULL;
 
@@ -3155,13 +3143,11 @@ static int ext4_li_info_new(void)
 {
 	struct ext4_lazy_init *eli = NULL;
 
-#ifdef CONFIG_HETERO_ENABLE 
-	eli = kzalloc_hetero_buf(sizeof(*eli), GFP_KERNEL);
+#ifdef CONFIG_KLOC_ENABLE 
+	eli = kzalloc_kloc_buf(sizeof(*eli), GFP_KERNEL);
 #else 
 	eli = kzalloc(sizeof(*eli), GFP_KERNEL);
 #endif 
-	//if (global_flag == PFN_TRACE)
-	//	add_to_hashtable_ext4_lazy_init(eli);
 
 	if (!eli)
 		return -ENOMEM;
@@ -3181,14 +3167,11 @@ static struct ext4_li_request *ext4_li_request_new(struct super_block *sb,
 {
 	struct ext4_sb_info *sbi = EXT4_SB(sb);
 	struct ext4_li_request *elr;
-#ifdef CONFIG_HETERO_ENABLE 
-	elr = kzalloc_hetero_buf(sizeof(*elr), GFP_KERNEL);
+#ifdef CONFIG_KLOC_ENABLE 
+	elr = kzalloc_kloc_buf(sizeof(*elr), GFP_KERNEL);
 #else 
 	elr = kzalloc(sizeof(*elr), GFP_KERNEL);
 #endif
-	//if (global_flag == PFN_TRACE)
-	//	add_to_hashtable_ext4_li_request(elr);
-
 	if (!elr)
 		return NULL;
 
@@ -3490,15 +3473,11 @@ static int ext4_fill_super(struct super_block *sb, void *data, int silent)
 	char *orig_data = kstrdup(data, GFP_KERNEL);
 	struct buffer_head *bh;
 	struct ext4_super_block *es = NULL;
-#ifdef CONFIG_HETERO_ENABLE 
-	struct ext4_sb_info *sbi = kzalloc_hetero_buf(sizeof(*sbi), GFP_KERNEL);
+#ifdef CONFIG_KLOC_ENABLE 
+	struct ext4_sb_info *sbi = kzalloc_kloc_buf(sizeof(*sbi), GFP_KERNEL);
 #else 
 	struct ext4_sb_info *sbi = kzalloc(sizeof(*sbi), GFP_KERNEL);
 #endif
-
-	//if (global_flag == PFN_TRACE)
-	//	add_to_hashtable_ext4_sb_info(sbi);
-
 	ext4_fsblk_t block;
 	ext4_fsblk_t sb_block = get_sb_block(&data);
 	ext4_fsblk_t logical_sb_block;
@@ -3521,16 +3500,13 @@ static int ext4_fill_super(struct super_block *sb, void *data, int silent)
 		goto out_free_base;
 
 	sbi->s_daxdev = dax_dev;
-#ifdef CONFIG_HETERO_ENABLE 
+#ifdef CONFIG_KLOC_ENABLE 
 	sbi->s_blockgroup_lock =
-		kzalloc_hetero_buf(sizeof(struct blockgroup_lock), GFP_KERNEL);
+		kzalloc_kloc_buf(sizeof(struct blockgroup_lock), GFP_KERNEL);
 #else 
 	sbi->s_blockgroup_lock =
 		kzalloc(sizeof(struct blockgroup_lock), GFP_KERNEL);
 #endif 
-	//if (global_flag == PFN_TRACE)
-	//	add_to_hashtable_blockgroup_lock(sbi->s_blockgroup_lock);
-	
 	if (!sbi->s_blockgroup_lock)
 		goto out_free_base;
 
@@ -4765,14 +4741,11 @@ static int ext4_load_journal(struct super_block *sb,
 	if (!ext4_has_feature_journal_needs_recovery(sb))
 		err = jbd2_journal_wipe(journal, !really_read_only);
 	if (!err) {
-#ifdef CONFIG_HETERO_ENABLE
-		char *save = kmalloc_hetero(EXT4_S_ERR_LEN, GFP_KERNEL);
+#ifdef CONFIG_KLOC_ENABLE
+		char *save = kmalloc_kloc(EXT4_S_ERR_LEN, GFP_KERNEL);
 #else 
 		char *save = kmalloc(EXT4_S_ERR_LEN, GFP_KERNEL);
 #endif
-		//if (global_flag == PFN_TRACE)
-		//	add_to_hashtable_char(save);
-
 		if (save)
 			memcpy(save, ((char *) es) +
 			       EXT4_S_ERR_START, EXT4_S_ERR_LEN);

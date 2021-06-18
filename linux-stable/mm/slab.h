@@ -18,9 +18,9 @@
  * SLUB is no longer needed.
  */
 struct kmem_cache {
-//#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
         unsigned int kloc_obj; /* Hetero Object*/
-//#endif
+#endif
 	unsigned int object_size;/* The original size of the object */
 	unsigned int size;	/* The aligned/padded/added on size  */
 	unsigned int align;	/* Alignment as calculated */

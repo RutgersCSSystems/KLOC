@@ -55,25 +55,25 @@ mempool_create_slab_pool(int min_nr, struct kmem_cache *kc)
 }
 
 //Hetero mempool alloc
-extern void *mempool_alloc_hetero(mempool_t *pool, gfp_t gfp_mask, void *obj) __malloc;
-extern void mempool_free_hetero(void *element, mempool_t *pool);
-#ifdef CONFIG_HETERO_ENABLE
-void *mempool_alloc_slab_hetero(gfp_t gfp_mask, void *pool_data);
-void mempool_free_slab_hetero(void *element, void *pool_data);
+extern void *mempool_alloc_kloc(mempool_t *pool, gfp_t gfp_mask, void *obj) __malloc;
+extern void mempool_free_kloc(void *element, mempool_t *pool);
+#ifdef CONFIG_KLOC_ENABLE
+void *mempool_alloc_slab_kloc(gfp_t gfp_mask, void *pool_data);
+void mempool_free_slab_kloc(void *element, void *pool_data);
 
-void *mempool_kmalloc_hetero(gfp_t gfp_mask, void *pool_data);
-void mempool_kfree_hetero(void *element, void *pool_data);
+void *mempool_kmalloc_kloc(gfp_t gfp_mask, void *pool_data);
+void mempool_kfree_kloc(void *element, void *pool_data);
 
 static inline mempool_t *
-mempool_create_slab_pool_hetero(int min_nr, struct kmem_cache *kc)
+mempool_create_slab_pool_kloc(int min_nr, struct kmem_cache *kc)
 {
-	return mempool_create(min_nr, mempool_alloc_slab_hetero, mempool_free_slab_hetero,
+	return mempool_create(min_nr, mempool_alloc_slab_kloc, mempool_free_slab_kloc,
 			      (void *) kc);
 }
 
-static inline mempool_t *mempool_create_kmalloc_pool_hetero(int min_nr, size_t size)
+static inline mempool_t *mempool_create_kmalloc_pool_kloc(int min_nr, size_t size)
 {
-	return mempool_create(min_nr, mempool_kmalloc_hetero, mempool_kfree_hetero,
+	return mempool_create(min_nr, mempool_kmalloc_kloc, mempool_kfree_kloc,
 			      (void *) size);
 }
 #endif

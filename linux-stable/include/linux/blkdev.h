@@ -271,7 +271,7 @@ struct request {
 	unsigned long long io_start_time_ns;    /* when passed to hardware */
 #endif
 
-#ifdef CONFIG_HETERO_MIGRATE
+#ifdef CONFIG_KLOC_MIGRATE
 	__u8	is_migratable;
 #endif
 };

@@ -4364,7 +4364,7 @@ static struct sk_buff *e1000_copybreak(struct e1000_adapter *adapter,
 	return skb;
 }
 
-#ifdef CONFIG_HETERO_NET_ENABLE
+#ifdef CONFIG_KLOC_NET
 #if 0
 /**
  * e1000_receive_skb - helper function to handle rx indications
@@ -4394,10 +4394,10 @@ static gro_result_t e1000_pre_parse_skb(struct e1000_adapter *adapter, u8 status
 }
 #endif
 
-static struct sk_buff *e1000_alloc_rx_skb_hetero(struct e1000_adapter *adapter,
+static struct sk_buff *e1000_alloc_rx_skb_kloc(struct e1000_adapter *adapter,
 					  unsigned int bufsz, void *kloc_obj)
 {
-	struct sk_buff *skb = napi_alloc_skb_hetero(&adapter->napi, bufsz, kloc_obj);
+	struct sk_buff *skb = napi_alloc_skb_kloc(&adapter->napi, bufsz, kloc_obj);
 
 	if (unlikely(!skb))
 		adapter->alloc_rx_buff_failed++;
@@ -4408,7 +4408,7 @@ static struct sk_buff *e1000_alloc_rx_skb_hetero(struct e1000_adapter *adapter,
 /* this should improve performance for small packets with large amounts
  * of reassembly being done in the stack
  */
-static struct sk_buff *e1000_copybreak_hetero(struct e1000_adapter *adapter,
+static struct sk_buff *e1000_copybreak_kloc(struct e1000_adapter *adapter,
 				       struct e1000_rx_buffer *buffer_info,
 				       u32 length, const void *data, void *kloc_obj)
 {
@@ -4417,7 +4417,7 @@ static struct sk_buff *e1000_copybreak_hetero(struct e1000_adapter *adapter,
 	if (length > copybreak)
 		return NULL;
 
-	skb = e1000_alloc_rx_skb_hetero(adapter, length, kloc_obj);
+	skb = e1000_alloc_rx_skb_kloc(adapter, length, kloc_obj);
 	if (!skb)
 		return NULL;
 	
@@ -4473,8 +4473,10 @@ static bool e1000_clean_rx_irq(struct e1000_adapter *adapter,
 		data = buffer_info->rxbuf.data;
 		prefetch(data);
 
-#if 0
-		if (is_hetero_buffer_set_new()) {
+		//FIXME: Unpacking packets in Cloudlab ehternet drivers are causing some issues
+		//Disabled
+#ifdef CONFIG_KLOC_NETxx
+		if (is_kloc_buffer_set_new()) {
 				do_gettimeofday(&t0);			
 
 				if (!pre_skb) {	
@@ -4590,7 +4592,7 @@ process_pre_skb:
 					printk(KERN_ALERT "sk->kloc_obj = 0x%lx | %s:%d \n", sk->kloc_obj, __FUNCTION__, __LINE__);
 
 				if (sk && sk->kloc_obj) {
-					skb = e1000_copybreak_hetero(adapter, buffer_info, length, data, sk->kloc_obj);
+					skb = e1000_copybreak_kloc(adapter, buffer_info, length, data, sk->kloc_obj);
 				}
 		}
 normal_allocation:
@@ -4598,12 +4600,11 @@ normal_allocation:
 #endif
 
 
-#ifdef CONFIG_HETERO_NET_ENABLE
-		if (is_hetero_buffer_set()) {
-			if (netdev && netdev->hetero_sock && netdev->hetero_sock->kloc_obj
-				 && is_hetero_cacheobj(netdev->hetero_sock->kloc_obj)) {
-				printk(KERN_ALERT "kloc_obj = 0x%lx | %s:%d \n", netdev->hetero_sock->kloc_obj, __FUNCTION__, __LINE__);
-				skb = e1000_copybreak_hetero(adapter, buffer_info, length, data, netdev->hetero_sock->kloc_obj);
+#ifdef CONFIG_KLOC_NET
+		if (is_kloc_buffer_set()) {
+			if (netdev && netdev->kloc_sock && netdev->kloc_sock->kloc_obj
+				 && is_kloc_cacheobj(netdev->kloc_sock->kloc_obj)) {
+				skb = e1000_copybreak_kloc(adapter, buffer_info, length, data, netdev->kloc_sock->kloc_obj);
 			}
 		}
 		if (!skb)
@@ -4612,12 +4613,11 @@ normal_allocation:
 		if (!skb) {
 			unsigned int frag_len = e1000_frag_len(adapter);
 
-#ifdef CONFIG_HETERO_NET_ENABLE
-			if (is_hetero_buffer_set()) {
-				if (netdev && netdev->hetero_sock && netdev->hetero_sock->kloc_obj
-					&& is_hetero_cacheobj(netdev->hetero_sock->kloc_obj)) {
-					hetero_force_dbg("hetero_sock = 0x%lx | %s:%d \n", netdev->hetero_sock, __FUNCTION__, __LINE__);
-					skb = build_skb_hetero(data - E1000_HEADROOM, frag_len, netdev->hetero_sock->kloc_obj);
+#ifdef CONFIG_KLOC_NET
+			if (is_kloc_buffer_set()) {
+				if (netdev && netdev->kloc_sock && netdev->kloc_sock->kloc_obj
+					&& is_kloc_cacheobj(netdev->kloc_sock->kloc_obj)) {
+					skb = build_skb_kloc(data - E1000_HEADROOM, frag_len, netdev->kloc_sock->kloc_obj);
 				}
 			}
 			if (!skb)

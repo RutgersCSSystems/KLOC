@@ -1424,10 +1424,10 @@ static inline handle_t *jbd2_alloc_handle(gfp_t gfp_flags)
 }
 
 /* heteroOS code */
-#ifdef CONFIG_HETERO_ENABLE
-static inline handle_t *jbd2_alloc_handle_hetero(gfp_t gfp_flags)
+#ifdef CONFIG_KLOC_ENABLE
+static inline handle_t *jbd2_alloc_handle_kloc(gfp_t gfp_flags)
 {
-	return kmem_cache_zalloc_hetero(jbd2_handle_cache, gfp_flags);
+	return kmem_cache_zalloc_kloc(jbd2_handle_cache, gfp_flags);
 }
 #endif
 

@@ -283,7 +283,7 @@
 #include <asm/ioctls.h>
 #include <net/busy_poll.h>
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 #include <linux/hetero.h>
 #endif
 
@@ -877,13 +877,13 @@ struct sk_buff *sk_stream_alloc_skb(struct sock *sk, int size, gfp_t gfp,
 		sk_mem_reclaim_partial(sk);
 
         /* Allocate hetero buffer */
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 	skb = NULL;
 
-	if(sk && is_hetero_buffer_set() 
-			&& is_hetero_cacheobj(sk->kloc_obj) 
-			&& is_hetero_sockbuff()) {
-		skb = alloc_skb_fclone_hetero(size + sk->sk_prot->max_header, gfp,
+	if(sk && is_kloc_buffer_set() 
+			&& is_kloc_cacheobj(sk->kloc_obj) 
+			&& is_kloc_sockbuff()) {
+		skb = alloc_skb_fclone_kloc(size + sk->sk_prot->max_header, gfp,
 			sk->kloc_obj);
 	}	
 	if(!skb)

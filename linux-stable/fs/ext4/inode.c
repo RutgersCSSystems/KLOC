@@ -3181,12 +3181,11 @@ static int ext4_da_write_end(struct file *file,
 	if (!ret)
 		ret = ret2;
 
-#ifdef CONFIG_HETERO_ENABLE
-	if(page && page->hetero == HETERO_PG_FLAG) {
-		//page->hetero = HETERO_PG_FLAG;
+#ifdef CONFIG_KLOC_ENABLE
+	if(page && page->kloc == HETERO_PG_FLAG) {
 		if(current && current->mm &&
-			current->mm->hetero_task == HETERO_PROC) {
-			try_hetero_migration(mapping, 0, 0);
+			current->mm->kloc_task == HETERO_PROC) {
+			kloc_try_migration(mapping, 0, 0);
 		}
 	}
 #endif
@@ -3329,10 +3328,10 @@ static int ext4_readpage(struct file *file, struct page *page)
 	int ret = -EAGAIN;
 	struct inode *inode = page->mapping->host;
         /*Mark the mapping to Hetero target object*/
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
         if(current && current->mm && 
-		current->mm->hetero_task == HETERO_PROC) {
-		try_hetero_migration(page->mapping, 0, 0);
+		current->mm->kloc_task == HETERO_PROC) {
+		kloc_try_migration(page->mapping, 0, 0);
 		//if(!execute_ok(inode))
 			//set_fsmap_kloc_obj(page->mapping);
 	}
@@ -3353,13 +3352,12 @@ ext4_readpages(struct file *file, struct address_space *mapping,
 {
 	struct inode *inode = mapping->host;
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
         if(current && current->mm && 
-		current->mm->hetero_task == HETERO_PROC) {
+		current->mm->kloc_task == HETERO_PROC) {
 		//if(!execute_ok(inode))
-                	//set_fsmap_kloc_obj(mapping);
-                //printk(KERN_ALERT "%s:%d \n", __func__, __LINE__);
-                try_hetero_migration(mapping, 0, 0);
+                set_fsmap_kloc_obj(mapping);
+                kloc_try_migration(mapping, 0, 0);
         }
 #endif
 	/* If the file has inline data, no need to do readpages. */
@@ -3695,12 +3693,6 @@ static ssize_t ext4_direct_IO_write(struct kiocb *iocb, struct iov_iter *iter)
 	int orphan = 0;
 	handle_t *handle;
 
-#ifdef CONFIG_HETERO_ENABLE
-        if(current->mm->hetero_task == HETERO_PROC) {
-                printk(KERN_ALERT "%s:%d \n", __func__, __LINE__);
-                //try_hetero_migration(page->mapping, 0);
-        }
-#endif
 
 	if (final_size > inode->i_size || final_size > ei->i_disksize) {
 		/* Credits for sb + inode write */
@@ -3851,12 +3843,6 @@ static ssize_t ext4_direct_IO_read(struct kiocb *iocb, struct iov_iter *iter)
 	size_t count = iov_iter_count(iter);
 	ssize_t ret;
 
-#ifdef CONFIG_HETERO_ENABLE
-        /*if(current->mm->hetero_task == HETERO_PROC) {
-                printk(KERN_ALERT "%s:%d \n", __func__, __LINE__);
-                //try_hetero_migration(page->mapping, 0);
-        }*/
-#endif
 	/*
 	 * Shared inode_lock is enough for us - it protects against concurrent
 	 * writes & truncates and since we take care of writing back page cache,
@@ -6216,15 +6202,15 @@ int ext4_filemap_fault(struct vm_fault *vmf)
 	struct inode *inode = file_inode(vmf->vma->vm_file);
 	int err;
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
         if(current && current->mm &&
-                current->mm->hetero_task == HETERO_PROC) {
+                current->mm->kloc_task == HETERO_PROC) {
 
 		if(inode->i_mapping) {
 			is_kloc_obj(inode->i_mapping);
 		}
                 //if(!execute_ok(inode) && inode->i_mapping) 
-                  //   set_fsmap_hetero_obj(inode->i_mapping);
+                  //   set_fsmap_kloc_obj(inode->i_mapping);
         }
 #endif
 

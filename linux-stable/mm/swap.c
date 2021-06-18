@@ -625,10 +625,9 @@ void deactivate_file_page(struct page *page)
 		if (!pagevec_add(pvec, page) || PageCompound(page)) {
 			pagevec_lru_move_fn(pvec, lru_deactivate_file_fn, NULL);
 		}
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 		//dectivation function works
-		if(page && page->hetero == HETERO_PG_FLAG) {
-			//printk(KERN_ALERT "%s:%d Evictable \n", __func__, __LINE__);
+		if(page && page->kloc == HETERO_PG_FLAG) {
 			pagevec_lru_move_fn(pvec, lru_deactivate_file_fn, NULL);
 		}
 #endif
@@ -638,7 +637,7 @@ void deactivate_file_page(struct page *page)
 
 
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 
 /*
  * If the page can not be invalidated, it is moved to the
@@ -661,7 +660,7 @@ void deactivate_file_page(struct page *page)
  * be write it out by flusher threads as this is much more effective
  * than the single-page writeout from reclaim.
  */
-static void hetero_lru_deactivate_file_fn(struct page *page, struct lruvec *lruvec,
+static void kloc_lru_deactivate_file_fn(struct page *page, struct lruvec *lruvec,
 			      void *arg)
 {
 	int lru, file;
@@ -713,14 +712,14 @@ static void hetero_lru_deactivate_file_fn(struct page *page, struct lruvec *lruv
 
 
 /**
- * deactivate_hetero_file_page - forcefully deactivate a file page
+ * deactivate_kloc_file_page - forcefully deactivate a file page
  * @page: page to deactivate
  *
  * This function hints the VM that @page is a good reclaim candidate,
  * for example if its invalidation fails due to the page being dirty
  * or under writeback.
  */
-void hetero_deactivate_file_page(struct page *page)
+void kloc_deactivate_file_page(struct page *page)
 {
 	/*
 	 * In a workload with many unevictable page such as mprotect,
@@ -736,11 +735,10 @@ void hetero_deactivate_file_page(struct page *page)
 		if (!pagevec_add(pvec, page) || PageCompound(page)) {
 			pagevec_lru_move_fn(pvec, lru_deactivate_file_fn, NULL);
 		}
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 		//dectivation function works
-		if(page && page->hetero == HETERO_PG_FLAG) {
-			//printk(KERN_ALERT "%s:%d Evictable \n", __func__, __LINE__);
-			pagevec_lru_move_fn(pvec, hetero_lru_deactivate_file_fn, NULL);
+		if(page && page->kloc == HETERO_PG_FLAG) {
+			pagevec_lru_move_fn(pvec, kloc_lru_deactivate_file_fn, NULL);
 		}
 #endif
 		put_cpu_var(lru_deactivate_file_pvecs);

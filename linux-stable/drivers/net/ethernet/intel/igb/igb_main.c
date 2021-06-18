@@ -7892,8 +7892,8 @@ static void igb_put_rx_buffer(struct igb_ring *rx_ring,
 	rx_buffer->page = NULL;
 }
 
-#ifdef CONFIG_HETERO_NET_ENABLE
-static struct sk_buff *igb_build_skb_hetero(struct igb_ring *rx_ring,
+#ifdef CONFIG_KLOC_NET
+static struct sk_buff *igb_build_skb_kloc(struct igb_ring *rx_ring,
 				     struct igb_rx_buffer *rx_buffer,
 				     union e1000_adv_rx_desc *rx_desc,
 				     unsigned int size,
@@ -7914,9 +7914,9 @@ static struct sk_buff *igb_build_skb_hetero(struct igb_ring *rx_ring,
 	prefetch(va + L1_CACHE_BYTES);
 #endif
 
-#ifdef CONFIG_HETERO_NET_ENABLE
+#ifdef CONFIG_KLOC_NET
 	if (kloc_obj) {
-		skb = build_skb_hetero(va - IGB_SKB_PAD, truesize, kloc_obj);
+		skb = build_skb_kloc(va - IGB_SKB_PAD, truesize, kloc_obj);
 	}
 	if (!skb)
 #endif
@@ -7979,14 +7979,14 @@ static int igb_clean_rx_irq(struct igb_q_vector *q_vector, const int budget)
 		rx_buffer = igb_get_rx_buffer(rx_ring, size);
 
 		/* retrieve a buffer from the ring */
-#ifdef CONFIG_HETERO_NET_ENABLE
-		if (!skb && is_hetero_buffer_set()) {
+#ifdef CONFIG_KLOC_NET
+		if (!skb && is_kloc_buffer_set()) {
 			struct net_device *netdev = NULL;
 			if (q_vector && q_vector->adapter)
 				netdev = q_vector->adapter->netdev;
-			if (netdev && netdev->hetero_sock && netdev->hetero_sock->kloc_obj 
-				&& is_hetero_cacheobj(netdev->hetero_sock->kloc_obj)) {
-				skb = igb_build_skb_hetero(rx_ring, rx_buffer, rx_desc, size, netdev->hetero_sock->kloc_obj);
+			if (netdev && netdev->kloc_sock && netdev->kloc_sock->kloc_obj 
+				&& is_kloc_cacheobj(netdev->kloc_sock->kloc_obj)) {
+				skb = igb_build_skb_kloc(rx_ring, rx_buffer, rx_desc, size, netdev->kloc_sock->kloc_obj);
 			}
 		}
 #endif

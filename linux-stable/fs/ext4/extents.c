@@ -580,18 +580,17 @@ int ext4_ext_precache(struct inode *inode)
 
 	down_read(&ei->i_data_sem);
 	depth = ext_depth(inode);
-#ifdef CONFIG_HETERO_ENABLE
-	if(is_hetero_buffer_set()) {
-		printk(KERN_ALERT  "%s:%d\n", __FUNCTION__, __LINE__);
-#ifdef CONFIG_HETERO_MIGRATE
+#ifdef CONFIG_KLOC_ENABLE
+	if(is_kloc_buffer_set()) {
+#ifdef CONFIG_KLOC_MIGRATE
 		path = NULL;
-		path = kmalloc_hetero_wrap(sizeof(struct ext4_ext_path) * (depth + 1), (void *)inode);
+		path = kloc_kmalloc_wrap(sizeof(struct ext4_ext_path) * (depth + 1), (void *)inode);
 		if(path) {
 			path->is_migratable = HETERO_INIT;
 		}
                if(!path)
 #endif
-		path = kzalloc_hetero_buf(sizeof(struct ext4_ext_path) * (depth + 1),
+		path = kzalloc_kloc_buf(sizeof(struct ext4_ext_path) * (depth + 1),
 			       GFP_NOFS);
 	}
 #endif 
@@ -642,10 +641,10 @@ out:
 	up_read(&ei->i_data_sem);
 	ext4_ext_drop_refs(path);
 
-#ifdef CONFIG_HETERO_MIGRATE
-	//if(is_hetero_buffer_set() && path->is_migratable && is_vmalloc_addr(path)) {
+#ifdef CONFIG_KLOC_MIGRATE
+	//if(is_kloc_buffer_set() && path->is_migratable && is_vmalloc_addr(path)) {
 	if(is_vmalloc_addr(path)) {
-	    vfree_hetero_page(path);
+	    kloc_vfree_page(path);
 	}
 	else
 #endif
@@ -902,10 +901,9 @@ ext4_find_extent(struct inode *inode, ext4_lblk_t block,
 	if (path) {
 		ext4_ext_drop_refs(path);
 		if (depth > path[0].p_maxdepth) {
-#ifdef CONFIG_HETERO_MIGRATE
-			//if(is_hetero_buffer_set() && path->is_migratable && is_vmalloc_addr(path)) {
+#ifdef CONFIG_KLOC_MIGRATE
 			if(is_vmalloc_addr(path)) {
-				vfree_hetero_page(path);
+				kloc_vfree_page(path);
 			}
 			else
 #endif
@@ -915,17 +913,17 @@ ext4_find_extent(struct inode *inode, ext4_lblk_t block,
 	}
 	if (!path) {
 		/* account possible depth increase */
-#ifdef CONFIG_HETERO_ENABLE 
-		if(is_hetero_buffer_set()) {
-#ifdef CONFIG_HETERO_MIGRATE
+#ifdef CONFIG_KLOC_ENABLE 
+		if(is_kloc_buffer_set()) {
+#ifdef CONFIG_KLOC_MIGRATE
 			path = NULL;
-			path = kmalloc_hetero_wrap(sizeof(struct ext4_ext_path) * (depth + 1), (void *)inode);
+			path = kloc_kmalloc_wrap(sizeof(struct ext4_ext_path) * (depth + 1), (void *)inode);
 			if(path) {
 				path->is_migratable = HETERO_INIT;
 			}
 			if(!path)
 #endif
-			path = kzalloc_hetero_buf(sizeof(struct ext4_ext_path) * (depth + 2),
+			path = kzalloc_kloc_buf(sizeof(struct ext4_ext_path) * (depth + 2),
 				GFP_NOFS);
 		}
 #endif
@@ -981,11 +979,10 @@ ext4_find_extent(struct inode *inode, ext4_lblk_t block,
 err:
 	ext4_ext_drop_refs(path);
 
-#ifdef CONFIG_HETERO_MIGRATE
-	//if(is_hetero_buffer_set() && path->is_migratable && is_vmalloc_addr(path)) {
+#ifdef CONFIG_KLOC_MIGRATE
+	//if(is_kloc_buffer_set() && path->is_migratable && is_vmalloc_addr(path)) {
 	if(is_vmalloc_addr(path)) {	
-	    printk(KERN_ALERT  "%s:%d\n", __FUNCTION__, __LINE__);
-	    vfree_hetero_page(path);
+	    kloc_vfree_page(path);
 	}
 	else
 #endif
@@ -1125,14 +1122,14 @@ static int ext4_ext_split(handle_t *handle, struct inode *inode,
 	 * We need this to handle errors and free blocks
 	 * upon them.
 	 */
-#ifdef CONFIG_HETERO_ENABLE 
+#ifdef CONFIG_KLOC_ENABLE 
 	ablocks = NULL;
-        if(is_hetero_buffer_set()) {
-#ifdef CONFIG_HETERO_MIGRATEXX
-		ablocks = kmalloc_hetero_migrate(sizeof(ext4_fsblk_t) * depth, GFP_NOFS);
+        if(is_kloc_buffer_set()) {
+#ifdef CONFIG_KLOC_MIGRATEXX
+		ablocks = kloc_kmalloc_migrate(sizeof(ext4_fsblk_t) * depth, GFP_NOFS);
 		if(!ablocks)
 #endif
-		ablocks = kzalloc_hetero_buf(sizeof(ext4_fsblk_t) * depth, GFP_NOFS);
+		ablocks = kzalloc_kloc_buf(sizeof(ext4_fsblk_t) * depth, GFP_NOFS);
 	}
 #endif
 	if (!ablocks)
@@ -1317,9 +1314,9 @@ cleanup:
 		}
 	}
 
-#ifdef CONFIG_HETERO_MIGRATEXX
-	if(is_hetero_buffer_set()) {
-		vfree_hetero_page(ablocks);
+#ifdef CONFIG_KLOC_MIGRATEXX
+	if(is_kloc_buffer_set()) {
+		kloc_vfree_page(ablocks);
 		return err;
 	}else
 #endif
@@ -2220,10 +2217,10 @@ merge:
 cleanup:
 	ext4_ext_drop_refs(npath);
 
-#ifdef CONFIG_HETERO_MIGRATE
-	//if(is_hetero_buffer_set() && npath->is_migratable && is_vmalloc_addr(npath)) {
+#ifdef CONFIG_KLOC_MIGRATE
+	//if(is_kloc_buffer_set() && npath->is_migratable && is_vmalloc_addr(npath)) {
 	if(is_vmalloc_addr(npath)) {
-	    vfree_hetero_page(npath);
+	    kloc_vfree_page(npath);
 	}
 	else
 #endif
@@ -2377,11 +2374,10 @@ static int ext4_fill_fiemap_extents(struct inode *inode,
 
 	ext4_ext_drop_refs(path);
 
-#ifdef CONFIG_HETERO_MIGRATE
-	//if(is_hetero_buffer_set() && path->is_migratable && is_vmalloc_addr(path)) {
+#ifdef CONFIG_KLOC_MIGRATE
+	//if(is_kloc_buffer_set() && path->is_migratable && is_vmalloc_addr(path)) {
 	if(is_vmalloc_addr(path)) {
-            printk(KERN_ALERT  "%s:%d\n", __FUNCTION__, __LINE__);
-            vfree_hetero_page(path);
+            kloc_vfree_page(path);
         }
         else
 #endif
@@ -3019,12 +3015,11 @@ again:
 				le16_to_cpu(path[k].p_hdr->eh_entries)+1;
 	} else {
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 		path = NULL;
-                if(is_hetero_buffer_set()) {
-			//printk(KERN_ALERT  "%s:%d\n", __FUNCTION__, __LINE__);
-#ifdef CONFIG_HETERO_MIGRATE
-			path = kmalloc_hetero_migrate(sizeof(struct ext4_ext_path) * (depth + 1), GFP_NOFS);
+                if(is_kloc_buffer_set()) {
+#ifdef CONFIG_KLOC_MIGRATE
+			path = kloc_kmalloc_migrate(sizeof(struct ext4_ext_path) * (depth + 1), GFP_NOFS);
 			if(path) {
 				memset(path, 0, sizeof(struct ext4_ext_path) * (depth + 1));
                         	path->is_migratable = HETERO_INIT;
@@ -3036,7 +3031,7 @@ again:
 			}
 			if(!path)
 #endif
-			path = kzalloc_hetero_buf(sizeof(struct ext4_ext_path) * (depth + 1),
+			path = kzalloc_kloc_buf(sizeof(struct ext4_ext_path) * (depth + 1),
 				       GFP_NOFS);
                 }else
 #endif
@@ -3171,10 +3166,10 @@ again:
 out:
 	ext4_ext_drop_refs(path);
 
-#ifdef CONFIG_HETERO_MIGRATE
-	//if(is_hetero_buffer_set() && path->is_migratable && is_vmalloc_addr(path)) {
+#ifdef CONFIG_KLOC_MIGRATE
+	//if(is_kloc_buffer_set() && path->is_migratable && is_vmalloc_addr(path)) {
 	if(is_vmalloc_addr(path)) {
-            vfree_hetero_page(path);
+            kloc_vfree_page(path);
         }
         else
 #endif
@@ -4730,14 +4725,11 @@ out:
 out2:
 	ext4_ext_drop_refs(path);
 
-#ifdef CONFIG_HETERO_MIGRATE
-	//if(is_hetero_buffer_set() && path->is_migratable && is_vmalloc_addr(path)) {
+#ifdef CONFIG_KLOC_MIGRATE
+	//if(is_kloc_buffer_set() && path->is_migratable && is_vmalloc_addr(path)) {
 	if(is_vmalloc_addr(path)) {
-		//printk(KERN_ALERT  "%s:%d\n", __FUNCTION__, __LINE__);
-                vfree_hetero_page(path);
-	}/*else if (path->is_migratable) {
-		printk(KERN_ALERT  "%s:%d\n", __FUNCTION__, __LINE__);
-	}*/
+                kloc_vfree_page(path);
+	}	
 	else
 #endif
 	kfree(path);
@@ -5037,11 +5029,6 @@ long ext4_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
 	int flags;
 	ext4_lblk_t lblk;
 	unsigned int blkbits = inode->i_blkbits;
-
-        /*Mark the mapping to Hetero target object*/
-#ifdef CONFIG_HETERO_ENABLE
-        //set_fsmap_kloc_obj(inode->i_mapping);
-#endif
 
 	/*
 	 * Encrypted inodes can't handle collapse range or insert
@@ -5571,11 +5558,10 @@ ext4_ext_shift_extents(struct inode *inode, handle_t *handle,
 out:
 	ext4_ext_drop_refs(path);
 
-#ifdef CONFIG_HETERO_MIGRATE
-	//if(is_hetero_buffer_set() && path->is_migratable && is_vmalloc_addr(path))  {
+#ifdef CONFIG_KLOC_MIGRATE
+	//if(is_kloc_buffer_set() && path->is_migratable && is_vmalloc_addr(path))  {
 	if(is_vmalloc_addr(path)) {
-	    printk(KERN_ALERT  "%s:%d\n", __FUNCTION__, __LINE__);
-            vfree_hetero_page(path);
+            kloc_vfree_page(path);
         }
         else
 #endif
@@ -5857,11 +5843,10 @@ int ext4_insert_range(struct inode *inode, loff_t offset, loff_t len)
 
 		ext4_ext_drop_refs(path);
 
-#ifdef CONFIG_HETERO_MIGRATE
-		//if(is_hetero_buffer_set() && path->is_migratable && is_vmalloc_addr(path)) {
+#ifdef CONFIG_KLOC_MIGRATE
+		//if(is_kloc_buffer_set() && path->is_migratable && is_vmalloc_addr(path)) {
 		if(is_vmalloc_addr(path)) {
-		    //printk(KERN_ALERT  "%s:%d\n", __FUNCTION__, __LINE__);
-		    vfree_hetero_page(path);
+		    kloc_vfree_page(path);
 		}
 		else
 #endif
@@ -5873,11 +5858,10 @@ int ext4_insert_range(struct inode *inode, loff_t offset, loff_t len)
 
 	} else {
 		ext4_ext_drop_refs(path);
-#ifdef CONFIG_HETERO_MIGRATE
-		//if(is_hetero_buffer_set() && path->is_migratable  && is_vmalloc_addr(path))  {
+#ifdef CONFIG_KLOC_MIGRATE
+		//if(is_kloc_buffer_set() && path->is_migratable  && is_vmalloc_addr(path))  {
 		if(is_vmalloc_addr(path)) {
-		    //printk(KERN_ALERT  "%s:%d\n", __FUNCTION__, __LINE__);
-		    vfree_hetero_page(path);
+		    kloc_vfree_page(path);
 		}
 		else
 #endif
@@ -6103,11 +6087,10 @@ ext4_swap_extents(handle_t *handle, struct inode *inode1,
 	repeat:
 		ext4_ext_drop_refs(path1);
 
-#ifdef CONFIG_HETERO_MIGRATE
-		//if(is_hetero_buffer_set() && path1->is_migratable && is_vmalloc_addr(path1)) {
+#ifdef CONFIG_KLOC_MIGRATE
+		//if(is_kloc_buffer_set() && path1->is_migratable && is_vmalloc_addr(path1)) {
 		if(is_vmalloc_addr(path1)) {
-		    //printk(KERN_ALERT  "%s:%d\n", __FUNCTION__, __LINE__);
-		    vfree_hetero_page(path1);
+		    kloc_vfree_page(path1);
 		}
 		else
 #endif
@@ -6117,11 +6100,10 @@ ext4_swap_extents(handle_t *handle, struct inode *inode1,
 
 		ext4_ext_drop_refs(path2);
 
-#ifdef CONFIG_HETERO_MIGRATE
-		//if(is_hetero_buffer_set() && path2->is_migratable && is_vmalloc_addr(path2)) {
+#ifdef CONFIG_KLOC_MIGRATE
+		//if(is_kloc_buffer_set() && path2->is_migratable && is_vmalloc_addr(path2)) {
 		if(is_vmalloc_addr(path2)) {
-		    //printk(KERN_ALERT  "%s:%d\n", __FUNCTION__, __LINE__);
-		    vfree_hetero_page(path2);
+		    kloc_vfree_page(path2);
 		}
 		else
 #endif

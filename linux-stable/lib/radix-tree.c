@@ -408,11 +408,11 @@ radix_tree_node_alloc(gfp_t gfp_mask, struct radix_tree_node *parent,
 		 * cache first for the new node to get accounted to the memory
 		 * cgroup.
 		 */
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 		ret = NULL;
-		if (is_hetero_radix_set()) {
+		if (is_kloc_radix_set()) {
 			radix_cnt++;
-			ret = kmem_cache_alloc_hetero(radix_tree_node_cachep,
+			ret = kmem_cache_alloc_kloc(radix_tree_node_cachep,
 					       gfp_mask | __GFP_NOWARN);
 		}
 		if(!ret)
@@ -442,11 +442,11 @@ radix_tree_node_alloc(gfp_t gfp_mask, struct radix_tree_node *parent,
 		kmemleak_update_trace(ret);
 		goto out;
 	}
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 	ret = NULL;
-	if (is_hetero_radix_set()) {
+	if (is_kloc_radix_set()) {
 		radix_cnt++;
-		ret = kmem_cache_alloc_hetero(radix_tree_node_cachep, gfp_mask);
+		ret = kmem_cache_alloc_kloc(radix_tree_node_cachep, gfp_mask);
 	}
 	if(!ret)
 #endif
@@ -514,10 +514,10 @@ static __must_check int __radix_tree_preload(gfp_t gfp_mask, unsigned nr)
 
 	while (rtp->nr < nr) {
 		preempt_enable();
-#ifdef CONFIG_HETERO_ENABLE
-		if (is_hetero_radix_set()) {
+#ifdef CONFIG_KLOC_ENABLE
+		if (is_kloc_radix_set()) {
  			radix_cnt++;
-			node = kmem_cache_alloc_hetero(radix_tree_node_cachep, gfp_mask);
+			node = kmem_cache_alloc_kloc(radix_tree_node_cachep, gfp_mask);
 		}
 		else
 			node = kmem_cache_alloc(radix_tree_node_cachep, gfp_mask);
@@ -928,9 +928,9 @@ int __radix_tree_create(struct radix_tree_root *root, unsigned long index,
 
 
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 /**
- *	__radix_tree_create_hetero - create a slot in a radix tree
+ *	__radix_tree_create_kloc - create a slot in a radix tree
  *	@root:		radix tree root
  *	@index:		index key
  *	@order:		index occupies 2^order aligned slots
@@ -946,7 +946,7 @@ int __radix_tree_create(struct radix_tree_root *root, unsigned long index,
  *
  *	Returns -ENOMEM, or 0 for success.
  */
-int __radix_tree_create_hetero(struct radix_tree_root *root, unsigned long index,
+int __radix_tree_create_kloc(struct radix_tree_root *root, unsigned long index,
 			unsigned order, struct radix_tree_node **nodep,
 			void __rcu ***slotp, void *kloc_obj)
 {
@@ -958,8 +958,8 @@ int __radix_tree_create_hetero(struct radix_tree_root *root, unsigned long index
 	gfp_t gfp = root_gfp_mask(root);
 
 	/*Mark the cache that it belongs to Hetero targe object*/
-#ifdef CONFIG_HETERO_ENABLE
-        if (is_hetero_buffer_set() && is_hetero_cacheobj(kloc_obj)){
+#ifdef CONFIG_KLOC_ENABLE
+        if (is_kloc_buffer_set() && is_kloc_cacheobj(kloc_obj)){
 		update_kloc_obj(radix_tree_node_cachep, kloc_obj);
 	}
 #endif
@@ -986,8 +986,6 @@ int __radix_tree_create_hetero(struct radix_tree_root *root, unsigned long index
 				return -ENOMEM;
 			rcu_assign_pointer(*slot, node_to_entry(child));
 			if (node) {
-				//if (global_flag == 4)
-				//	add_to_hashtable_node(node);
 				node->count++;
 			}
 		} else if (!radix_tree_is_internal_node(child))
@@ -995,8 +993,6 @@ int __radix_tree_create_hetero(struct radix_tree_root *root, unsigned long index
 
 		/* Go a level down */
 		node = entry_to_node(child);
-	//	if (global_flag == 4)
-	//		add_to_hashtable_node(node);
 
 		offset = radix_tree_descend(node, &child, index);
 		slot = &node->slots[offset];
@@ -1004,14 +1000,12 @@ int __radix_tree_create_hetero(struct radix_tree_root *root, unsigned long index
 
 	if (nodep) {
 		*nodep = node;
-	//	if (global_flag == 4)
-	//		add_to_hashtable_node(*nodep);
 	}
 	if (slotp)
 		*slotp = slot;
 	return 0;
 }
-#endif //CONFIG_HETERO_ENABLE
+#endif //CONFIG_KLOC_ENABLE
 
 
 

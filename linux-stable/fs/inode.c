@@ -160,9 +160,8 @@ int inode_init_always(struct super_block *sb, struct inode *inode)
 	inode->i_rdev = 0;
 	inode->dirtied_when = 0;
 
-#ifdef CONFIG_HETERO_OBJAFF
-	if (is_hetero_buffer_set()) {
-		//printk(KERN_ALERT "%s:%d \n", __func__, __LINE__);
+#ifdef CONFIG_KLOC_KNODE
+	if (is_kloc_buffer_set()) {
 		set_inode_kloc_obj(inode);
 	}
 #endif

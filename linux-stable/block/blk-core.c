@@ -186,16 +186,16 @@ void blk_queue_congestion_threshold(struct request_queue *q)
 void blk_rq_init(struct request_queue *q, struct request *rq)
 {
 
-#ifdef CONFIG_HETERO_MIGRATE
+#ifdef CONFIG_KLOC_MIGRATE
 	__u8 is_migratable;
-	if(is_hetero_buffer_set()) {
+	if(is_kloc_buffer_set()) {
 		is_migratable = rq->is_migratable;
 	}
 #endif
 	memset(rq, 0, sizeof(*rq));
 
-#ifdef CONFIG_HETERO_MIGRATE
-	if(is_hetero_buffer_set()) {
+#ifdef CONFIG_KLOC_MIGRATE
+	if(is_kloc_buffer_set()) {
 		rq->is_migratable = is_migratable;
 	}
 #endif
@@ -846,9 +846,9 @@ static void *alloc_request_simple(gfp_t gfp_mask, void *data)
 {
 	struct request_queue *q = data;
 
-#ifdef CONFIG_HETERO_ENABLE
-        if(is_hetero_buffer_set()) {
-		return kmem_cache_alloc_node_hetero(request_cachep, gfp_mask, q->node);
+#ifdef CONFIG_KLOC_ENABLE
+        if(is_kloc_buffer_set()) {
+		return kmem_cache_alloc_node_kloc(request_cachep, gfp_mask, q->node);
         }
 #endif
 	return kmem_cache_alloc_node(request_cachep, gfp_mask, q->node);
@@ -864,20 +864,13 @@ static void *alloc_request_size(gfp_t gfp_mask, void *data)
 	struct request_queue *q = data;
 	struct request *rq;
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 	struct page *page = NULL;
 	rq = NULL;
 
-        if(is_hetero_buffer_set()) {
-		/*if(q && q->bio_split) {
-			printk(KERN_ALERT "%s : %d \n", __func__, __LINE__);	
-			if(q->bio_split->kloc_obj) 
-			    printk(KERN_ALERT "%s : %d \n", __func__, __LINE__);
-		}*/
-		//if(current && current->kloc_obj)
-		//	    printk(KERN_ALERT "%s : %d kloc_obj not null \n", __func__, __LINE__);
-#ifdef CONFIG_HETERO_MIGRATE
-		rq = kmalloc_hetero_migrate(sizeof(struct request) + q->cmd_size, gfp_mask);
+        if(is_kloc_buffer_set()) {
+#ifdef CONFIG_KLOC_MIGRATE
+		rq = kloc_kmalloc_migrate(sizeof(struct request) + q->cmd_size, gfp_mask);
 		if(rq) {
 			rq->is_migratable = HETERO_INIT;
 			page = vmalloc_to_page(rq);
@@ -887,7 +880,7 @@ static void *alloc_request_size(gfp_t gfp_mask, void *data)
 			}
 		} else 
 #endif
-		rq = kmalloc_node_hetero(sizeof(struct request) +
+		rq = kmalloc_node_kloc(sizeof(struct request) +
 				q->cmd_size, gfp_mask, q->node);
         }
 	if(!rq)
@@ -896,17 +889,14 @@ static void *alloc_request_size(gfp_t gfp_mask, void *data)
 			q->node);
 
 	if (rq && q->init_rq_fn && q->init_rq_fn(q, rq, gfp_mask) < 0) {
-#ifdef CONFIG_HETERO_ENABLE
-#ifdef CONFIG_HETERO_MIGRATE
-			//if(rq->is_migratable == HETERO_INIT) {
+#ifdef CONFIG_KLOC_ENABLE
+#ifdef CONFIG_KLOC_MIGRATE
 				if(is_vmalloc_addr(rq)) {
-					//printk(KERN_ALERT "%s : %d \n", __func__, __LINE__);	
 					rq->is_migratable = 0;
-					vfree_hetero_page(rq);
+					kloc_vfree_page(rq);
 					rq = NULL;
 					return rq;
 				}
-			//}
 #endif	
 #endif
 		kfree(rq);
@@ -925,15 +915,12 @@ static void free_request_size(void *element, void *data)
 		q->exit_rq_fn(q, element);
 
 	if(element) 
-#ifdef CONFIG_HETERO_MIGRATE
+#ifdef CONFIG_KLOC_MIGRATE
 	{
 	    rq = (struct request *)element;
-	    //if(is_hetero_buffer_set()) {
-		//if(rq && rq->is_migratable == HETERO_INIT && is_vmalloc_addr(rq)) {
 		if(is_vmalloc_addr(rq)) {
-			//printk(KERN_ALERT "%s:%d \n", __func__, __LINE__);
 			rq->is_migratable = 0;
-			vfree_hetero_page(rq);
+			kloc_vfree_page(rq);
 			return;
 		}
 	}else 

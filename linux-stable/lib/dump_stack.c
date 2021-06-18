@@ -77,11 +77,11 @@ static void __dump_stack(void)
 	show_stack(NULL, NULL);
 }
 
-#ifdef CONFIG_HETERO_MIGRATE
-static void __dump_stack_hetero(void)
+#ifdef CONFIG_KLOC_MIGRATE
+static void __dump_stack_kloc(void)
 {
         //dump_stack_print_info(KERN_DEFAULT);
-        hetero_show_stack(NULL, NULL);
+        kloc_show_stack(NULL, NULL);
 }
 #endif
 
@@ -118,10 +118,9 @@ retry:
 		goto retry;
 	}
 
-#ifdef CONFIG_HETERO_MIGRATE
-	//if(is_hetero_buffer_set()) {
-	if(1) {
-		__dump_stack_hetero();
+#ifdef CONFIG_KLOC_MIGRATE
+	if(is_kloc_buffer_set()) {
+		__dump_stack_kloc();
 	}
 	else
 #endif

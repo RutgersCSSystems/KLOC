@@ -41,8 +41,8 @@ struct vm_struct {
 	unsigned int		nr_pages;
 	phys_addr_t		phys_addr;
 	const void		*caller;
-#ifdef CONFIG_HETERO_ENABLE
-	int 			is_hetero;
+#ifdef CONFIG_KLOC_ENABLE
+	int 			is_kloc;
 #endif
 };
 
@@ -55,8 +55,8 @@ struct vmap_area {
 	struct llist_node purge_list;    /* "lazy purge" list */
 	struct vm_struct *vm;
 	struct rcu_head rcu_head;
-#ifdef CONFIG_HETERO_ENABLE
-	int is_hetero;
+#ifdef CONFIG_KLOC_ENABLE
+	int is_kloc;
 #endif
 };
 
@@ -76,10 +76,10 @@ static inline void vmalloc_init(void)
 }
 #endif
 
-extern void *vmalloc_hetero(unsigned long size);
-extern void *vmalloc_hetero_gfp(unsigned long size, gfp_t gfp_mask);
+extern void *vmalloc_kloc(unsigned long size);
+extern void *vmalloc_kloc_gfp(unsigned long size, gfp_t gfp_mask);
 
-extern void vfree_hetero(const void *addr);
+extern void kloc_vfree(const void *addr);
 
 extern void *vmalloc(unsigned long size);
 extern void *vzalloc(unsigned long size);

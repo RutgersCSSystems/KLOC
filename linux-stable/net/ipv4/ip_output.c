@@ -736,10 +736,10 @@ slow_path:
 		}
 
 		/* Allocate buffer */
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 		skb2 = NULL;
-		if(sk && is_hetero_buffer_set() && is_hetero_cacheobj(sk->kloc_obj)){
-			skb2 = alloc_skb_hetero(len + hlen + ll_rs, GFP_ATOMIC, 
+		if(sk && is_kloc_buffer_set() && is_kloc_cacheobj(sk->kloc_obj)){
+			skb2 = alloc_skb_kloc(len + hlen + ll_rs, GFP_ATOMIC, 
 				sk->kloc_obj);
 		}
 		if(!skb2)
@@ -984,9 +984,9 @@ alloc_new_skb:
 				    2 * sk->sk_sndbuf) {
 
       			          /* Allocate buffer */
-#ifdef CONFIG_HETERO_ENABLE
-				if(sk && is_hetero_cacheobj(sk->kloc_obj)){
-					skb = alloc_skb_hetero(alloclen + hh_len + 15,
+#ifdef CONFIG_KLOC_ENABLE
+				if(sk && is_kloc_cacheobj(sk->kloc_obj)){
+					skb = alloc_skb_kloc(alloclen + hh_len + 15,
 						sk->sk_allocation, sk->kloc_obj);
 				}
 				if(!skb)

@@ -223,9 +223,9 @@ ext4_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
 	if (unlikely(ext4_forced_shutdown(EXT4_SB(inode->i_sb))))
 		return -EIO;
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
         if(current && current->mm &&
-                current->mm->hetero_task == HETERO_PROC) {
+                current->mm->kloc_task == HETERO_PROC) {
                 //set_fsmap_kloc_obj(inode->i_mapping);
         }
 #endif
@@ -399,11 +399,6 @@ static int ext4_file_open(struct inode * inode, struct file * filp)
 	int ret;
 
         /*Mark the mapping to Hetero target object*/
-#ifdef CONFIG_HETERO_ENABLE
-	//if(!execute_ok(inode))
-	  //      set_fsmap_kloc_obj(inode->i_mapping);
-#endif
-
 	if (unlikely(ext4_forced_shutdown(EXT4_SB(inode->i_sb))))
 		return -EIO;
 

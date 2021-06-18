@@ -1461,34 +1461,34 @@ static inline struct page *alloc_slab_page(struct kmem_cache *s,
 		__free_pages(page, order);
 		page = NULL;
 	}
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 	if(page)
 		page->kloc_obj = NULL;
 #endif
 	return page;
 }
 
-static inline struct page *alloc_slab_page_hetero(struct kmem_cache *s,
+static inline struct page *alloc_slab_page_kloc(struct kmem_cache *s,
 		gfp_t flags, int node, struct kmem_cache_order_objects oo)
 {
 	struct page *page;
 	unsigned int order = oo_order(oo);
 
-#ifdef CONFIG_HETERO_STATS
+#ifdef CONFIG_KLOC_STATS
 	//incr_tot_vmalloc_pages();
 #endif
 
 	if (node == NUMA_NO_NODE) 
 		page = alloc_pages(flags, order);
 	else
-		page = __alloc_pages_node_hetero(node, flags, order);
+		page = __alloc_pages_node_kloc(node, flags, order);
 
 	if (page && memcg_charge_slab(page, flags, order, s)) {
 		__free_pages(page, order);
 		page = NULL;
 	}
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 	if(page)
 		page->kloc_obj = NULL;
 #endif
@@ -1605,7 +1605,7 @@ static inline bool shuffle_freelist(struct kmem_cache *s, struct page *page)
 }
 #endif /* CONFIG_SLAB_FREELIST_RANDOM */
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 void update_kloc_obj(struct kmem_cache *s, void *obj) 
 {
 	s->kloc_obj = obj;
@@ -1696,7 +1696,7 @@ out:
 
 	inc_slabs_node(s, page_to_nid(page), page->objects);
 
-#ifdef CONFIG_HETERO_STATS
+#ifdef CONFIG_KLOC_STATS
         incr_tot_buff_pages();
 #endif
 
@@ -2485,34 +2485,30 @@ slab_out_of_memory(struct kmem_cache *s, gfp_t gfpflags, int nid)
 #endif
 }
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 void dgb_target_kloc_obj(void *kloc_obj){
 
-        struct inode *curr_inode = NULL, *hetero_inode = NULL;
-        struct dentry *curr_dentry = NULL, *hetero_dentry = NULL;
-        struct address_space *hetero_map = NULL;
+        struct inode *curr_inode = NULL, *kloc_inode = NULL;
+        struct dentry *curr_dentry = NULL, *kloc_dentry = NULL;
+        struct address_space *kloc_map = NULL;
 
         curr_inode = (struct inode *)kloc_obj;
 
         if(curr_inode) {
                 curr_dentry = d_find_any_alias(curr_inode);
-                printk("%s:%d Proc name %s is_hetero_cacheobj %d "
-                       "inode %lu", __func__,__LINE__, current->comm,
-                       is_hetero_cacheobj(kloc_obj),
-                       curr_inode->i_ino);
         }
         else
                 goto error;
 
-        //hetero_inode = (struct inode *)current->mm->kloc_obj;
-	hetero_inode = (struct inode *)current->kloc_obj;
-        if(hetero_inode) {
-                hetero_dentry = d_find_any_alias(hetero_inode);
-                if(hetero_dentry && curr_dentry)
+        //kloc_inode = (struct inode *)current->mm->kloc_obj;
+	kloc_inode = (struct inode *)current->kloc_obj;
+        if(kloc_inode) {
+                kloc_dentry = d_find_any_alias(kloc_inode);
+                if(kloc_dentry && curr_dentry)
                         printk("fname %s hetero fname %s \n",
-                               curr_dentry->d_iname, hetero_dentry->d_iname);
+                               curr_dentry->d_iname, kloc_dentry->d_iname);
         }else {
-                printk("fname %s hetero_inode NULL \n",
+                printk("fname %s kloc_inode NULL \n",
                                 curr_dentry->d_iname);
         }
 error:
@@ -2528,9 +2524,9 @@ static inline void *new_slab_objects(struct kmem_cache *s, gfp_t flags,
 	struct kmem_cache_cpu *c = *pc;
 	struct page *page;
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
         /* Check if we are allocating for targetted object */
-        if(is_hetero_buffer_set()) {
+        if(is_kloc_buffer_set()) {
                 node = get_fastmem_node();
         }
 #endif
@@ -2555,13 +2551,13 @@ static inline void *new_slab_objects(struct kmem_cache *s, gfp_t flags,
 		stat(s, ALLOC_SLAB);
 		c->page = page;
 		*pc = c;
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 		/*Most likely this should be a fast page miss 
 		* because we explicity redirected allocatio to 
 		* slow memory 
 		*/
-	        if(is_hetero_buffer_set() ) {
-			update_hetero_pgbuff_stat(get_fastmem_node(), page, 0);
+	        if(is_kloc_buffer_set() ) {
+			kloc_update_pgbuff_stat(get_fastmem_node(), page, 0);
 		}
 #endif
 	} else
@@ -2638,10 +2634,6 @@ static void *___slab_alloc(struct kmem_cache *s, gfp_t gfpflags, int node,
 	void *freelist;
 	struct page *page;
 
-#ifdef CONFIG_HETERO_ENABLE
-        if(is_hetero_buffer_set()){
-	}
-#endif
 	page = c->page;
 	if (!page)
 		goto new_slab;
@@ -2735,14 +2727,6 @@ static void *__slab_alloc(struct kmem_cache *s, gfp_t gfpflags, int node,
 	void *p;
 	unsigned long flags;
 
-#ifdef CONFIG_HETERO_ENABLE
-        if(is_hetero_buffer_set()){
-		//dump_stack();
-		//printk(KERN_ALERT "%s : %d \n", __func__, __LINE__);
-	}
-#endif
-
-
 	local_irq_save(flags);
 #ifdef CONFIG_PREEMPT
 	/*
@@ -2774,14 +2758,6 @@ static __always_inline void *slab_alloc_node(struct kmem_cache *s,
 	struct kmem_cache_cpu *c;
 	struct page *page;
 	unsigned long tid;
-
-#ifdef CONFIG_HETERO_ENABLE
-        //if(is_hetero_buffer_set()){
-	//	dump_stack();
-	//	printk(KERN_ALERT "%s : %d \n", __func__, __LINE__);
-	//}
-#endif
-
 
 	s = slab_pre_alloc_hook(s, gfpflags);
 	if (!s)
@@ -2863,9 +2839,9 @@ redo:
 }
 
  /* HeteroOS code */
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 
-static struct page *allocate_slab_hetero(struct kmem_cache *s, gfp_t flags, int node)
+static struct page *allocate_slab_kloc(struct kmem_cache *s, gfp_t flags, int node)
 {
 	struct page *page;
 	struct kmem_cache_order_objects oo = s->oo;
@@ -2891,7 +2867,7 @@ static struct page *allocate_slab_hetero(struct kmem_cache *s, gfp_t flags, int 
 
 	page = NULL;
 	if(!page)
-		page = alloc_slab_page_hetero(s, alloc_gfp, node, oo);
+		page = alloc_slab_page_kloc(s, alloc_gfp, node, oo);
 
 	if (unlikely(!page)) {
 		oo = s->min;
@@ -2949,14 +2925,14 @@ out:
 
 	inc_slabs_node(s, page_to_nid(page), page->objects);
 
-#ifdef CONFIG_HETERO_STATS
+#ifdef CONFIG_KLOC_STATS
 	incr_tot_buff_pages();
 #endif
 	return page;
 }
 
 
-static struct page *new_slab_hetero(struct kmem_cache *s, gfp_t flags, int node)
+static struct page *new_slab_kloc(struct kmem_cache *s, gfp_t flags, int node)
 {
 	if (unlikely(flags & GFP_SLAB_BUG_MASK)) {
 		gfp_t invalid_mask = flags & GFP_SLAB_BUG_MASK;
@@ -2965,14 +2941,14 @@ static struct page *new_slab_hetero(struct kmem_cache *s, gfp_t flags, int node)
 				invalid_mask, &invalid_mask, flags, &flags);
 		dump_stack();
 	}
-	return allocate_slab_hetero(s,
+	return allocate_slab_kloc(s,
 		flags & (GFP_RECLAIM_MASK | GFP_CONSTRAINT_MASK), node);
 }
 
 
 
-#ifdef CONFIG_HETERO_ENABLE
-static inline void *new_slab_objects_hetero(struct kmem_cache *s, gfp_t flags,
+#ifdef CONFIG_KLOC_ENABLE
+static inline void *new_slab_objects_kloc(struct kmem_cache *s, gfp_t flags,
                         int node, struct kmem_cache_cpu **pc)
 {
         void *freelist;
@@ -2980,7 +2956,7 @@ static inline void *new_slab_objects_hetero(struct kmem_cache *s, gfp_t flags,
         struct page *page;
 
         /* Check if we are allocating for targetted object */
-        if(is_hetero_buffer_set() && is_hetero_cacheobj(s->kloc_obj)) {
+        if(is_kloc_buffer_set() && is_kloc_cacheobj(s->kloc_obj)) {
 		node = get_fastmem_node();
 	}else {
 		node = get_fastmem_node();
@@ -2990,7 +2966,7 @@ static inline void *new_slab_objects_hetero(struct kmem_cache *s, gfp_t flags,
         if (freelist)
                 return freelist;
 
-        page = new_slab_hetero(s, flags, node);
+        page = new_slab_kloc(s, flags, node);
         if (page) {
                 c = raw_cpu_ptr(s->cpu_slab);
                 if (c->page)
@@ -3006,15 +2982,15 @@ static inline void *new_slab_objects_hetero(struct kmem_cache *s, gfp_t flags,
                 c->page = page;
                 *pc = c;
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 		/* We set kloc_obj to page even if not in the desired 
 		 * memory node. We can later use this for migration.
 		 */
-                if(is_hetero_buffer_set() && is_hetero_cacheobj(s->kloc_obj)) {
-			if(is_hetero_page(page, node))
+                if(is_kloc_buffer_set() && is_kloc_cacheobj(s->kloc_obj)) {
+			if(is_kloc_page(page, node))
 				set_kloc_obj_page(page, s->kloc_obj);	
 			/* Hit or miss to desired node */
-			update_hetero_pgbuff_stat(get_fastmem_node(), page, 0);
+			kloc_update_pgbuff_stat(get_fastmem_node(), page, 0);
 		}
 #endif
         } else
@@ -3043,7 +3019,7 @@ static inline void *new_slab_objects_hetero(struct kmem_cache *s, gfp_t flags,
  * Version of __slab_alloc to use when we know that interrupts are
  * already disabled (which is the case for bulk allocation).
  */
-static void *___slab_alloc_hetero(struct kmem_cache *s, gfp_t gfpflags, int node,
+static void *___slab_alloc_kloc(struct kmem_cache *s, gfp_t gfpflags, int node,
 			  unsigned long addr, struct kmem_cache_cpu *c)
 {
 	void *freelist;
@@ -3098,9 +3074,9 @@ load_freelist:
 	 * page is pointing to the page from which the objects are obtained.
 	 * That page must be frozen for per cpu allocations to work.
 	 */
-#ifdef CONFIG_HETERO_NET_ENABLE
-	if (c->page && page_to_nid(c->page) == get_fastmem_node() && c->page->hetero != HETERO_PG_FLAG)
-		update_hetero_pgbuff_stat(get_fastmem_node(), c->page, 0);
+#ifdef CONFIG_KLOC_NET
+	if (c->page && page_to_nid(c->page) == get_fastmem_node() && c->page->kloc != HETERO_PG_FLAG)
+		kloc_update_pgbuff_stat(get_fastmem_node(), c->page, 0);
 #endif
 
 	VM_BUG_ON(!c->page->frozen);
@@ -3109,9 +3085,9 @@ load_freelist:
 	return freelist;
 
 new_slab:
-#ifdef CONFIG_HETERO_NET_ENABLE
-	if (c->page && page_to_nid(c->page) == get_fastmem_node() && c->page->hetero != HETERO_PG_FLAG)
-		update_hetero_pgbuff_stat(get_fastmem_node(), c->page, 0);
+#ifdef CONFIG_KLOC_NET
+	if (c->page && page_to_nid(c->page) == get_fastmem_node() && c->page->kloc != HETERO_PG_FLAG)
+		kloc_update_pgbuff_stat(get_fastmem_node(), c->page, 0);
 #endif
 
 	if (slub_percpu_partial(c)) {
@@ -3121,7 +3097,7 @@ new_slab:
 		goto redo;
 	}
 
-	freelist = new_slab_objects_hetero(s, gfpflags, node, &c);
+	freelist = new_slab_objects_kloc(s, gfpflags, node, &c);
 
 	if (unlikely(!freelist)) {
 		slab_out_of_memory(s, gfpflags, node);
@@ -3147,7 +3123,7 @@ new_slab:
  * Another one that disabled interrupt and compensates for possible
  * cpu changes by refetching the per cpu area pointer.
  */
-static void *__slab_alloc_hetero(struct kmem_cache *s, gfp_t gfpflags, int node,
+static void *__slab_alloc_kloc(struct kmem_cache *s, gfp_t gfpflags, int node,
                           unsigned long addr, struct kmem_cache_cpu *c)
 {
         void *p;
@@ -3162,7 +3138,7 @@ static void *__slab_alloc_hetero(struct kmem_cache *s, gfp_t gfpflags, int node,
          */
         c = this_cpu_ptr(s->cpu_slab);
 #endif
-        p = ___slab_alloc_hetero(s, gfpflags, node, addr, c);
+        p = ___slab_alloc_kloc(s, gfpflags, node, addr, c);
         local_irq_restore(flags);
         return p;
 }
@@ -3177,7 +3153,7 @@ static void *__slab_alloc_hetero(struct kmem_cache *s, gfp_t gfpflags, int node,
  *
  * Otherwise we can simply pick the next object from the lockless free list.
  */
-static __always_inline void *slab_alloc_node_hetero(struct kmem_cache *s,
+static __always_inline void *slab_alloc_node_kloc(struct kmem_cache *s,
 		gfp_t gfpflags, int node, unsigned long addr)
 {
 	void *object;
@@ -3226,7 +3202,7 @@ redo:
 	page = c->page;
 
 	if (unlikely(!object || !node_match(page, node))) {
-		object = __slab_alloc_hetero(s, gfpflags, node, addr, c);
+		object = __slab_alloc_kloc(s, gfpflags, node, addr, c);
 		stat(s, ALLOC_SLOWPATH);
 	} else {
 		void *next_object = get_freepointer_safe(s, object);
@@ -3266,26 +3242,27 @@ redo:
 }
 
 
-static __always_inline void *slab_alloc_hetero(struct kmem_cache *s,
+static __always_inline void *slab_alloc_kloc(struct kmem_cache *s,
 		gfp_t gfpflags, unsigned long addr)
 {
-	return slab_alloc_node_hetero(s, gfpflags, get_fastmem_node(), addr);
+	return slab_alloc_node_kloc(s, gfpflags, get_fastmem_node(), addr);
 }
 
-void *kmem_cache_alloc_hetero(struct kmem_cache *s, gfp_t gfpflags)
+void *kmem_cache_alloc_kloc(struct kmem_cache *s, gfp_t gfpflags)
 {
-        if(!is_hetero_buffer_set()) {
+        if(!is_kloc_buffer_set()) {
                 return kmem_cache_alloc(s, gfpflags); 
         }
-#ifdef CONFIG_HETERO_STATS
+
+#ifdef CONFIG_KLOC_STATS
 	incr_tot_vmalloc_pages();
 #endif
-	void *ret = slab_alloc_hetero(s, gfpflags, _RET_IP_);
+	void *ret = slab_alloc_kloc(s, gfpflags, _RET_IP_);
 	trace_kmem_cache_alloc(_RET_IP_, ret, s->object_size,
 				s->size, gfpflags);
 	return ret;
 }
-EXPORT_SYMBOL(kmem_cache_alloc_hetero);
+EXPORT_SYMBOL(kmem_cache_alloc_kloc);
 
 #endif
 
@@ -3294,14 +3271,7 @@ static __always_inline void *slab_alloc(struct kmem_cache *s,
 		gfp_t gfpflags, unsigned long addr)
 {
 
-#ifdef CONFIG_HETERO_ENABLEXX
-	if(is_hetero_buffer_set()) {
-		return slab_alloc_node_hetero(s, gfpflags, get_fastmem_node(), addr);
-	}
-	return slab_alloc_node(s, gfpflags, get_fastmem_node(), addr);
-#else
 	return slab_alloc_node(s, gfpflags, NUMA_NO_NODE, addr);
-#endif
 }
 
 
@@ -3309,10 +3279,6 @@ static __always_inline void *slab_alloc(struct kmem_cache *s,
 void *kmem_cache_alloc(struct kmem_cache *s, gfp_t gfpflags)
 {
 
-#ifdef CONFIG_HETERO_ENABLE
-        //if(is_hetero_buffer_set())
-          //  return kmem_cache_alloc_hetero(s, gfpflags);
-#endif
 	void *ret = slab_alloc(s, gfpflags, _RET_IP_);
 
 	trace_kmem_cache_alloc(_RET_IP_, ret, s->object_size,
@@ -3323,35 +3289,30 @@ EXPORT_SYMBOL(kmem_cache_alloc);
 
 #ifdef CONFIG_TRACING
 
-#ifdef CONFIG_HETERO_ENABLE
-void *kmem_cache_alloc_trace_hetero(struct kmem_cache *s, gfp_t gfpflags, size_t size)
+#ifdef CONFIG_KLOC_ENABLE
+void *kmem_cache_alloc_trace_kloc(struct kmem_cache *s, gfp_t gfpflags, size_t size)
 {
-	void *ret = slab_alloc_hetero(s, gfpflags, _RET_IP_);
+	void *ret = slab_alloc_kloc(s, gfpflags, _RET_IP_);
 	trace_kmalloc(_RET_IP_, ret, size, s->size, gfpflags);
 	kasan_kmalloc(s, ret, size, gfpflags);
 	return ret;
 }
-EXPORT_SYMBOL(kmem_cache_alloc_trace_hetero);
+EXPORT_SYMBOL(kmem_cache_alloc_trace_kloc);
 
-void *kmem_cache_alloc_node_hetero(struct kmem_cache *s, gfp_t gfpflags, int node)
+void *kmem_cache_alloc_node_kloc(struct kmem_cache *s, gfp_t gfpflags, int node)
 {
-        void *ret = slab_alloc_node_hetero(s, gfpflags, node, _RET_IP_);
+        void *ret = slab_alloc_node_kloc(s, gfpflags, node, _RET_IP_);
 
         trace_kmem_cache_alloc_node(_RET_IP_, ret,
                                     s->object_size, s->size, gfpflags, node);
 
         return ret;
 }
-EXPORT_SYMBOL(kmem_cache_alloc_node_hetero);
+EXPORT_SYMBOL(kmem_cache_alloc_node_kloc);
 #endif
 
 void *kmem_cache_alloc_trace(struct kmem_cache *s, gfp_t gfpflags, size_t size)
 {
-
-#ifdef CONFIG_HETERO_ENABLE
-        if(is_hetero_buffer_set()){
-	}
-#endif
 	void *ret = slab_alloc(s, gfpflags, _RET_IP_);
 	trace_kmalloc(_RET_IP_, ret, size, s->size, gfpflags);
 	kasan_kmalloc(s, ret, size, gfpflags);
@@ -3368,8 +3329,6 @@ void *kmem_cache_alloc_node(struct kmem_cache *s, gfp_t gfpflags, int node)
 {
 	void *ret = slab_alloc_node(s, gfpflags, node, _RET_IP_);
 
-#ifdef CONFIG_HETERO_ENABLE
-#endif
 	trace_kmem_cache_alloc_node(_RET_IP_, ret,
 				    s->object_size, s->size, gfpflags, node);
 
@@ -3383,8 +3342,6 @@ void *kmem_cache_alloc_node_trace(struct kmem_cache *s,
 				    int node, size_t size)
 {
 
-#ifdef CONFIG_HETERO_ENABLE
-#endif
 	void *ret = slab_alloc_node(s, gfpflags, node, _RET_IP_);
 
 	trace_kmalloc_node(_RET_IP_, ret,
@@ -3578,9 +3535,9 @@ static __always_inline void slab_free(struct kmem_cache *s, struct page *page,
 				      void *head, void *tail, int cnt,
 				      unsigned long addr)
 {
-#ifdef CONFIG_HETERO_ENABLE
-	if(page != NULL && is_hetero_buffer_set()) {
-		update_hetero_pgbuff_stat(get_fastmem_node(), page, 1);
+#ifdef CONFIG_KLOC_ENABLE
+	if(page != NULL && is_kloc_buffer_set()) {
+		kloc_update_pgbuff_stat(get_fastmem_node(), page, 1);
 	}
 #endif
 	/*
@@ -3723,12 +3680,6 @@ int kmem_cache_alloc_bulk(struct kmem_cache *s, gfp_t flags, size_t size,
 {
 	struct kmem_cache_cpu *c;
 	int i;
-
-#ifdef CONFIG_HETERO_ENABLE
-        if(is_hetero_buffer_set()){
-		printk(KERN_ALERT "%s : %d \n", __func__, __LINE__);
-	}
-#endif
 
 	/* memcg and kmem_cache debug support */
 	s = slab_pre_alloc_hook(s, flags);
@@ -4402,19 +4353,14 @@ void *__kmalloc(size_t size, gfp_t flags)
 EXPORT_SYMBOL(__kmalloc);
 
 /* heteroOS code */
-#ifdef CONFIG_HETERO_ENABLE
-void *__kmalloc_hetero(size_t size, gfp_t flags)
+#ifdef CONFIG_KLOC_ENABLE
+void *__kmalloc_kloc(size_t size, gfp_t flags)
 {
 	struct kmem_cache *s;
 	void *ret;
 
-#ifdef CONFIG_HETERO_MIGRATE
-	//incr_tot_vmalloc_pages();
-	//dump_stack();
-#endif
-
 	/*revert to default allocation*/
-	if(!is_hetero_buffer_set())
+	if(!is_kloc_buffer_set())
 		__kmalloc(size, flags);
 
 
@@ -4426,7 +4372,7 @@ void *__kmalloc_hetero(size_t size, gfp_t flags)
 	if (unlikely(ZERO_OR_NULL_PTR(s)))
 		return s;
 
-	ret = slab_alloc_hetero(s, flags, _RET_IP_);
+	ret = slab_alloc_kloc(s, flags, _RET_IP_);
 
 	trace_kmalloc(_RET_IP_, ret, size, s->size, flags);
 
@@ -4434,7 +4380,7 @@ void *__kmalloc_hetero(size_t size, gfp_t flags)
 
 	return ret;
 }
-EXPORT_SYMBOL(__kmalloc_hetero);
+EXPORT_SYMBOL(__kmalloc_kloc);
 #endif
 
 
@@ -4483,14 +4429,14 @@ void *__kmalloc_node(size_t size, gfp_t flags, int node)
 }
 EXPORT_SYMBOL(__kmalloc_node);
 
-#ifdef CONFIG_HETERO_ENABLE
-void *__kmalloc_node_hetero(size_t size, gfp_t flags, int node)
+#ifdef CONFIG_KLOC_ENABLE
+void *__kmalloc_node_kloc(size_t size, gfp_t flags, int node)
 {
 	struct kmem_cache *s;
 	void *ret;
 
         /*revert to default allocation*/
-        if(!is_hetero_buffer_set())
+        if(!is_kloc_buffer_set())
                 __kmalloc_node(size, flags, node);
 
 	if (unlikely(size > KMALLOC_MAX_CACHE_SIZE)) {
@@ -4506,7 +4452,7 @@ void *__kmalloc_node_hetero(size_t size, gfp_t flags, int node)
 	if (unlikely(ZERO_OR_NULL_PTR(s)))
 		return s;
 
-	ret = slab_alloc_node_hetero(s, flags, node, _RET_IP_);
+	ret = slab_alloc_node_kloc(s, flags, node, _RET_IP_);
 
 	trace_kmalloc_node(_RET_IP_, ret, size, s->size, flags, node);
 
@@ -4514,7 +4460,7 @@ void *__kmalloc_node_hetero(size_t size, gfp_t flags, int node)
 
 	return ret;
 }
-EXPORT_SYMBOL(__kmalloc_node_hetero);
+EXPORT_SYMBOL(__kmalloc_node_kloc);
 #endif
 
 #endif
@@ -4613,16 +4559,8 @@ void kfree(const void *x)
 	trace_kfree(_RET_IP_, x);
 
 	if (unlikely(ZERO_OR_NULL_PTR(x)))
-#ifdef CONFIG_HETERO_MIGRATEXX
-		if(is_hetero_buffer_set()) {
-			dump_stack();
-			printk(KERN_ALERT  "%s:%d\n", __FUNCTION__, __LINE__);
-			return;
-		}else
-			return;	
-#else
 		return;
-#endif
+
 	page = virt_to_head_page(x);
 	if (unlikely(!PageSlab(page))) {
 		BUG_ON(!PageCompound(page));
@@ -5028,8 +4966,8 @@ void *__kmalloc_track_caller(size_t size, gfp_t gfpflags, unsigned long caller)
 	return ret;
 }
 
-#ifdef CONFIG_HETERO_ENABLE
-void *__kmalloc_track_caller_hetero(size_t size, gfp_t gfpflags, unsigned long caller)
+#ifdef CONFIG_KLOC_ENABLE
+void *__kmalloc_track_caller_kloc(size_t size, gfp_t gfpflags, unsigned long caller)
 {
 	struct kmem_cache *s;
 	void *ret;
@@ -5042,7 +4980,7 @@ void *__kmalloc_track_caller_hetero(size_t size, gfp_t gfpflags, unsigned long c
 	if (unlikely(ZERO_OR_NULL_PTR(s)))
 		return s;
 
-	ret = slab_alloc_hetero(s, gfpflags, caller);
+	ret = slab_alloc_kloc(s, gfpflags, caller);
 	/* Honor the call site pointer we received. */
 	trace_kmalloc(caller, ret, size, s->size, gfpflags);
 	return ret;
@@ -5080,8 +5018,8 @@ void *__kmalloc_node_track_caller(size_t size, gfp_t gfpflags,
 	return ret;
 }
 
-#ifdef CONFIG_HETERO_ENABLE
-void *__kmalloc_node_track_caller_hetero(size_t size, gfp_t gfpflags,
+#ifdef CONFIG_KLOC_ENABLE
+void *__kmalloc_node_track_caller_kloc(size_t size, gfp_t gfpflags,
 					int node, unsigned long caller)
 {
 	struct kmem_cache *s;
@@ -5099,14 +5037,13 @@ void *__kmalloc_node_track_caller_hetero(size_t size, gfp_t gfpflags,
 	s = kmalloc_slab(size, gfpflags);
 	if (unlikely(ZERO_OR_NULL_PTR(s)))
 		return s;
-	ret = slab_alloc_node_hetero(s, gfpflags, node, caller);
+	ret = slab_alloc_node_kloc(s, gfpflags, node, caller);
 	/* Honor the call site pointer we received. */
 	trace_kmalloc_node(caller, ret, size, s->size, gfpflags, node);
 
 	return ret;
 }
-#endif //CONFIG_HETERO_ENABLE
-
+#endif //CONFIG_KLOC_ENABLE
 #endif
 
 #ifdef CONFIG_SYSFS

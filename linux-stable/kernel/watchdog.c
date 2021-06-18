@@ -31,7 +31,7 @@
 #include <linux/kvm_para.h>
 #include <linux/kthread.h>
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 #include <linux/hetero.h>
 #endif
 
@@ -420,8 +420,7 @@ static enum hrtimer_restart watchdog_timer_fn(struct hrtimer *hrtimer)
 			}
 		}
 
-		print_hetero_deadlock();
-
+		//print_kloc_deadlock();
 		pr_emerg("BUG: soft lockup - CPU#%d stuck for %us! [%s:%d] \n",
 			smp_processor_id(), duration,
 			current->comm, task_pid_nr(current));

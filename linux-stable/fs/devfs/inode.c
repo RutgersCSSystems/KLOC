@@ -287,7 +287,7 @@ static void devfs_generic_file_read(struct file *filp, loff_t *ppos,
 
 find_page:
 #if defined(_DEVFS_HETERO)
-      		page = hetero_alloc_IO(
+      		page = kloc_alloc_IO(
 			GFP_HIGHUSER_MOVABLE |__GFP_ZERO, 0, 0);
 		if (page){
 			SetPageReadahead(page);	
@@ -535,14 +535,6 @@ no_cached_page:
 		 * Ok, it wasn't cached, so we need to create a new
 		 * page..
 		 */
-//#ifdef HETEROMEM
-#if 0
-		if(current && current->heteroflag == PF_HETEROMEM){
-			printk(KERN_ALERT "mm/filemap.c, Hetero before page cache alloc 8888\n"); 
-            //page = getnvpage(NULL);
-        }
-        //if(!page)
-#endif	
 		page = page_cache_alloc(mapping);
 		if (!page) {
 			desc->error = -ENOMEM;

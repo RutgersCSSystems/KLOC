@@ -466,23 +466,10 @@ __do_kmalloc_node(size_t size, gfp_t gfp, int node, unsigned long caller)
 
 void *__kmalloc(size_t size, gfp_t gfp)
 {
-//	printk(KERN_ALERT "mm slob.c __kmalloc \n");
 	return __do_kmalloc_node(size, gfp, NUMA_NO_NODE, _RET_IP_);
 }
 EXPORT_SYMBOL(__kmalloc);
 
-/* heteroOS code */
-/*
-#ifdef CONFIG_HETERO_ENABLE
-void *__kmalloc_hetero(size_t size, gfp_t gfp)
-{
-	//return __do_kmalloc_node(size, gfp, NUMA_NO_NODE, _RET_IP_);
-	return __do_kmalloc_node(size, gfp, get_fastmem_node(), _RET_IP_);
-
-}
-EXPORT_SYMBOL(__kmalloc_hetero);
-#endif
-*/
 
 void *__kmalloc_track_caller(size_t size, gfp_t gfp, unsigned long caller)
 {

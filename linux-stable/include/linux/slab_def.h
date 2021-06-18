@@ -11,9 +11,9 @@
 struct kmem_cache {
 	struct array_cache __percpu *cpu_cache;
 
-//#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
         unsigned int kloc_obj; /* Hetero Object*/
-//#endif
+#endif
 
 /* 1) Cache tunables. Protected by slab_mutex */
 	unsigned int batchcount;

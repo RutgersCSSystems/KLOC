@@ -415,7 +415,7 @@ struct queue_pages {
 	unsigned long flags;
 	nodemask_t *nmask;
 	struct vm_area_struct *prev;
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 	unsigned int *listcnt;
 #endif
 };
@@ -926,7 +926,7 @@ static void migrate_page_add(struct page *page, struct list_head *pagelist,
 }
 
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 int page_list_count(struct list_head *pagelist) {
 	struct page *page=NULL;
 	int pagecount = 0;
@@ -940,7 +940,7 @@ EXPORT_SYMBOL(page_list_count);
 
 
 
-static int hetero_migrate_page_add(struct page *page, struct list_head *pagelist,
+static int kloc_migrate_page_add(struct page *page, struct list_head *pagelist,
 				unsigned long flags)
 {
 	struct page *head = compound_head(page);
@@ -951,17 +951,13 @@ static int hetero_migrate_page_add(struct page *page, struct list_head *pagelist
 	 */
 	if ((flags & MPOL_MF_MOVE_ALL) || page_mapcount(head) == 1) {
 
-		if (!hetero_isolate_lru_page(head)) {
+		if (!kloc_isolate_lru_page(head)) {
 			list_add_tail(&head->lru, pagelist);
 			mod_node_page_state(page_pgdat(head),
 				NR_ISOLATED_ANON + page_is_file_cache(head),
 				hpage_nr_pages(head));
 			pagecount++;	
-		}/*else if(page->hetero ==  HETERO_PG_FLAG) {
-			if (!PageLRU(page)) 
-			printk(KERN_ALERT "%s:%d Hetero Page not added\n", 
-				__func__, __LINE__);
-		}*/	
+		}	
 	}
 	return pagecount;
 }
@@ -984,13 +980,9 @@ struct page *alloc_new_node_page(struct page *page, unsigned long node)
 		prep_transhuge_page(thp);
 		return thp;
 	} else
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 #ifdef _USE_HETERO_PG_FLAG
-        if(page && page->hetero == HETERO_PG_FLAG) {
-                hetero_dbg("%s:%d Orig page node %d, Slow Node %d \n", 
-			__func__,__LINE__, page_to_nid(page), get_slowmem_node());
-		//return __alloc_pages_node_hetero(get_slowmem_node(), GFP_HIGHUSER_MOVABLE |
-		//		__GFP_THISNODE, 0);
+        if(page && page->kloc == HETERO_PG_FLAG) {
 		return __alloc_pages_node(get_slowmem_node(), GFP_HIGHUSER_MOVABLE |
 				__GFP_THISNODE, 0);
         }
@@ -1035,13 +1027,12 @@ static int migrate_to_node(struct mm_struct *mm, int source, int dest,
 }
 
 
-#ifdef CONFIG_HETERO_ENABLE
-int g_pages_added;
+#ifdef CONFIG_KLOC_ENABLE
 /*
  * Scan through pages checking if pages follow certain conditions,
  * and move them to the pagelist if they do.
  */
-#ifdef CONFIG_HETERO_OBJAFF
+#ifdef CONFIG_KLOC_KNODE
 static int queue_pages_pte_range_inodelru(pmd_t *pmd, unsigned long addr,
 		unsigned long end, struct mm_walk *walk)
 {
@@ -1052,15 +1043,11 @@ static int queue_pages_pte_range_inodelru(pmd_t *pmd, unsigned long addr,
 	int ret;
 	pte_t *pte;
 	spinlock_t *ptl;
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 	struct address_space *mapping = NULL;
 	int pages_checked = 0;
 	unsigned int *pages_added = qp->listcnt; 
 #endif
-	/*if(!is_hetero_vma(vma)) {*/
-	//printk(KERN_ALERT "%s:%d \n", __func__, __LINE__);
-	/*	return 0;
-	}*/
 
 	ptl = pmd_trans_huge_lock(pmd, vma);
 	if (ptl) {
@@ -1075,7 +1062,6 @@ static int queue_pages_pte_range_inodelru(pmd_t *pmd, unsigned long addr,
 		return 0;
 	}
 
-	//printk(KERN_ALERT "%s:%d \n", __func__, __LINE__);
 	pte = pte_offset_map_lock(walk->mm, pmd, addr, &ptl);
 	for (; addr != end; pte++, addr += PAGE_SIZE) {
 		if (!pte_present(*pte))
@@ -1107,17 +1093,16 @@ static int queue_pages_pte_range_inodelru(pmd_t *pmd, unsigned long addr,
 		/* Only if the page is in the rbtree of the inode 
 		 * add it to migration target.
 		 */
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 		struct inode *inode = (struct inode*)page->kloc_obj;
 		if(inode && inode->i_ino) {
 			if(!kloc_rb_search(&inode->kloc_rblarge, page))
-			//printk(KERN_ALERT "%s : %d \n",__func__, __LINE__);
 				continue;
 		}
 #endif
-                if (is_hetero_pgcache_set()) {
-			page->hetero = HETERO_PG_FLAG;
-			*pages_added += hetero_migrate_page_add(page, qp->pagelist, flags);
+                if (is_kloc_pgcache_set()) {
+			page->kloc = HETERO_PG_FLAG;
+			*pages_added += kloc_migrate_page_add(page, qp->pagelist, flags);
                 }
 #endif
 	}
@@ -1130,158 +1115,8 @@ inodelru:
 #endif
 
 
-#if 0
-static int queue_pages_pte_range_inodelru(pmd_t *pmd, unsigned long addr,
-		unsigned long end, struct mm_walk *walk)
-{
-	struct vm_area_struct *vma = walk->vma;
-	struct page *page;
-	struct queue_pages *qp = walk->private;
-	unsigned long flags = qp->flags;
-
-	pte_t *pte;
-	spinlock_t *ptl;
-	int ret;
-
-        struct inode *inode = NULL;
-        struct rb_root kloc_rblarge;
-        int rb_pages_itr = 0;
-        struct rb_node *rb_inode;
-	unsigned int *pages_added = qp->listcnt; 
-	int num_inodes = 0;
-
-	if(*pages_added)
-		return 0;
-		 //printk(KERN_ALERT "%s : %d \n",__func__, __LINE__);
-		 //
-	if(!vma || !vma->vm_file || !vma->vm_file->f_mapping) {
-		printk(KERN_ALERT "%s:%d Not a file VMA \n",__func__, __LINE__);
-		return 0;
-	}else {
-		//printk(KERN_ALERT "%s:%d A file VMA \n",__func__, __LINE__);
-	}
-
-#ifdef CONFIG_HETERO_PERCPU
-	struct hlist_head __percpu *pcpu_list = NULL;
-	struct hlist_head *list_entries = NULL;
-#else
-	struct list_head *pcpu_list = NULL;
-	struct list_head *list_entries = NULL;
-#endif
-
-#if 0
-	ptl = pmd_trans_huge_lock(pmd, vma);
-	if (ptl) {
-		ret = queue_pages_pmd(pmd, ptl, addr, end, walk);
-		if (ret) {
-			return 0;
-		}
-	}
-
-	if (pmd_trans_unstable(pmd)) {
-	        printk(KERN_ALERT "%s : %d \n",__func__, __LINE__);	
-		return 0;
-	}
-
-	pte = pte_offset_map_lock(walk->mm, pmd, addr, &ptl);
-#endif	
-
-        inode = NULL;
-
-	pcpu_list = get_kloc_struct_list();
-	if(!pcpu_list)
-		goto release_pte_inodelru;
-
-#ifdef CONFIG_HETERO_PERCPU
-	int cpu;
-
-	for_each_possible_cpu(cpu) {
-
-		list_entries = per_cpu_ptr(pcpu_list, cpu);
-#else
-		list_entries = pcpu_list;
-#endif
-		if(!list_entries)
-			goto release_pte_inodelru;
-
-#ifdef CONFIG_HETERO_PERCPU
-		hlist_for_each_entry(inode, list_entries, kloc_hlist_entry) {
-#else
-		list_for_each_entry(inode, list_entries, kloc_hlist_entry) {
-#endif
-		        if(!inode && !inode->i_ino)
-                		continue;
-
-			num_inodes++;
-
-			kloc_rblarge = inode->kloc_rblarge;
-        	        page = NULL;
-
-			if(!(&kloc_rblarge))
-				continue;
-
-			struct rb_node *node = NULL;
-
-			for (node = rb_first(&kloc_rblarge); node; node = rb_next(node))
-			{
-				rb_pages_itr++;
-
-				struct hetero_rbnode *rbnode = rb_entry(node, struct hetero_rbnode, lru_node);
-				if(rbnode && rbnode->page) {
-					page = rbnode->page;
-				}
-
-				if(!page)
-					continue;
-#if 0
-				*pte = mk_pte(page, vma->vm_page_prot);
-				//for (; addr != end; pte++, addr += PAGE_SIZE) {
-				if (!pte_present(*pte))
-					continue;
-
-				page = vm_normal_page(vma, addr, *pte);
-				if (!page)
-#endif
-
-				if (page_to_nid(page) == get_slowmem_node()) {
-					continue;
-				}
-
-				if (PageReserved(page)) {
-					continue;
-				}
-
-				if (!queue_pages_required(page, qp))
-					continue;
-
-				if (is_hetero_pgcache_set()) {
-					page->hetero = HETERO_PG_FLAG;
-					*pages_added += hetero_migrate_page_add(page, qp->pagelist, flags);
-				}
-			}
-
-			num_inodes++;
-		}
-#ifdef CONFIG_HETERO_PERCPU
-	}
-#endif
-	//printk(KERN_ALERT "%s:%d num_inodes %d pages added %u \n", 
-	//	__func__, __LINE__,  num_inodes, *pages_added);
-	goto release_pte_inodelru;
-
-release_pte_inodelru:
-#if 0	
-	pte_unmap_unlock(pte - 1, ptl);
-#endif	
-	cond_resched();
-	return 0;
-}
-#endif
-
-
-#ifdef CONFIG_HETERO_RBTREE
-
-static int queue_hetero_rbtree_small(pmd_t *pmd, unsigned long addr,
+#ifdef CONFIG_KLOC_RBTREE
+static int queue_kloc_rbtree_small(pmd_t *pmd, unsigned long addr,
 		unsigned long end, struct mm_walk *walk)
 {
 	struct vm_area_struct *vma = walk->vma;
@@ -1291,7 +1126,7 @@ static int queue_hetero_rbtree_small(pmd_t *pmd, unsigned long addr,
 	int ret;
 	pte_t *pte;
 	spinlock_t *ptl;
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 	struct address_space *mapping = NULL;
 	unsigned int *pages_added = qp->listcnt; 
         struct inode *inode = NULL;
@@ -1319,24 +1154,21 @@ static int queue_hetero_rbtree_small(pmd_t *pmd, unsigned long addr,
 
 	pte = pte_offset_map_lock(walk->mm, pmd, addr, &ptl);
 
-        printk(KERN_ALERT "%s:%d: current inodes %u \n",
-              __func__,__LINE__, current->kloc_rbinode_cnt);
-
         for (rb_inode = rb_first(&current->kloc_rbinode);
                         rb_inode; rb_inode = rb_next(rb_inode))
         {
                 if(!rb_inode)
                         continue;
 
-                struct hetero_rbinode *hetero_rbinode =
-                        rb_entry(rb_inode, struct hetero_rbinode, rbnode);
+                struct kloc_rbinode *kloc_rbinode =
+                        rb_entry(rb_inode, struct kloc_rbinode, rbnode);
 
                 struct rb_node *node = NULL;
 
-                if(!hetero_rbinode)
+                if(!kloc_rbinode)
                         continue;
 
-                inode = hetero_rbinode->inode;
+                inode = kloc_rbinode->inode;
                 if(!inode)
                         continue;
 
@@ -1352,7 +1184,7 @@ static int queue_hetero_rbtree_small(pmd_t *pmd, unsigned long addr,
                 {
 			rb_pages_itr++;
 
-			struct hetero_rbnode *rbnode = rb_entry(node, struct hetero_rbnode, lru_node);
+			struct kloc_rbnode *rbnode = rb_entry(node, struct kloc_rbnode, lru_node);
 			if(rbnode && rbnode->page) {
 				page = rbnode->page;
 			}
@@ -1379,17 +1211,13 @@ static int queue_hetero_rbtree_small(pmd_t *pmd, unsigned long addr,
 			if (!queue_pages_required(page, qp))
 				continue;
 
-			if (is_hetero_pgcache_set()) {
-				page->hetero = HETERO_PG_FLAG;
-				//*pages_added += hetero_migrate_page_add(page, qp->pagelist, flags);
+			if (is_kloc_pgcache_set()) {
+				page->kloc = HETERO_PG_FLAG;
+				//*pages_added += kloc_migrate_page_add(page, qp->pagelist, flags);
 				*pages_added += 1;
 			}
 		}
 		spin_unlock(&inode->kloc_rblock_small);
-
-		if(*pages_added)
-			printk(KERN_ALERT "%s:%d pages ready to migrate %u\n", 
-				__func__, __LINE__, *pages_added);
 	}
 release_pte:
 	pte_unmap_unlock(pte - 1, ptl);
@@ -1398,7 +1226,7 @@ release_pte:
 }
 
 
-static int queue_hetero_rbtree_large(pmd_t *pmd, unsigned long addr,
+static int queue_kloc_rbtree_large(pmd_t *pmd, unsigned long addr,
 		unsigned long end, struct mm_walk *walk)
 {
 	struct vm_area_struct *vma = walk->vma;
@@ -1408,7 +1236,7 @@ static int queue_hetero_rbtree_large(pmd_t *pmd, unsigned long addr,
 	int ret;
 	pte_t *pte;
 	spinlock_t *ptl;
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 	struct address_space *mapping = NULL;
 	unsigned int *pages_added = qp->listcnt; 
         struct inode *inode = NULL;
@@ -1436,23 +1264,21 @@ static int queue_hetero_rbtree_large(pmd_t *pmd, unsigned long addr,
 
 	pte = pte_offset_map_lock(walk->mm, pmd, addr, &ptl);
 
-        //printk(KERN_ALERT "%s:%d: current inodes %u \n",
-        //      __func__,__LINE__, current->kloc_rbinode_cnt);
         for (rb_inode = rb_first(&current->kloc_rbinode);
                         rb_inode; rb_inode = rb_next(rb_inode))
         {
                 if(!rb_inode)
                         continue;
 
-                struct hetero_rbinode *hetero_rbinode =
-                        rb_entry(rb_inode, struct hetero_rbinode, rbnode);
+                struct kloc_rbinode *kloc_rbinode =
+                        rb_entry(rb_inode, struct kloc_rbinode, rbnode);
 
                 struct rb_node *node = NULL;
 
-                if(!hetero_rbinode)
+                if(!kloc_rbinode)
                         continue;
 
-                inode = hetero_rbinode->inode;
+                inode = kloc_rbinode->inode;
                 if(!inode)
                         continue;
 
@@ -1468,7 +1294,7 @@ static int queue_hetero_rbtree_large(pmd_t *pmd, unsigned long addr,
                 {
 			rb_pages_itr++;
 
-			struct hetero_rbnode *rbnode = rb_entry(node, struct hetero_rbnode, lru_node);
+			struct kloc_rbnode *rbnode = rb_entry(node, struct kloc_rbnode, lru_node);
 			if(rbnode && rbnode->page) {
 				page = rbnode->page;
 			}
@@ -1496,16 +1322,12 @@ static int queue_hetero_rbtree_large(pmd_t *pmd, unsigned long addr,
 			if (!queue_pages_required(page, qp))
 				continue;
 
-			if (is_hetero_pgcache_set()) {
-				page->hetero = HETERO_PG_FLAG;
-				*pages_added += hetero_migrate_page_add(page, qp->pagelist, flags);
+			if (is_kloc_pgcache_set()) {
+				page->kloc = HETERO_PG_FLAG;
+				*pages_added += kloc_migrate_page_add(page, qp->pagelist, flags);
 			}
 		}
 		spin_unlock(&inode->kloc_rblock_large);
-
-		//if(*pages_added)
-		//printk(KERN_ALERT "%s:%d pages ready to migrate %u\n", 
-		//		__func__, __LINE__, *pages_added);
 	}
 release_pte:
 	pte_unmap_unlock(pte - 1, ptl);
@@ -1515,7 +1337,7 @@ release_pte:
 #endif
 
 
-static int queue_pages_pte_range_hetero(pmd_t *pmd, unsigned long addr,
+static int queue_pages_pte_range_kloc(pmd_t *pmd, unsigned long addr,
 		unsigned long end, struct mm_walk *walk)
 {
 	struct vm_area_struct *vma = walk->vma;
@@ -1525,16 +1347,11 @@ static int queue_pages_pte_range_hetero(pmd_t *pmd, unsigned long addr,
 	int ret;
 	pte_t *pte;
 	spinlock_t *ptl;
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 	struct address_space *mapping = NULL;
 	int pages_checked = 0;
 	unsigned int *pages_added = qp->listcnt; 
 #endif
-	/*if(!is_hetero_vma(vma)) {
-		//printk(KERN_ALERT "%s : %d NOT HETERO \n", __func__, __LINE__);
-		return 0;
-	}*/
-
 	ptl = pmd_trans_huge_lock(pmd, vma);
 	if (ptl) {
 		ret = queue_pages_pmd(pmd, ptl, addr, end, walk);
@@ -1576,10 +1393,10 @@ static int queue_pages_pte_range_hetero(pmd_t *pmd, unsigned long addr,
 			continue;
 
 
-                if (is_hetero_pgcache_set()) {
-                	//if (!PageAnon(page)) { //|| (page->hetero == HETERO_PG_FLAG)) {
-				page->hetero = HETERO_PG_FLAG;
-				*pages_added += hetero_migrate_page_add(page, qp->pagelist, flags);
+                if (is_kloc_pgcache_set()) {
+                	//if (!PageAnon(page)) { //|| (page->kloc == HETERO_PG_FLAG)) {
+				page->kloc = HETERO_PG_FLAG;
+				*pages_added += kloc_migrate_page_add(page, qp->pagelist, flags);
                         //}
                 }
 #endif
@@ -1587,20 +1404,6 @@ static int queue_pages_pte_range_hetero(pmd_t *pmd, unsigned long addr,
 gotohell:
 	pte_unmap_unlock(pte - 1, ptl);
 	cond_resched();
-
-	//if(is_hetero_pgcache_set())
-	//	printk(KERN_ALERT "%s Proc %s PID %d pages_checked %d \n",
-	//		__func__, current->comm, current->pid, pages_checked);
-
-#if 0 //def CONFIG_HETERO_ENABLE
-	if((is_hetero_pgcache_set() && *pages_added)) {
-		g_pages_added = page_list_count(qp->pagelist);
-		printk(KERN_ALERT "%s Proc %s PID %d pages_checked %d pages_added %d "
-		"pagelist_count %d", __func__, current->comm, current->pid, 
-		pages_checked, pages_added, page_list_count(qp->pagelist)); 
-		//print_hetero_stats(current);
-	}		
-#endif
 	return 0;
 }
 
@@ -1612,7 +1415,7 @@ gotohell:
  * passed via @private.)
  */
 static int
-queue_pages_range_hetero(struct mm_struct *mm, unsigned long start, unsigned long end,
+queue_pages_range_kloc(struct mm_struct *mm, unsigned long start, unsigned long end,
 		nodemask_t *nodes, unsigned long flags,
 		struct list_head *pagelist, unsigned int *cnt)
 {
@@ -1625,13 +1428,13 @@ queue_pages_range_hetero(struct mm_struct *mm, unsigned long start, unsigned lon
 	};
 	struct mm_walk queue_pages_walk = {
 		.hugetlb_entry = queue_pages_hugetlb,
-		.pmd_entry = queue_pages_pte_range_hetero,
+		.pmd_entry = queue_pages_pte_range_kloc,
 		.test_walk = queue_pages_test_walk,
 		.mm = mm,
 		.private = &qp,
 	};
-#ifdef CONFIG_HETERO_RBTREE
-	return walk_page_range_hetero(start, end, &queue_pages_walk, 1);
+#ifdef CONFIG_KLOC_RBTREE
+	return walk_page_range_kloc(start, end, &queue_pages_walk, 1);
 #else
 	return walk_page_range(start, end, &queue_pages_walk);
 #endif
@@ -1658,13 +1461,13 @@ add_rbtree_small(struct mm_struct *mm, unsigned long start, unsigned long end,
 	};
 	struct mm_walk queue_pages_walk = {
 		.hugetlb_entry = queue_pages_hugetlb,
-		.pmd_entry = queue_hetero_rbtree_small,
+		.pmd_entry = queue_kloc_rbtree_small,
 		.test_walk = queue_pages_test_walk,
 		.mm = mm,
 		.private = &qp,
 	};
-#ifdef CONFIG_HETERO_RBTREE
-	return walk_page_range_hetero(start, end, &queue_pages_walk, 1);
+#ifdef CONFIG_KLOC_RBTREE
+	return walk_page_range_kloc(start, end, &queue_pages_walk, 1);
 #else
 	return walk_page_range(start, end, &queue_pages_walk);
 #endif
@@ -1691,13 +1494,13 @@ add_rbtree_large(struct mm_struct *mm, unsigned long start, unsigned long end,
 	};
 	struct mm_walk queue_pages_walk = {
 		.hugetlb_entry = queue_pages_hugetlb,
-		.pmd_entry = queue_hetero_rbtree_large,
+		.pmd_entry = queue_kloc_rbtree_large,
 		.test_walk = queue_pages_test_walk,
 		.mm = mm,
 		.private = &qp,
 	};
-#ifdef CONFIG_HETERO_RBTREE
-	return walk_page_range_hetero(start, end, &queue_pages_walk, 1);
+#ifdef CONFIG_KLOC_RBTREE
+	return walk_page_range_kloc(start, end, &queue_pages_walk, 1);
 #else
 	return walk_page_range(start, end, &queue_pages_walk);
 #endif
@@ -1714,7 +1517,7 @@ add_rbtree_large(struct mm_struct *mm, unsigned long start, unsigned long end,
  * passed via @private.)
  */
 static int
-queue_hetero_inodelru(struct mm_struct *mm, unsigned long start, unsigned long end,
+queue_kloc_inodelru(struct mm_struct *mm, unsigned long start, unsigned long end,
 		nodemask_t *nodes, unsigned long flags,
 		struct list_head *pagelist, unsigned int *cnt)
 {
@@ -1732,8 +1535,8 @@ queue_hetero_inodelru(struct mm_struct *mm, unsigned long start, unsigned long e
 		.mm = mm,
 		.private = &qp,
 	};
-#ifdef CONFIG_HETERO_RBTREE
-	return walk_page_range_hetero(start, end, &queue_pages_walk, 1);
+#ifdef CONFIG_KLOC_RBTREE
+	return walk_page_range_kloc(start, end, &queue_pages_walk, 1);
 #else
 	return walk_page_range(start, end, &queue_pages_walk);
 #endif
@@ -1745,7 +1548,7 @@ queue_hetero_inodelru(struct mm_struct *mm, unsigned long start, unsigned long e
  * Migrate pages from one node to a target node.
  * Returns error or the number of pages not migrated.
  */
-int migrate_to_node_hetero(struct mm_struct *mm, int source, int dest,
+int kloc_migrate_to_node(struct mm_struct *mm, int source, int dest,
 			   int flags)
 {
 	nodemask_t nmask;
@@ -1763,50 +1566,12 @@ int migrate_to_node_hetero(struct mm_struct *mm, int source, int dest,
 	 */
 	VM_BUG_ON(!(flags & (MPOL_MF_MOVE | MPOL_MF_MOVE_ALL)));
 
-#if 0 //def CONFIG_HETERO_MIGRATE
-	if(!pagecount) {
-		add_rbtree_small(mm, 0, 0, &nmask,
-				flags | MPOL_MF_DISCONTIG_OK, &pagelist, &pagecount);
-		/*printk(KERN_ALERT "%s:%d  queue_heteropgs_rbtree_large " 
-			"proc name %s pagecount %d listcount %d\n", 
-			__func__,__LINE__, current->comm,  pagecount, 
-			page_list_count(&pagelist));*/
-	}
-#endif
-	queue_hetero_inodelru(mm, mm->mmap->vm_start, mm->task_size, &nmask,
+	queue_kloc_inodelru(mm, mm->mmap->vm_start, mm->task_size, &nmask,
 			flags | MPOL_MF_DISCONTIG_OK, &pagelist, &pagecount);
 
-	if((is_hetero_pgcache_set()) && pagecount) {
-		printk(KERN_ALERT "%s:%d queue_hetero_inodelru: " 
-			" proc name %s pagecount %d listcount %d\n", 
-			__func__,__LINE__, current->comm,  pagecount, 
-			page_list_count(&pagelist));
-	}
-
-#if 1
 	if(!pagecount) {
 		add_rbtree_large(mm, mm->mmap->vm_start, mm->task_size, &nmask,
 				flags | MPOL_MF_DISCONTIG_OK, &pagelist, &pagecount);
-		if((is_hetero_pgcache_set())) {
-			printk(KERN_ALERT "%s:%d  queue_heteropgs_rbtree_large " 
-				"proc name %s pagecount %d listcount %d\n", 
-				__func__,__LINE__, current->comm,  pagecount, 
-				page_list_count(&pagelist));
-		}
-	}
-#endif
-
-#if 1
-	if(!pagecount) {
-		queue_pages_range_hetero(mm, mm->mmap->vm_start, mm->task_size, &nmask,
-				flags | MPOL_MF_DISCONTIG_OK, &pagelist, &pagecount);
-#endif
-		if((is_hetero_pgcache_set())) {
-			printk(KERN_ALERT "%s:%d queue_pages_range_hetero " 
-				"proc name %s pagecount %d listcount %d\n", 
-				__func__,__LINE__, current->comm,  pagecount, 
-				page_list_count(&pagelist));
-		}
 	}
 
 	if(!pagecount) {
@@ -1815,7 +1580,7 @@ int migrate_to_node_hetero(struct mm_struct *mm, int source, int dest,
 	}
 
 	if (!list_empty(&pagelist)) {
-		err = migrate_pages_hetero_list(&pagelist, alloc_new_node_page, NULL, dest,
+		err = migrate_pages_kloc_list(&pagelist, alloc_new_node_page, NULL, dest,
 					MIGRATE_ASYNC, MR_SYSCALL, mm, pagecount);
 		if (err)
 			putback_movable_pages(&pagelist);
@@ -2954,9 +2719,9 @@ struct page *alloc_pages_current(gfp_t gfp, unsigned order)
 EXPORT_SYMBOL(alloc_pages_current);
 
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 /*Heterogeneous Memory allocation. Use it only for kernel data structures*/
-struct page *alloc_pages_current_hetero(gfp_t gfp, 
+struct page *alloc_pages_current_kloc(gfp_t gfp, 
 					unsigned order, 
 					int nodeid)
 {
@@ -2968,7 +2733,7 @@ struct page *alloc_pages_current_hetero(gfp_t gfp,
 
 	/*Check if we have enable customized HETERO allocation for
 	page cache*/
-	page = __alloc_pages_nodemask_hetero(gfp, order, nodeid, NULL);
+	page = __alloc_pages_nodemask_kloc(gfp, order, nodeid, NULL);
 	if(!page) {
 		printk(KERN_ALERT "%s : %d FAILED HETERO ALLOC " 
 			"\n", __func__, __LINE__);
@@ -2982,12 +2747,11 @@ struct page *alloc_pages_current_hetero(gfp_t gfp,
 	 * nor system default_policy
 	 */
 	if (!page && pol->mode == MPOL_INTERLEAVE) {
-                hetero_dbg("%s : %d HETERO \n", __func__, __LINE__);
 		page = alloc_page_interleave(gfp, order, interleave_nodes(pol));
         }
 	return page;
 }
-EXPORT_SYMBOL(alloc_pages_current_hetero);
+EXPORT_SYMBOL(alloc_pages_current_kloc);
 #endif
 
 

@@ -99,17 +99,16 @@ ext4_acl_to_disk(const struct posix_acl *acl, size_t *size)
 	size_t n;
 
 	*size = ext4_acl_size(acl->a_count);
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 	ext_acl = NULL;
-	if(is_hetero_buffer_set()) {
+	if(is_kloc_buffer_set()) {
 		ext_acl = NULL;
-#ifdef CONFIG_HETERO_MIGRATEXX
-		ext_acl = kmalloc_hetero_migrate(sizeof(ext4_acl_header) + acl->a_count *
+#ifdef CONFIG_KLOC_MIGRATEXX
+		ext_acl = kloc_kmalloc_migrate(sizeof(ext4_acl_header) + acl->a_count *
 			sizeof(ext4_acl_entry), GFP_NOFS);
 		if(!ext_acl)
 #endif
-		printk(KERN_ALERT "%s:%d \n", __func__, __LINE__);
-		ext_acl = kmalloc_hetero(sizeof(ext4_acl_header) + acl->a_count *
+		ext_acl = kmalloc_kloc(sizeof(ext4_acl_header) + acl->a_count *
 			sizeof(ext4_acl_entry), GFP_NOFS);
 	}
 	if(!ext_acl)
@@ -180,14 +179,13 @@ ext4_get_acl(struct inode *inode, int type)
 	}
 	retval = ext4_xattr_get(inode, name_index, "", NULL, 0);
 	if (retval > 0) {
-#ifdef CONFIG_HETERO_ENABLE
-		if(is_hetero_buffer_set()) {
-#ifdef CONFIG_HETERO_MIGRATEXX
-			value = kmalloc_hetero_migrate(retval, GFP_NOFS);
+#ifdef CONFIG_KLOC_ENABLE
+		if(is_kloc_buffer_set()) {
+#ifdef CONFIG_KLOC_MIGRATEXX
+			value = kloc_kmalloc_migrate(retval, GFP_NOFS);
 			if(!value)
 #endif
-			printk(KERN_ALERT "%s:%d \n", __func__, __LINE__);
-			value = kmalloc_hetero(retval, GFP_NOFS);
+			value = kmalloc_kloc(retval, GFP_NOFS);
 		}
 		if(!value)
 #endif

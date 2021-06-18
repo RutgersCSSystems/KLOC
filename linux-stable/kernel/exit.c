@@ -924,11 +924,8 @@ void __noreturn do_exit(long code)
 	lockdep_free_task(tsk);
 	do_task_dead();
 
-#ifdef CONFIG_HETERO_ENABLE
-	//if(code == SIGKILL)
-        is_hetero_exit(tsk);
-	//if(code == SIGUSR1)
-	//	is_hetero_exit(tsk);
+#ifdef CONFIG_KLOC_ENABLE
+        is_kloc_exit(tsk);
 #endif
 
 }

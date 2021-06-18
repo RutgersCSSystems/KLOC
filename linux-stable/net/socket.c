@@ -242,10 +242,10 @@ static struct inode *sock_alloc_inode(struct super_block *sb)
 	struct socket_alloc *ei;
 	struct socket_wq *wq;
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 	ei = NULL;
-        if(is_hetero_buffer_set() &&  is_hetero_sockbuff()){
-		ei = kmem_cache_alloc_hetero(sock_inode_cachep, GFP_KERNEL);	
+        if(is_kloc_buffer_set() &&  is_kloc_sockbuff()){
+		ei = kmem_cache_alloc_kloc(sock_inode_cachep, GFP_KERNEL);	
 	}
 	if(!ei)
 #endif
@@ -253,14 +253,14 @@ static struct inode *sock_alloc_inode(struct super_block *sb)
 	if (!ei)
 		return NULL;
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
         wq = NULL;
-        if(is_hetero_buffer_set() &&  is_hetero_sockbuff()){
-#ifdef CONFIG_HETERO_MIGRATEXX
-		wq = kmalloc_hetero_migrate(sizeof(*wq), GFP_KERNEL);
+        if(is_kloc_buffer_set() &&  is_kloc_sockbuff()){
+#ifdef CONFIG_KLOC_MIGRATEXX
+		wq = kloc_kmalloc_migrate(sizeof(*wq), GFP_KERNEL);
 		if(!wq)
 #endif
-                wq = kmalloc_hetero(sizeof(*wq), GFP_KERNEL);
+                wq = kmalloc_kloc(sizeof(*wq), GFP_KERNEL);
         }
         if(!wq)
 #endif
@@ -290,10 +290,9 @@ static void sock_destroy_inode(struct inode *inode)
 
 	ei = container_of(inode, struct socket_alloc, vfs_inode);
 	wq = rcu_dereference_protected(ei->socket.wq, 1);
-#ifdef CONFIG_HETERO_MIGRATEXX
-	if(is_hetero_buffer_set()) {
-		printk(KERN_ALERT  "%s:%d\n", __FUNCTION__, __LINE__);
-		vfree_hetero(wq);	
+#ifdef CONFIG_KLOC_MIGRATEXX
+	if(is_kloc_buffer_set()) {
+		kloc_vfree(wq);	
 	} else 
 #endif
 	kfree_rcu(wq, rcu);
@@ -923,8 +922,8 @@ static ssize_t sock_write_iter(struct kiocb *iocb, struct iov_iter *from)
 			     .msg_iocb = iocb};
 	ssize_t res;
 
-#ifdef CONFIG_HETERO_ENABLE
-        if ((is_hetero_buffer_set() || is_hetero_pgcache_set())
+#ifdef CONFIG_KLOC_ENABLE
+        if ((is_kloc_buffer_set())
 		&& file->f_inode ) {
         	set_sock_kloc_obj((void *)sock, (void *)file->f_inode);
         }
@@ -1643,10 +1642,9 @@ int __sys_accept4(int fd, struct sockaddr __user *upeer_sockaddr,
 	fd_install(newfd, newfile);
 	err = newfd;
 
-#ifdef CONFIG_HETERO_NET_ENABLE
-	if ((is_hetero_buffer_set() || is_hetero_pgcache_set())
+#ifdef CONFIG_KLOC_NET
+	if ((is_kloc_buffer_set())
 		&& newsock->file->f_inode ) { 
-			//printk(KERN_ALERT "current process: %s | %s:%d\n", current->comm, __FUNCTION__, __LINE__);
 			set_sock_kloc_obj_netdev((void *)newsock, (void *)newsock->file->f_inode);
 	}
 #endif

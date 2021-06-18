@@ -80,39 +80,39 @@
 
 
 /* 
-Flags to enable hetero allocations.
+Flags to enable kloc allocations.
 Move this to header file later.
 */
-#define HETERO_PGCACHE 11
-#define HETERO_BUFFER 12
-#define HETERO_JOURNAL 13
-#define HETERO_RADIX 14
-#define HETERO_FULLKERN 15
-#define HETERO_SET_FASTMEM_NODE 16
-#define HETERO_MIGRATE_FREQ 17
-#define HETERO_OBJ_AFF 18
-#define HETERO_DISABLE_MIGRATE 19
-#define HETERO_MIGRATE_LISTCNT 20
-#define HETERO_SET_CONTEXT 21
-#define HETERO_NET 22
-#define HETERO_PGCACHE_READAHEAD 23
+#define KLOC_PGCACHE 11
+#define KLOC_BUFFER 12
+#define KLOC_JOURNAL 13
+#define KLOC_RADIX 14
+#define KLOC_FULLKERN 15
+#define KLOC_SET_FASTMEM_NODE 16
+#define KLOC_MIGRATE_FREQ 17
+#define KLOC_KNODE 18
+#define KLOC_DISABLE_MIGRATE 19
+#define KLOC_MIGRATE_LISTCNT 20
+#define KLOC_SET_CONTEXT 21
+#define KLOC_NET 22
+#define KLOC_PGCACHE_READAHEAD 23
 
 /* 
  * Flags for kernel object profiling
  */
-#define HETERO_KOBJ_STAT
-#define HETERO_KOBJ_STAT_INFO 24
-#define HETERO_KOBJ_INODE 25
-#define HETERO_KOBJ_TRANS 26
-#define HETERO_KOBJ_BUFFHEAD 27
-#define HETERO_KOBJ_DCACHE 28
-#define HETERO_KOBJ_SOCKBUFF 29
-#define HETERO_KOBJ_BIO 30
+#define KLOC_KNODE_STAT
+#define KLOC_KNODE_STAT_INFO 24
+#define KLOC_KNODE_INODE 25
+#define KLOC_KNODE_TRANS 26
+#define KLOC_KNODE_BUFFHEAD 27
+#define KLOC_KNODE_DCACHE 28
+#define KLOC_KNODE_SOCKBUFF 29
+#define KLOC_KNODE_BIO 30
 /*
  * Migration related
  */
-#define HETERO_MIGRATE_THRESH 31
-#define HETERO_MIGRATE_THREADS 32
+#define KLOC_MIGRATE_THRESH 31
+#define KLOC_MIGRATE_THREADS 32
 
 /*
  * Per-CPU List code enable
@@ -121,22 +121,13 @@ Move this to header file later.
 
 /* Collect life time of page 
 */
-#define HETERO_COLLECT_LIFETIME
-#define CONFIG_HETERO_RBTREE
-
-#define HETERO_DEBUG_LOCK1
-
-#ifdef HETERO_COLLECT_LIFETIME
-unsigned int g_avg_cachepage_life = 0;
-unsigned int g_avg_kbufpage_life = 0;
-unsigned int g_cache_pages_deleted = 0;
-unsigned int g_buff_pages_deleted = 0;
-unsigned int g_buff_pages_migrated = 0;
-#endif
-
 #define _ENABLE_HETERO_THREAD
 #ifdef _ENABLE_HETERO_THREAD
+
+/*We restruct max threads to 10 */
 #define MAXTHREADS 10
+
+
 struct migrate_threads {
 	struct task_struct *thrd;
 };
@@ -151,44 +142,44 @@ DEFINE_SPINLOCK(kthread_lock);
 /* Hetero Stats information*/
 int global_flag = 0;
 int radix_cnt = 0;
-int hetero_dbgmask = 0;
+int kloc_dbgmask = 0;
 
-int enbl_hetero_pgcache=0;
-int enbl_hetero_buffer=0;
-int enbl_hetero_journal=0;
-int enbl_hetero_radix=0;
-int enbl_hetero_kernel=0;
-int enbl_hetero_set_context=0;
-int hetero_fastmem_node=0;
-int enbl_kloc_objaff=0;
-int disabl_hetero_migrate=0;
-int enbl_hetero_net=0;
-int enbl_hetero_pgcache_readahead=0;
+int enbl_kloc_pgcache=0;
+int enbl_kloc_buffer=0;
+int enbl_kloc_journal=0;
+int enbl_kloc_radix=0;
+int enbl_kloc_kernel=0;
+int enbl_kloc_set_context=0;
+int kloc_fastmem_node=0;
+int enbl_knode=0;
+int disabl_kloc_migrate=0;
+int enbl_kloc_net=0;
+int enbl_kloc_pgcache_readahead=0;
 int enbl_thrd_migrate=0;
-int hetero_migrate_thresh=0;
+int kloc_migrate_thresh=0;
 
-#define HETERO_KOBJ_STAT
+#define KLOC_KNODE_STAT
 
-#ifdef HETERO_KOBJ_STAT
-int enbl_hetero_inode=0;
-int enbl_hetero_buffhead=0;
-int enbl_hetero_trans=0;
-int enbl_hetero_dcache=0;
-int enbl_hetero_bio=0;
-int enbl_hetero_sockbuff=0;
-#endif //HETERO_KOBJ_STAT
+#ifdef KLOC_KNODE_STAT
+int enbl_kloc_inode=0;
+int enbl_kloc_buffhead=0;
+int enbl_kloc_trans=0;
+int enbl_kloc_dcache=0;
+int enbl_kloc_bio=0;
+int enbl_kloc_sockbuff=0;
+#endif //KLOC_KNODE_STAT
 
 //Number of inodes managed by KLOC
-int hetero_stat_inodes = 0;
-int hetero_stat_erased_inodes = 0;
+int kloc_stat_inodes = 0;
+int kloc_stat_erased_inodes = 0;
 
 //Frequency of migration
 int g_migrate_freq=0;
 //Migration list threshold
 int min_migrate_cnt=0;
-int hetero_pid=0;
-int hetero_usrpg_cnt=0;
-int hetero_kernpg_cnt=0;
+int kloc_pid=0;
+int kloc_usrpg_cnt=0;
+int kloc_kernpg_cnt=0;
 long migrate_time=0;
 
 unsigned long g_cachehits=0;
@@ -200,14 +191,14 @@ unsigned long g_cachedel=0;
 unsigned long g_buffdel=0;
 int g_lock_step = 0;
 
-#ifdef CONFIG_HETERO_STATS
+#ifdef CONFIG_KLOC_STATS
 unsigned long g_tot_cache_pages=0;
 unsigned long g_tot_buff_pages=0;
 unsigned long g_tot_app_pages=0;
 unsigned long g_tot_vmalloc_pages=0;
 #endif
 
-#ifdef CONFIG_HETERO_OBJAFF
+#ifdef CONFIG_KLOC_KNODE
 struct kloc_obj_list *kloc_struct=0;
 struct list_head *pcpu_list_head;
 int kloc_cleanedup=0;
@@ -220,61 +211,55 @@ unsigned long per_cpu_inode[NR_CPUS];
 
 DEFINE_SPINLOCK(stats_lock);
 
-#ifdef CONFIG_HETERO_OBJAFF
+#ifdef CONFIG_KLOC_KNODE
 void inode_cleanup_rblarge(struct inode *inode);
-void hetero_delete_inode(struct inode *inode);
+void kloc_delete_inode(struct inode *inode);
 #endif
 
 
-#ifdef CONFIG_HETERO_RBTREE
-bool
-kloc_rbinode_insert(struct rb_root *root, struct inode *inode);
+#ifdef CONFIG_KLOC_RBTREE
+bool kloc_rbinode_insert(struct rb_root *root, struct inode *inode);
 void kloc_rb_remove_kaddr(struct rb_root *root, void *kaddr);
 void inode_cleanup_rbsmall(struct inode *inode);
 #endif
 
 
 
-#ifdef CONFIG_HETERO_ENABLE
-void print_hetero_deadlock(void)
-{
-	printk(KERN_ALERT "g_lock_step = %d \n", g_lock_step);
-}
-EXPORT_SYMBOL(print_hetero_deadlock);
+#ifdef CONFIG_KLOC_ENABLE
 
-#ifdef CONFIG_HETERO_STATS
+#ifdef CONFIG_KLOC_STATS
 void incr_tot_cache_pages(void) 
 {
-	if(!is_hetero_pgcache_set())
+	if(!is_kloc_pgcache_set())
 		return;
 
-	//hetero_spin_lock(&stats_lock);
+	//kloc_spin_lock(&stats_lock);
 	g_tot_cache_pages++;
-	//hetero_spin_unlock(&stats_lock);
+	//kloc_spin_unlock(&stats_lock);
 }
 
 void incr_tot_buff_pages(void) 
 {
-	if(!is_hetero_buffer_set())
+	if(!is_kloc_buffer_set())
 		return;
 
-	//hetero_spin_lock(&stats_lock);
+	//kloc_spin_lock(&stats_lock);
 	g_tot_buff_pages++;
-	//hetero_spin_unlock(&stats_lock);
+	//kloc_spin_unlock(&stats_lock);
 }
 
 void incr_tot_app_pages(void) 
 {
-	if(!is_hetero_pgcache_set()) 
+	if(!is_kloc_pgcache_set()) 
 		return;
 
-	//hetero_spin_lock(&stats_lock);
+	//kloc_spin_lock(&stats_lock);
 	g_tot_app_pages++;
 	/*if(g_tot_app_pages) {
 		g_tot_app_pages = (g_tot_app_pages - g_tot_cache_pages  -
 					g_tot_buff_pages);
 	}*/
-	//hetero_spin_unlock(&stats_lock);
+	//kloc_spin_unlock(&stats_lock);
 }
 
 inline 
@@ -286,55 +271,27 @@ void incr_tot_vmalloc_pages(void)
 
 
 void incr_global_stats(unsigned long *counter){
-	//hetero_spin_lock(&stats_lock);
+	//kloc_spin_lock(&stats_lock);
 	*counter = *counter + 1;	
-	//hetero_spin_unlock(&stats_lock);
+	//kloc_spin_unlock(&stats_lock);
 }
 
 void print_global_stats(void) {
 
-#ifdef CONFIG_HETERO_STATS
+#ifdef CONFIG_KLOC_STATS
   	printk("ANALYSIS STAT CACHE-PAGES %lu, BUFF-PAGES %lu, APP-PAGES %lu VMALLOC %lu \n",
 		g_tot_cache_pages, g_tot_buff_pages, g_tot_app_pages, g_tot_vmalloc_pages);
 
-       printk("FASTMEM CachePage hits %lu miss %lu " 
+     /*  printk("FASTMEM CachePage hits %lu miss %lu " 
 	      "KBUFF hits %lu miss %lu migrated %lu \n", 
 		g_cachehits, g_cachemiss, g_buffhits, 
-		g_buffmiss, g_migrated);
-#endif
-
-#ifdef HETERO_COLLECT_LIFETIME
-	if(g_avg_cachepage_life && g_avg_kbufpage_life && g_buff_pages_deleted && g_cache_pages_deleted) {
-		  printk("ANALYSIS LIFESTAT  CACHE-PAGE-LIFE %lu, BUFF-PAGE-LIFE %lu CACHE_PAGES_ALLOC_DELETE %lu " 
-			" BUFF_PAGES_ALLOC_DELETE %lu SLAB MIGRATED %u\n",
-			  //g_avg_cachepage_life %lu, g_avg_kbufpage_life %lu \n",
-			  jiffies_to_msecs(g_avg_cachepage_life/g_cache_pages_deleted), 
-			  jiffies_to_msecs(g_avg_kbufpage_life/g_buff_pages_deleted), 
-			  g_cache_pages_deleted, g_buff_pages_deleted, g_buff_pages_migrated);
-			  // g_avg_cachepage_life/g_cache_pages_deleted, g_avg_kbufpage_life/g_buff_pages_deleted);
-	}
+		g_buffmiss, g_migrated);*/
 #endif
 }
 EXPORT_SYMBOL(print_global_stats);
 
-static void hetero_spin_lock_init(spinlock_t *lock)
-{
-	spin_lock_init(lock);
-}
 
-static void hetero_spin_lock(spinlock_t *lock)
-{
-        spin_lock(lock);
-}
-
-static void hetero_spin_unlock(spinlock_t *lock)
-{
-        spin_unlock(lock);
-}
-
-struct mm_struct* 
-getmm(struct task_struct *task) 
-{
+struct mm_struct* getmm(struct task_struct *task) {
         struct mm_struct *mm = NULL;
 
         if(task->mm) {
@@ -347,10 +304,8 @@ getmm(struct task_struct *task)
 }
 
 
-void 
-print_hetero_stats(struct task_struct *task) 
-{
-#ifdef CONFIG_HETERO_STATS
+void kloc_stats(struct task_struct *task) {
+#ifdef CONFIG_KLOC_STATS
 	unsigned long buffpgs = 0;
 	unsigned long cachepgs = 0;
 	struct mm_struct *mm = NULL;
@@ -358,32 +313,13 @@ print_hetero_stats(struct task_struct *task)
 	mm = getmm(task);
 	if(!mm)
 		return;
-
-#if 0
-        printk("EXITING PROCESS PID %d Currname %s " 
-		"cache-hits %lu cache-miss %lu " 
-	      	"buff-hits %lu buff-miss %lu " 
-		"migrated %lu migrate_time %ld " 
-                "avg_buff_life(us) %ld pgbuff-del %lu " 
-		"avg_cache_life(us) %ld pgcache-del %lu " 
-		"active-cache %lu\n ", 
-	  	task->pid, task->comm, mm->pgcache_hits_cnt, 
-		mm->pgcache_miss_cnt, 
-	      	mm->pgbuff_hits_cnt, mm->pgbuff_miss_cnt, 
-		mm->pages_migrated, migrate_time, 
-                avgbuff_life, mm->pgbuffdel, avgcache_life, 
-		mm->pgcachedel, 
-		(mm->pgcache_hits_cnt - mm->pgcachedel)
-       );
-#endif
 #endif
 }
-EXPORT_SYMBOL(print_hetero_stats);
+EXPORT_SYMBOL(kloc_stats);
 
 
-void reset_hetero_stats(struct task_struct *task) {
-
-#ifdef CONFIG_HETERO_STATS
+void reset_kloc_stats(struct task_struct *task) {
+#ifdef CONFIG_KLOC_STATS
 	g_cachehits = 0;
 	g_cachemiss = 0;
 	g_buffhits = 0;
@@ -398,7 +334,7 @@ void reset_hetero_stats(struct task_struct *task) {
 	g_tot_vmalloc_pages = 0;
 #endif
 }
-EXPORT_SYMBOL(reset_hetero_stats);
+EXPORT_SYMBOL(reset_kloc_stats);
 #endif
 
 unsigned long 
@@ -424,9 +360,7 @@ int check_node_memsize(int node_id)
 {
         struct sysinfo i;
         si_meminfo_node(&i, node_id);
-	//printk(KERN_ALERT "%s : %d Node: %d, Free pages %8lu kB  \n", 
-	//			 __func__, __LINE__, node_id,  K(i.freeram));
-	if(K(i.freeram) > hetero_migrate_thresh)
+	if(K(i.freeram) > kloc_migrate_thresh)
         	return -1;
 	return 0;
 }
@@ -437,7 +371,7 @@ int check_node_memsize(int node_id)
 * Callers responsibility to check mm is not NULL
 */
 int
-check_parent_hetero (struct task_struct *task, struct mm_struct *mm) 
+kloc_check_parent (struct task_struct *task, struct mm_struct *mm) 
 {
 	struct task_struct *realp = NULL;
 	struct task_struct *parent = NULL;
@@ -459,8 +393,8 @@ check_parent_hetero (struct task_struct *task, struct mm_struct *mm)
 		return 0;
         }
 
-	if(parent_mm && parent_mm->hetero_task == HETERO_PROC) {
-		mm->hetero_task = HETERO_PROC;
+	if(parent_mm && parent_mm->kloc_task == HETERO_PROC) {
+		mm->kloc_task = HETERO_PROC;
 		return 1;
 	}
 	return 0;
@@ -468,10 +402,10 @@ check_parent_hetero (struct task_struct *task, struct mm_struct *mm)
 
 
 /*
- * Check whether is a hetero process 
+ * Check whether is a kloc process 
  */
 int 
-check_hetero_proc (struct task_struct *task) 
+kloc_check_proc (struct task_struct *task) 
 {
     struct mm_struct *mm = NULL; 
     
@@ -479,35 +413,33 @@ check_hetero_proc (struct task_struct *task)
     if(!mm ) 
 	return 0;
 
-    if (mm->hetero_task == HETERO_PROC) {
+    if (mm->kloc_task == HETERO_PROC) {
 	return 1;
     }
-    /*if (check_parent_hetero(task, mm)) {
-	return 1;
-    }*/
+
     if(!strcmp(task->comm, "java")) {
-	mm->hetero_task = HETERO_PROC;
+	mm->kloc_task = HETERO_PROC;
 	return 1;
     }
 
     return 0; 	
 }
-EXPORT_SYMBOL(check_hetero_proc);
+EXPORT_SYMBOL(kloc_check_proc);
 
 
 int 
-check_hetero_page(struct mm_struct *mm, struct page *page) 
+kloc_check_page(struct mm_struct *mm, struct page *page) 
 {
 	int rc = -1;
 
-	if(mm && (mm->hetero_task == HETERO_PROC) && page) {
-		if(page->hetero == HETERO_PG_FLAG) {
+	if(mm && (mm->kloc_task == HETERO_PROC) && page) {
+		if(page->kloc == HETERO_PG_FLAG) {
 			rc = 0;
 		}
 	}
 	return rc;
 }
-EXPORT_SYMBOL(check_hetero_page);
+EXPORT_SYMBOL(kloc_check_page);
 
 
 static int 
@@ -543,28 +475,27 @@ stop_threads(struct task_struct *task, int force)
 * Exit function called during process exit 
 */
 int 
-is_hetero_exit(struct task_struct *task) 
+is_kloc_exit(struct task_struct *task) 
 {
-    if(task && check_hetero_proc(task)) {
-	print_hetero_stats(task);
-
+    if(task && kloc_check_proc(task)) {
+	kloc_stats(task);
 #ifdef _ENABLE_HETERO_THREAD
 	if(enbl_thrd_migrate) {
-		//spin_lock(&kthread_lock);
+		spin_lock(&kthread_lock);
 		if(thrd_idx)
 			thrd_idx--;
-		//spin_unlock(&kthread_lock);
+		spin_unlock(&kthread_lock);
 	}
 #endif
     }
     return 0;
 }
-EXPORT_SYMBOL(is_hetero_exit);
+EXPORT_SYMBOL(is_kloc_exit);
 
 void 
 debug_kloc_obj(void *obj) 
 {
-#ifdef CONFIG_HETERO_DEBUG
+#ifdef CONFIG_KLOC_DEBUG
         struct dentry *dentry, *curr_dentry = NULL;
 	struct inode *inode = (struct inode *)obj;
 	struct inode *currinode = (struct inode *)current->kloc_obj;
@@ -583,70 +514,31 @@ debug_kloc_obj(void *obj)
 }
 EXPORT_SYMBOL(debug_kloc_obj);
 
-#if 0
-void 
-debug_kloc_obj(void *obj) 
-{
-#if 1 // CONFIG_HETERO_DEBUG
-        struct dentry *dentry, *curr_dentry = NULL;
-	struct inode *inode = (struct inode *)obj;
-	//struct inode *currinode = (struct inode *)current->mm->kloc_obj;
-	struct inode *currinode = (struct inode *)current->kloc_obj;
 
-	if(inode && currinode && inode->i_ino) {
-
-		if(execute_ok(inode))
-			return;
-
-		dentry = d_find_any_alias(inode);
-		curr_dentry = d_find_any_alias(currinode);
-		printk(KERN_ALERT "%s:%d Proc %s Hetero Proc? %d Inode %lu FNAME %s "
-		 "current->heterobj_name %s Write access? %d \n",
-		__func__,__LINE__,current->comm, current->mm->hetero_task, inode->i_ino, 
-		dentry->d_iname, curr_dentry->d_iname, get_write_access(currinode));
-	}
-#endif
-}
-EXPORT_SYMBOL(debug_kloc_obj);
-#endif
-
-
-int is_hetero_cacheobj(void *obj)
+int is_kloc_cacheobj(void *obj)
 {
 	return 1;
 
-	if(!enbl_hetero_net)
+	if(!enbl_kloc_net)
 		return 0;
 
-	return enbl_hetero_net;
+	return enbl_kloc_net;
 }
-EXPORT_SYMBOL(is_hetero_cacheobj);
+EXPORT_SYMBOL(is_kloc_cacheobj);
 
 
 int 
 is_kloc_obj(void *obj) 
 {
 	int ret = 0;
-#if 0 //def CONFIG_HETERO_PERCPU
-        void __percpu *kloc_objs;
-        kloc_objs = alloc_percpu(sizeof(void *));
-        if (!kloc_objs) {
-		printk(KERN_ALERT "%s:%d kloc_objs per cpu failed \n", 
-				__func__, __LINE__);
-		return ret;
-        }
-	per_cpu_ptr(kloc_objs, get_cpu());
-#endif
-
-#ifdef CONFIG_HETERO_OBJAFF
+#ifdef CONFIG_KLOC_KNODE
         /*If we do not enable object affinity then we simply 
 	return true for all the case*/
-	if(!enbl_kloc_objaff)
+	if(!enbl_knode)
 		ret = 1;
 #endif
 	if(obj && current && current->mm && 
 		current->kloc_obj && current->kloc_obj == obj){
-		//debug_kloc_obj(obj);
 		ret = 1;
 	}	
 	return ret;
@@ -657,17 +549,15 @@ EXPORT_SYMBOL(is_kloc_obj);
 
 /*
 * Checked only for object affinity 
-* when CONFIG_HETERO_OBJAFF is enabled
+* when CONFIG_KLOC_KNODE is enabled
 */
 int 
-is_hetero_vma(struct vm_area_struct *vma) 
+is_kloc_vma(struct vm_area_struct *vma) 
 {
-#ifdef CONFIG_HETERO_OBJAFF
-	if(!enbl_kloc_objaff)
+#ifdef CONFIG_KLOC_KNODE
+	if(!enbl_knode)
 		return 1;
         if(!vma || !vma->vm_file) {
-		//printk(KERN_ALERT "%s : %d NOT HETERO \n", __func__,
-		//__LINE__);
                 return 0;
         }
 #endif
@@ -675,50 +565,50 @@ is_hetero_vma(struct vm_area_struct *vma)
 }
 
 
-#ifdef HETERO_KOBJ_STAT
-int is_hetero_inode(void)
+#ifdef KLOC_KNODE_STAT
+int is_kloc_inode(void)
 {
-	return enbl_hetero_inode;
+	return enbl_kloc_inode;
 }
-EXPORT_SYMBOL(is_hetero_inode);
+EXPORT_SYMBOL(is_kloc_inode);
 
 //FIXME:
-int is_hetero_buffhead(void)
+int is_kloc_buffhead(void)
 {
 	return 1;
-        return enbl_hetero_buffhead;
+        return enbl_kloc_buffhead;
 }
-EXPORT_SYMBOL(is_hetero_buffhead);
+EXPORT_SYMBOL(is_kloc_buffhead);
 
 
-int is_hetero_trans(void)
+int is_kloc_trans(void)
 {
-        return enbl_hetero_trans;
+        return enbl_kloc_trans;
 }
-EXPORT_SYMBOL(is_hetero_trans);
+EXPORT_SYMBOL(is_kloc_trans);
 
 
-int is_hetero_dcache(void)
+int is_kloc_dcache(void)
 {
-	return enbl_hetero_dcache;
+	return enbl_kloc_dcache;
 }
-EXPORT_SYMBOL(is_hetero_dcache);
+EXPORT_SYMBOL(is_kloc_dcache);
 
 
 //FIXME:
-int is_hetero_bio(void)
+int is_kloc_bio(void)
 {
 	return 1;
 
-        return enbl_hetero_bio;
+        return enbl_kloc_bio;
 }
-EXPORT_SYMBOL(is_hetero_bio);
+EXPORT_SYMBOL(is_kloc_bio);
 
-int is_hetero_sockbuff(void)
+int is_kloc_sockbuff(void)
 {
-        return enbl_hetero_sockbuff;
+        return enbl_kloc_sockbuff;
 }
-EXPORT_SYMBOL(is_hetero_sockbuff);
+EXPORT_SYMBOL(is_kloc_sockbuff);
 #endif
 
 
@@ -726,40 +616,40 @@ EXPORT_SYMBOL(is_hetero_sockbuff);
 * Functions to test different allocation strategies 
 */
 int 
-is_hetero_pgcache_set(void)
+is_kloc_pgcache_set(void)
 {
-        if(check_hetero_proc(current)) 
-	        return enbl_hetero_pgcache;
+        if(kloc_check_proc(current)) 
+	        return enbl_kloc_pgcache;
         return 0;
 }
-EXPORT_SYMBOL(is_hetero_pgcache_set);
+EXPORT_SYMBOL(is_kloc_pgcache_set);
 
 int 
-is_hetero_pgcache_readahead_set(void)
+is_kloc_pgcache_readahead_set(void)
 {
-	if(check_hetero_proc(current))
-		return enbl_hetero_pgcache_readahead;
+	if(kloc_check_proc(current))
+		return enbl_kloc_pgcache_readahead;
 	return 0;
 }
-EXPORT_SYMBOL(is_hetero_pgcache_readahead_set);
+EXPORT_SYMBOL(is_kloc_pgcache_readahead_set);
 
 
 int 
-is_hetero_buffer_set(void)
+is_kloc_buffer_set(void)
 {
-        if(check_hetero_proc(current)) 
-                return enbl_hetero_buffer;
+        if(kloc_check_proc(current)) 
+                return enbl_kloc_buffer;
     return 0;
 }
-EXPORT_SYMBOL(is_hetero_buffer_set);
+EXPORT_SYMBOL(is_kloc_buffer_set);
 
 
 /*
-* Sets current task with hetero obj
+* Sets current task with kloc obj
 */
 void set_curr_kloc_obj(void *obj) 
 {
-#ifdef CONFIG_HETERO_OBJAFF
+#ifdef CONFIG_KLOC_KNODE
         //current->mm->kloc_obj = obj;
 	current->kloc_obj = obj;
 #endif
@@ -768,12 +658,12 @@ EXPORT_SYMBOL(set_curr_kloc_obj);
 
 
 /*
-* Sets page with hetero obj
+* Sets page with kloc obj
 */
 void 
 set_kloc_obj_page(struct page *page, void *obj)                          
 {
-#ifdef CONFIG_HETERO_OBJAFF
+#ifdef CONFIG_KLOC_KNODE
         page->kloc_obj = obj;
 #endif
 }
@@ -802,10 +692,8 @@ void initialize_kloc_lists(struct inode *inode)
 #endif
 
 
-void set_inode_cpu(struct inode *inode)
-{
+void set_inode_cpu(struct inode *inode) {
 	per_cpu_inode[smp_processor_id()] = (unsigned long)inode;
-	//printk(KERN_ALERT "Current CPU ID %d of MAX CPUS %d \n", smp_processor_id(), NR_CPUS);
 }
 
 int get_inode_cpu(struct inode *inode)
@@ -824,19 +712,17 @@ int get_inode_cpu(struct inode *inode)
 }
 
 
-
-
 void  set_inode_kloc_obj(struct inode *inode)                                        
 {
 
 	if(!inode)
 		return;
 
-	inode->is_hetero = HETERO_INIT;
+	inode->is_kloc = HETERO_INIT;
 
 	set_inode_cpu(inode);
 
-#ifdef CONFIG_HETERO_RBTREE
+#ifdef CONFIG_KLOC_RBTREE
 	//Initialize per-process inode RBtree
 	if(current->kloc_rbinode_init != HETERO_INIT) {
 		spin_lock_init(&current->kloc_rblock);
@@ -891,16 +777,16 @@ void set_fsmap_kloc_obj(void *mapobj)
 	if(!current_obj)
 		return;
 
-#ifdef CONFIG_HETERO_DEBUG
+#ifdef CONFIG_KLOC_DEBUG
 	struct dentry *res = NULL;
 #endif
 
-#ifdef CONFIG_HETERO_OBJAFF
+#ifdef CONFIG_KLOC_KNODE
         /*
 	 * If we do not enable object affinity then we simply 
 	 * return true for all the case
 	*/
-	if(!enbl_kloc_objaff)
+	if(!enbl_knode)
 		return;
 #endif
 	mapping = (struct address_space *)mapobj;
@@ -913,11 +799,11 @@ void set_fsmap_kloc_obj(void *mapobj)
 	if(!inode)
 		return;
 
-	inode->is_hetero = HETERO_INIT;
+	inode->is_kloc = HETERO_INIT;
 
 	set_inode_cpu(inode);
 
-#ifdef CONFIG_HETERO_RBTREE
+#ifdef CONFIG_KLOC_RBTREE
 	//Initialize per-process inode RBtree
 	if(current->kloc_rbinode_init != HETERO_INIT) 
 	{
@@ -953,20 +839,10 @@ void set_fsmap_kloc_obj(void *mapobj)
 	if(current_obj && current_obj == (void *)inode)
 		return;
 
-        if((is_hetero_buffer_set() || is_hetero_pgcache_set())) 
-	{
+        if((is_kloc_buffer_set() || is_kloc_pgcache_set())) {
                 mapping->kloc_obj = (void *)inode;
                 //current->mm->kloc_obj = (void *)inode;
 		current->kloc_obj = (void *)inode;
-
-#ifdef CONFIG_HETERO_DEBUG
-		if(mapping->host) {
-			res = d_find_any_alias(inode);
-			printk(KERN_ALERT "%s:%d Proc %s Inode %lu FNAME %s\n",
-			 __func__,__LINE__,current->comm, mapping->host->i_ino, 
-		         res->d_iname);
-		}
-#endif
         }
 }
 EXPORT_SYMBOL(set_fsmap_kloc_obj);
@@ -982,21 +858,15 @@ void set_sock_kloc_obj(void *socket_obj, void *inode)
 	sock = (struct sock *)socket->sk;
 
 	if(!sock) {
-		printk(KERN_ALERT "%s:%d SOCK NULL \n", __func__,__LINE__);
 		return;
 	}
 
-        if((is_hetero_buffer_set() || is_hetero_pgcache_set())){
+        if((is_kloc_buffer_set() || is_kloc_pgcache_set())){
 
 		sock->kloc_obj = (void *)inode;
 		//current->mm->kloc_obj = (void *)inode;
 		current->kloc_obj = (void *)inode;
 		sock->__sk_common.kloc_obj = (void *)inode;
-
-#ifdef CONFIG_HETERO_DEBUG
-		printk(KERN_ALERT "%s:%d Proc %s \n", __func__,__LINE__,
-			current->comm);
-#endif
 	}
 }
 EXPORT_SYMBOL(set_sock_kloc_obj);
@@ -1004,61 +874,34 @@ EXPORT_SYMBOL(set_sock_kloc_obj);
 
 void set_sock_kloc_obj_netdev(void *socket_obj, void *inode)                                        
 {
-#ifdef CONFIG_HETERO_NET_ENABLE
+#ifdef CONFIG_KLOC_NET
     struct sock *sock = NULL;
     struct socket *socket = (struct socket *)socket_obj;
     sock = (struct sock *)socket->sk;
 
     if(!sock) {
-	printk(KERN_ALERT "%s:%d SOCK NULL \n", __func__,__LINE__);
 	return;
     }
 
-    if((is_hetero_buffer_set() || is_hetero_pgcache_set())){
+    if((is_kloc_buffer_set() || is_kloc_pgcache_set())){
 		sock->kloc_obj = (void *)inode;
 		//current->mm->kloc_obj = (void *)inode;
 		current->kloc_obj = (void *)inode;
 		sock->__sk_common.kloc_obj = (void *)inode;
 		if (sock->sk_dst_cache && sock->sk_dst_cache->dev) {
-			hetero_dbg("net device is 0x%lx | %s:%d\n", 
-				sock->sk_dst_cache->dev, __FUNCTION__, __LINE__);
-			if (!sock->sk_dst_cache->dev->hetero_sock)
-				sock->sk_dst_cache->dev->hetero_sock = sock;
+			if (!sock->sk_dst_cache->dev->kloc_sock)
+				sock->sk_dst_cache->dev->kloc_sock = sock;
 		}
 	}
 #endif
 }
 EXPORT_SYMBOL(set_sock_kloc_obj_netdev);
 
-#ifdef HETERO_COLLECT_LIFETIME
-void update_page_life_time(struct page *page, int delpage, int kbuff) {
-
-	if(!delpage) {
-		page->hetero_create_time = 0;
-		page->hetero_create_time = jiffies;
-	}else {
-		page->hetero_del_time = jiffies;
-
-		if(kbuff) {
-			g_avg_kbufpage_life += (page->hetero_del_time - page->hetero_create_time);
-			g_buff_pages_deleted++;
-
-		} else  {
-			g_avg_cachepage_life += (page->hetero_del_time - page->hetero_create_time);
-			g_cache_pages_deleted++;
-		}
-		page->hetero_del_time = 0;  //(struct timeval){0};
-                page->hetero_create_time = 0; //(struct timeval){0};
-	}
-}
-#endif
-
-
 /*
  * RBTREE RELATED FUNCTIONALITIES
  */
 
-#ifdef CONFIG_HETERO_RBTREE
+#ifdef CONFIG_KLOC_RBTREE
 
 /*
  * Clean up large rbinode elements
@@ -1105,9 +948,8 @@ void inode_cleanup_rbsmall(struct inode *inode) {
 			rbcnt--;
     	} 
    	inode->kloc_rbsmall_cnt = rbcnt;
-    	//printk(KERN_ALERT "%s:%d Actual: %u Erased %u \n", 
-	  //  		    __func__, __LINE__, inode->kloc_rblarge_cnt, rbcnt);
 }
+
 
 /*
  * Clean up all inodes from process list
@@ -1116,20 +958,16 @@ void process_cleanup_rbtree(void) {
 
 	struct rb_node *rb_inode = NULL;
 
-#ifdef HETERO_DEBUG_LOCK
-        printk(KERN_ALERT "Entering %s:%d \n", __func__, __LINE__);
-#endif
-
        	for (rb_inode = rb_first(&current->kloc_rbinode);
                         rb_inode; rb_inode = rb_next(rb_inode)) {
 
-                struct hetero_rbinode *hetero_rbinode =
-                        rb_entry(rb_inode, struct hetero_rbinode, rbnode);
-                if(!hetero_rbinode)
+                struct kloc_rbinode *kloc_rbinode =
+                        rb_entry(rb_inode, struct kloc_rbinode, rbnode);
+                if(!kloc_rbinode)
                         continue;
 
 		struct inode *inode = NULL;
-                inode = hetero_rbinode->inode;
+                inode = kloc_rbinode->inode;
                 if(!inode)
                         continue;
 
@@ -1163,11 +1001,6 @@ void process_cleanup_rbtree(void) {
 	        }
 		spin_unlock(&current->kloc_rblock);
 	}
-	printk(KERN_ALERT "%s:%d Finished cleanup \n", __func__, __LINE__);
-
-#ifdef HETERO_DEBUG_LOCK
-        printk(KERN_ALERT "Exiting %s:%d \n", __func__, __LINE__);
-#endif
 }
 
 
@@ -1177,30 +1010,22 @@ void process_cleanup_rbtree(void) {
 bool kloc_rbinode_insert(struct rb_root *root, struct inode *inode)
 {
 
-#ifdef HETERO_DEBUG_LOCK
-        printk(KERN_ALERT "%s:%d \n", __func__, __LINE__);
-#endif
-	struct hetero_rbinode *data = 
-		kmalloc(sizeof(struct hetero_rbinode), GFP_KERNEL);
+	struct kloc_rbinode *data = 
+		kmalloc(sizeof(struct kloc_rbinode), GFP_KERNEL);
 
 	struct rb_node **link = &(root->rb_node), *parent=NULL;
-	struct hetero_rbinode *this_node = NULL;
+	struct kloc_rbinode *this_node = NULL;
 
 	data->inode = inode;
 	
 	while(*link) {
 		parent = *link;
-		this_node = rb_entry(parent, struct hetero_rbinode, rbnode);
+		this_node = rb_entry(parent, struct kloc_rbinode, rbnode);
 
 		if(this_node->inode->i_ino > inode->i_ino) {
 			link = &(*link)->rb_left;
 		}
 		else if (this_node->inode->i_ino == inode->i_ino) {
-#ifdef _DEBUG
-			printk(KERN_ALERT "!!Duplicate Page in"
-					" pvt LRU PID:%d at add:%lu\n", 
-					current->pid, inode->i_ino);
-#endif
 			goto duplicate;
 		}
 		else
@@ -1209,18 +1034,9 @@ bool kloc_rbinode_insert(struct rb_root *root, struct inode *inode)
 
 	rb_link_node(&data->rbnode, parent, link);
 	rb_insert_color(&data->rbnode, root);
-
-#ifdef HETERO_DEBUG_LOCK
-        printk(KERN_ALERT "Exiting %s:%d \n", __func__, __LINE__);
-#endif
-
 	return true;
 
 duplicate:
-
-#ifdef HETERO_DEBUG_LOCK
-        printk(KERN_ALERT "Exiting %s:%d \n", __func__, __LINE__);
-#endif
 	return false;
 }
 
@@ -1228,20 +1044,18 @@ duplicate:
 /*
  * Searches and returns a page from pvt rb tree
  */
-struct hetero_rbinode *kloc_rbinode_search 
+struct kloc_rbinode *kloc_rbinode_search 
         (struct rb_root *root, struct inode *inode)
 {
 	struct rb_node *node = root->rb_node;
-	struct hetero_rbinode *this_node = NULL;
+	struct kloc_rbinode *this_node = NULL;
 
 	if(root == NULL) {
-		printk("pid:%d, comm:%s, kloc_rb_search, root==NULL\n",
-				current->pid, current->comm);
 		return NULL;
 	}
 
 	while(node) {
-		this_node = rb_entry(node, struct hetero_rbinode, rbnode);
+		this_node = rb_entry(node, struct kloc_rbinode, rbnode);
 
 		if(this_node->inode->i_ino > inode->i_ino) {
 			node = node->rb_left;
@@ -1260,7 +1074,7 @@ EXPORT_SYMBOL(kloc_rbinode_search);
 
 void kloc_rbinode_remove(struct rb_root *root, struct inode *inode)
 {
-	struct hetero_rbinode *node;
+	struct kloc_rbinode *node;
       
 	node = kloc_rbinode_search(root, inode);
 	if(node == NULL) {
@@ -1280,21 +1094,18 @@ void kloc_rbinode_remove(struct rb_root *root, struct inode *inode)
 bool kloc_rb_insert_cache(struct rb_root *root, struct page *page)
 {
 	struct rb_node **link = &(root->rb_node), *parent=NULL;
-	struct hetero_rbnode *this_node = NULL;
-        struct hetero_rbnode *data = NULL;
+	struct kloc_rbnode *this_node = NULL;
+        struct kloc_rbnode *data = NULL;
 
 	if(root == NULL){
-		printk(KERN_ALERT "%s:%d ROOT NULL \n", __func__,__LINE__);
 		return false;
 	}
 
-	if(page->is_hetero_rbtree == HETERO_INIT) {
-		//printk(KERN_ALERT "%s:%d page already present \n",
-		//		__func__,__LINE__);
+	if(page->is_kloc_rbtree == HETERO_INIT) {
 		return false;
 	}	
 
-	data = kmalloc(sizeof(struct hetero_rbnode), GFP_KERNEL);
+	data = kmalloc(sizeof(struct kloc_rbnode), GFP_KERNEL);
 	if(!data)
 		BUG_ON(!data);
 
@@ -1303,7 +1114,7 @@ bool kloc_rb_insert_cache(struct rb_root *root, struct page *page)
 	while(*link) {
 
 		parent = *link;
-		this_node = rb_entry(parent, struct hetero_rbnode, lru_node);
+		this_node = rb_entry(parent, struct kloc_rbnode, lru_node);
 
 		if(!this_node || !link) {
 			goto rb_insert_fail;
@@ -1313,10 +1124,6 @@ bool kloc_rb_insert_cache(struct rb_root *root, struct page *page)
 			link = &(*link)->rb_left;
 		}
 		else if (page_to_virt(this_node->page) == page_to_virt(page)) {
-#ifdef _DEBUG
-			printk(KERN_ALERT "Duplicate page LRU PID:%d at add:%lu\n"
-					, current->pid, page_to_virt(page));
-#endif
 			goto rb_insert_fail;
 		}
 		else {
@@ -1329,7 +1136,7 @@ bool kloc_rb_insert_cache(struct rb_root *root, struct page *page)
 	/*Indicate that the page is now part of an rbtree 
 	 * Ensure, it is reset during removal. 
 	 */
-	page->is_hetero_rbtree = HETERO_INIT;
+	page->is_kloc_rbtree = HETERO_INIT;
 
 	return true;
 
@@ -1344,19 +1151,17 @@ EXPORT_SYMBOL(kloc_rb_insert_cache);
 /*
  * Searches and returns a page from pvt rb tree
  */
-struct hetero_rbnode *kloc_rb_search(struct rb_root *root, struct page *page)
+struct kloc_rbnode *kloc_rb_search(struct rb_root *root, struct page *page)
 {
 	if(root == NULL) {
-		printk("pid:%d, comm:%s, kloc_rb_search, root==NULL\n",
-				current->pid, current->comm);
 		return NULL;
 	}
 
 	struct rb_node *node = root->rb_node;
-	struct hetero_rbnode *this_node = NULL;
+	struct kloc_rbnode *this_node = NULL;
 
 	while(node) {
-		this_node = rb_entry(node, struct hetero_rbnode, lru_node);
+		this_node = rb_entry(node, struct kloc_rbnode, lru_node);
 
 		if(page_to_virt(this_node->page) > page_to_virt(page)) {
 			node = node->rb_left;
@@ -1376,7 +1181,7 @@ EXPORT_SYMBOL(kloc_rb_search);
 
 void kloc_rb_remove(struct rb_root *root, struct page *page)
 {
-	struct hetero_rbnode *node = NULL;
+	struct kloc_rbnode *node = NULL;
        
 	node = kloc_rb_search(root, page);
 	if(node == NULL) {
@@ -1387,7 +1192,7 @@ void kloc_rb_remove(struct rb_root *root, struct page *page)
 	/*Indicate that the page is now not a part of an rbtree 
 	 * Ensure, it is reset during removal. 
 	 */
-	page->is_hetero_rbtree = 0;
+	page->is_kloc_rbtree = 0;
 
 	if(node) {
 		kfree(node);
@@ -1433,10 +1238,6 @@ insert_page_cache_rbtree(struct page *page, int is_pagecache)
 {
 	struct inode *inode = NULL;
 
-#ifdef HETERO_DEBUG_LOCK
-        printk(KERN_ALERT "%s:%d \n", __func__, __LINE__);
-#endif
-
 	if(!page)
 		return NULL;
 
@@ -1447,7 +1248,6 @@ insert_page_cache_rbtree(struct page *page, int is_pagecache)
 		if(inode) {
 
 			if(!kloc_rbinode_search(&current->kloc_rbinode, inode)) {
-				//printk(KERN_ALERT "%s:%d inode not present \n");
 				set_inode_kloc_obj(inode);
 			}
 
@@ -1470,9 +1270,6 @@ insert_page_cache_rbtree(struct page *page, int is_pagecache)
 			}
 		}
 	}
-#ifdef HETERO_DEBUG_LOCK
-        printk(KERN_ALERT "Exiting %s:%d \n", __func__, __LINE__);
-#endif
 }
 EXPORT_SYMBOL(insert_page_cache_rbtree);
 
@@ -1480,10 +1277,6 @@ EXPORT_SYMBOL(insert_page_cache_rbtree);
 void remove_page_cache_rbtree(struct page *page, int is_pagecache)
 {
 	struct inode *inode;
-
-#ifdef HETERO_DEBUG_LOCK
-        printk(KERN_ALERT "%s:%d \n", __func__, __LINE__);
-#endif
 
 	if(page->kloc_obj != NULL) {
 		inode = (struct inode*)page->kloc_obj;
@@ -1496,16 +1289,11 @@ void remove_page_cache_rbtree(struct page *page, int is_pagecache)
 
 				if(inode->kloc_rblarge_cnt > 0)
 					inode->kloc_rblarge_cnt--;
-				//printk(KERN_ALERT "inode->kloc_rblarge_cnt %u \n", 
-				//		inode->kloc_rblarge_cnt);
 				page->kloc_obj = NULL;
 			}
 		}
 	}
 
-#ifdef HETERO_DEBUG_LOCK
-        printk(KERN_ALERT "Exiting %s:%d \n", __func__, __LINE__);
-#endif
 }
 EXPORT_SYMBOL(remove_page_cache_rbtree);
 
@@ -1522,17 +1310,12 @@ void try_kernel_page_migration(struct inode *inode)
 	int num_inodes = 0;
 
 
-#ifdef HETERO_DEBUG_LOCK
-        printk(KERN_ALERT "%s:%d \n", __func__, __LINE__);
-#endif
-
 	if(!inode)
 		return;
 	inode = NULL;
 
 	cond_resched();
 
-	//printk(KERN_ALERT "Entering  %s:%d \n", __func__, __LINE__);
        	for (rb_inode = rb_first(&current->kloc_rbinode);
                         rb_inode; rb_inode = rb_next(rb_inode)) {
 
@@ -1540,19 +1323,17 @@ void try_kernel_page_migration(struct inode *inode)
                         continue;
 
 		struct rb_node *node = NULL;
-                struct hetero_rbinode *hetero_rbinode =
-                        rb_entry(rb_inode, struct hetero_rbinode, rbnode);
-                if(!hetero_rbinode)
+                struct kloc_rbinode *kloc_rbinode =
+                        rb_entry(rb_inode, struct kloc_rbinode, rbnode);
+                if(!kloc_rbinode)
                         continue;
 
-                inode = hetero_rbinode->inode;
+                inode = kloc_rbinode->inode;
                 if(!inode)
                         continue;
 
 		int cpu = get_inode_cpu(inode);
 		if(cpu != -EINVAL) {
-			//printk(KERN_ALERT "%s:%d Active INODE used by CPU %d\n",
-                	//__func__, __LINE__, cpu);
 			continue;
 		}
 
@@ -1568,35 +1349,21 @@ void try_kernel_page_migration(struct inode *inode)
                 for (node = rb_first(&kloc_rbsmall); node; node = rb_next(node))
                 {
                         rb_pages_itr++;
-			struct hetero_rbnode *rbnode = rb_entry(node, struct
-					hetero_rbnode, lru_node);
+			struct kloc_rbnode *rbnode = rb_entry(node, struct
+					kloc_rbnode, lru_node);
 			kaddr = NULL;
                         if(rbnode)
                                 kaddr = rbnode->kaddr;
 
                         if(!kaddr)
                                 continue;
-#if 0
-                        if (PageReserved(page)) 
-                                continue;
-#endif
+
 			if(!is_vmalloc_addr(kaddr))
 				continue;
-
-
-                        /*struct page *page = vmalloc_to_page(kaddr);
-			if(!page)
-				continue;
-
-                        if(is_page_migratable(page)) {
-                                //page_ref_sub(page, 1);
-                                continue;
-                        }*/
 
 			//spin_lock(&current->kloc_rblock);
 			if(!migrate_vmalloc_pages(kaddr, NULL, NULL, get_slowmem_node(), NULL)) {
 				pages_migrated += 1;
-				//kloc_rb_remove_kaddr(&kloc_rbsmall, kaddr);
 			}
 			//spin_unlock(&current->kloc_rblock);
 		}
@@ -1604,8 +1371,8 @@ void try_kernel_page_migration(struct inode *inode)
 #if 0
                 for (node = rb_first(&kloc_rbsmall); node; node = rb_next(node))
                 {
-			struct hetero_rbnode *rbnode = rb_entry(node, struct
-					hetero_rbnode, lru_node);
+			struct kloc_rbnode *rbnode = rb_entry(node, struct
+					kloc_rbnode, lru_node);
                         if(!rbnode) {
 				continue;
                         }
@@ -1618,24 +1385,7 @@ void try_kernel_page_migration(struct inode *inode)
 #endif
                 //spin_unlock(&inode->kloc_rblock_small);
         }
-	//printk(KERN_ALERT "RELEASING %s:%d \n", __func__, __LINE__);
-	//spin_lock(&inode->kloc_rblock_small);
-
-#ifdef CONFIG_HETERO_STATS
-	if(pages_migrated) {
-	//if(1){
-        	printk(KERN_ALERT "%s:%d kloc_rbsmall_cnt %d  pages migrated %u " 
-				"pages erased %u num_inodes %d\n", __func__, __LINE__, 
-				inode->kloc_rbsmall_cnt, pages_migrated, pages_erased, num_inodes);
-	}
-#endif
 	cond_resched();
-
-#ifdef HETERO_DEBUG_LOCK
-        printk(KERN_ALERT "Exiting %s:%d \n", __func__, __LINE__);
-#endif
-
-
 	return;
 }
 
@@ -1649,25 +1399,21 @@ void try_kernel_page_migration(struct inode *inode)
 bool kloc_rb_insert_kaddr(struct rb_root *root, void *kaddr)
 {
 	struct rb_node **link = &(root->rb_node), *parent=NULL;
-	struct hetero_rbnode *this_node = NULL;
-        struct hetero_rbnode *data = NULL;
+	struct kloc_rbnode *this_node = NULL;
+        struct kloc_rbnode *data = NULL;
 
-#ifdef HETERO_DEBUG_LOCK
-        printk(KERN_ALERT "%s:%d \n", __func__, __LINE__);
-#endif
-
-
-
-	data = kmalloc(sizeof(struct hetero_rbnode), GFP_KERNEL);
-	if(!data)
-		BUG_ON(!data);
+	data = kmalloc(sizeof(struct kloc_rbnode), GFP_KERNEL);
+	if(!data) {
+		//BUG_ON(!data);
+		return false;
+	}
 
 	data->kaddr = (void *)kaddr;
 
 	while(*link) {
 
 		parent = *link;
-		this_node = rb_entry(parent, struct hetero_rbnode, lru_node);
+		this_node = rb_entry(parent, struct kloc_rbnode, lru_node);
 
 		if(!this_node || !link) {
 			goto rb_insert_fail_kernel;
@@ -1677,10 +1423,6 @@ bool kloc_rb_insert_kaddr(struct rb_root *root, void *kaddr)
 			link = &(*link)->rb_left;
 		}
 		else if ((void *)this_node->kaddr == (void *)kaddr) {
-#ifdef _DEBUG
-			printk(KERN_ALERT "Duplicate page LRU PID:%d at add:%lu\n"
-					, current->pid, (unsigned long)kaddr);
-#endif
 			goto rb_insert_fail_kernel;
 		}
 		else {
@@ -1690,16 +1432,10 @@ bool kloc_rb_insert_kaddr(struct rb_root *root, void *kaddr)
 
 	rb_link_node(&data->lru_node, parent, link);
 	rb_insert_color(&data->lru_node, root);
-#ifdef HETERO_DEBUG_LOCK
-        printk(KERN_ALERT "Exiting %s:%d \n", __func__, __LINE__);
-#endif
 
 	return true;
 
 rb_insert_fail_kernel:
-#ifdef HETERO_DEBUG_LOCK
-        printk(KERN_ALERT "Exiting %s:%d \n", __func__, __LINE__);
-#endif
 	kfree(data);
 	data = NULL;
 	return false;
@@ -1709,7 +1445,7 @@ EXPORT_SYMBOL(kloc_rb_insert_kaddr);
 
 void kloc_rb_remove_kaddr(struct rb_root *root, void *kaddr)
 {
-	struct hetero_rbnode *node = NULL;
+	struct kloc_rbnode *node = NULL;
        
 	node = kloc_rb_search_kaddr(root, kaddr);
 	if(node == NULL) {
@@ -1727,19 +1463,17 @@ void kloc_rb_remove_kaddr(struct rb_root *root, void *kaddr)
 /*
  * Searches and returns a kern addr
  */
-struct hetero_rbnode *kloc_rb_search_kaddr(struct rb_root *root, void *kaddr)
+struct kloc_rbnode *kloc_rb_search_kaddr(struct rb_root *root, void *kaddr)
 {
 	if(root == NULL) {
-		printk("pid:%d, comm:%s, kloc_rb_search, root==NULL\n",
-				current->pid, current->comm);
 		return NULL;
 	}
 
 	struct rb_node *node = root->rb_node;
-	struct hetero_rbnode *this_node = NULL;
+	struct kloc_rbnode *this_node = NULL;
 
 	while(node) {
-		this_node = rb_entry(node, struct hetero_rbnode, lru_node);
+		this_node = rb_entry(node, struct kloc_rbnode, lru_node);
 
 		if((void *)this_node->kaddr > (void *)kaddr) {
 			node = node->rb_left;
@@ -1758,80 +1492,12 @@ EXPORT_SYMBOL(kloc_rb_search_kaddr);
 
 
 
-static int thread_slab_migration(void *arg) {
-
-        unsigned long count = 0;
-	int i=0;
-	void *addr = arg;
-
-#ifdef HETERO_DEBUG_LOCK
-        printk(KERN_ALERT "%s:%d \n", __func__, __LINE__);
-#endif
-	g_lock_step = 600;
-	spin_lock(&current->kloc_rblock);
-
-	if(elements < 10) {
-		virtaddr[elements] = (unsigned long)addr;
-		elements++;
-	}else {
-#ifdef _ENABLE_HETERO_THREADXX
-		if(MAXTHREADS <= thrd_idx)
-			return;
-		THREADS[thrd_idx].thrd = kthread_run(thread_slab_migration, 
-					NULL, "HETEROTHRD");	
-#else
-		for(i=0; i < elements; i++) {
-
-			void *kaddr = (void *)virtaddr[i];
-			struct page *page = vmalloc_to_page(kaddr);
-			if(!kaddr)
-				continue;
-			
-			if(!page || !is_vmalloc_addr(kaddr))
-				continue;
-
-			if(is_page_migratable(page)) {
-				page_ref_sub(page, 1);
-				//printk(KERN_ALERT "%s:%d pages migrated %u\n", __func__,
-				//	__LINE__, g_buff_pages_migrated);
-				continue;
-			}
-
-			if(kaddr && !migrate_vmalloc_pages(kaddr, NULL, NULL, get_slowmem_node(), page)) {
-				g_buff_pages_migrated += 1;
-				printk(KERN_ALERT "%s:%d pages migrated %u\n", __func__,
-					__LINE__, g_buff_pages_migrated);
-			}else {
-				printk(KERN_ALERT "%s:%d pages migrated %u\n", __func__,
-					__LINE__, g_buff_pages_migrated);
-			}
-		}
-		g_lock_step = 555;
-		elements = 0;
-#endif
-	}
-	spin_unlock(&current->kloc_rblock);
-	g_lock_step = 556;
-
-#ifdef HETERO_DEBUG_LOCK
-	printk(KERN_ALERT "Exiting %s:%d \n", __func__, __LINE__);
-#endif
-	//cond_resched();
-	return 0;
-}
-
-
-
 /* The inodes have a per-inode rb-tree of kernel buffer 
  * pages. This function adds the vaddr to the rbtree
  */
 int insert_kaddr_rbtree(struct page *page, void *kaddr)
 {
 	struct inode *inode = NULL;
-
-#ifdef HETERO_DEBUG_LOCK
-        printk(KERN_ALERT "%s:%d \n", __func__, __LINE__);
-#endif
 
 	if(!kaddr)
 		return NULL;
@@ -1849,32 +1515,15 @@ int insert_kaddr_rbtree(struct page *page, void *kaddr)
 				inode->kloc_rbsmall_cnt = 0;
 				spin_lock_init(&inode->kloc_rblock_small);
 			}
-			/*if(!kloc_rbinode_search(&current->kloc_rbinode, inode)) {
-				//printk(KERN_ALERT "%s:%d inode not present \n");
-				set_inode_kloc_obj(inode);
-			}*/
-			g_lock_step = 599;
-#if 0
-			if(inode->kloc_rbsmall_cnt % 200 == 0) {
-				printk(KERN_ALERT "Before try_kernel_page_migration \n");
-				try_kernel_page_migration(inode);
-				printk(KERN_ALERT "After try_kernel_page_migration \n");
-			}
-#endif
+
 			spin_lock(&inode->kloc_rblock_small);
-			g_lock_step = 588;
 			if(kloc_rb_insert_kaddr(&inode->kloc_rbsmall, kaddr)
 					== true) {
 				inode->kloc_rbsmall_cnt++;
 			}
 			spin_unlock(&inode->kloc_rblock_small);
-			//thread_slab_migration(kaddr);
-			g_lock_step = 557;
 		}
 	}
-#ifdef HETERO_DEBUG_LOCK
-        printk(KERN_ALERT "Exiting %s:%d \n", __func__, __LINE__);
-#endif
 }
 EXPORT_SYMBOL(insert_kaddr_rbtree);
 
@@ -1883,35 +1532,26 @@ void remove_kaddr_rbtree(struct page *page, void *kaddr)
 {
 	struct inode *inode;
 
-#ifdef HETERO_DEBUG_LOCK
-	printk(KERN_ALERT "Entering %s:%d \n", __func__, __LINE__);
-#endif
 	if(page->kloc_obj != NULL) {
+
 		inode = (struct inode*)page->kloc_obj;
 		if(inode) {
+
+			if(inode->kloc_rbsmall_init == HETERO_INIT)
+				return;
 
 			//spin_lock(&inode->kloc_rblock_small);
 			kloc_rb_remove_kaddr(&inode->kloc_rbsmall, kaddr);
 			//spin_unlock(&inode->kloc_rblock_small);
-		
 			if(inode->kloc_rbsmall_cnt > 0)
 				inode->kloc_rbsmall_cnt--;
-
-			 g_lock_step = 994;
+			return;
 		}
 	}
 
 	if(inode->kloc_rbsmall_cnt % 200 == 0) {
-		//printk(KERN_ALERT "Before try_kernel_page_migration \n");
 		try_kernel_page_migration(inode);
-		//printk(KERN_ALERT "After try_kernel_page_migration \n");
 	}
-
-	g_lock_step = 995;
-
-#ifdef HETERO_DEBUG_LOCK
-	printk(KERN_ALERT "Exiting %s:%d \n", __func__, __LINE__);
-#endif
 
 }
 EXPORT_SYMBOL(remove_kaddr_rbtree);
@@ -1930,18 +1570,16 @@ int delete_element(void *kaddr) {
 
 
 
-void *kmalloc_hetero_wrap(unsigned int size, void *kloc_obj) {
-#ifdef CONFIG_HETERO_MIGRATE
+void *kloc_kmalloc_wrap(unsigned int size, void *kloc_obj) {
+#ifdef CONFIG_KLOC_MIGRATE
         /* Insert the page to KLOC RBTREE */
         struct page *page = NULL;
         void *s = NULL;
 
-	s = kmalloc_hetero_migrate(size, GFP_KERNEL);
+	s = kloc_kmalloc_migrate(size, GFP_KERNEL);
         if(s) {
                 page = vmalloc_to_page(s);
-                if(page && page->is_hetero_vmalloc == HETERO_INIT) {
-                        //printk(KERN_ALERT "%s:%d is_hetero_vmalloc %d\n",
-                         //     __func__, __LINE__, page->is_hetero_vmalloc);
+                if(page && page->is_kloc_vmalloc == HETERO_INIT) {
                         page->kloc_obj = kloc_obj;
                         insert_kaddr_rbtree(page, s);
                 }
@@ -1951,36 +1589,27 @@ void *kmalloc_hetero_wrap(unsigned int size, void *kloc_obj) {
 	}
 #endif
 }
-EXPORT_SYMBOL(kmalloc_hetero_wrap);
+EXPORT_SYMBOL(kloc_kmalloc_wrap);
 
 
-void vfree_hetero_page(void *addr) {
-
+void kloc_vfree_page(void *addr) {
 
 	struct page *page = vmalloc_to_page(addr);
 
 	if(!is_vmalloc_addr(addr))
 		return;
 
-#ifdef HETERO_DEBUG_LOCK
-        printk(KERN_ALERT "%s:%d \n", __func__, __LINE__);
-#endif
-
-	if(page && page->is_hetero_vmalloc == HETERO_INIT) {
-		vfree_hetero(addr);
-		delete_element(addr);
+	if(page && page->is_kloc_vmalloc == HETERO_INIT) {
+		//delete_element(addr);
 		remove_kaddr_rbtree(page, addr);
-		set_page_count(page, 0);
+		kloc_vfree(addr);
+		//set_page_count(page, 0);
 		//spin_unlock(&current->kloc_rblock);
-		//thread_slab_migration(addr, page);
 	}
 	//spin_unlock(&current->kloc_rblock);
 	//cond_resched();
-#ifdef HETERO_DEBUG_LOCK
-        printk(KERN_ALERT "Exiting %s:%d \n", __func__, __LINE__);
-#endif
 }
-EXPORT_SYMBOL(vfree_hetero_page);
+EXPORT_SYMBOL(kloc_vfree_page);
 #endif
 
 
@@ -1988,7 +1617,7 @@ EXPORT_SYMBOL(vfree_hetero_page);
 * TODO: Currently not setting HETERO_PG_FLAG for testing
 */
 void 
-update_hetero_pgcache(int nodeid, struct page *page, int delpage) 
+kloc_update_pgcache(int nodeid, struct page *page, int delpage) 
 {
 	int correct_node = 0; 
 	struct mm_struct *mm = NULL;
@@ -2008,50 +1637,46 @@ update_hetero_pgcache(int nodeid, struct page *page, int delpage)
 	if(!mm)
 		return;
 
-#ifdef HETERO_COLLECT_LIFETIME
-	page->hetero = HETERO_PG_FLAG;
-	update_page_life_time(page, delpage, 0);
-#else
-	if(page->hetero != HETERO_PG_FLAG)
+	if(page->kloc != HETERO_PG_FLAG)
 		return;
-#endif
+
 	/*Check if page is in the correct node and 
 	we are not deleting and only inserting the page*/
 	if(correct_node && !delpage) {
 		mm->pgcache_hits_cnt += 1;
-		page->hetero = HETERO_PG_FLAG;
+		page->kloc = HETERO_PG_FLAG;
 		incr_global_stats(&g_cachehits);
-#ifdef CONFIG_HETERO_OBJAFF
+#ifdef CONFIG_KLOC_KNODE
 		insert_page_cache_rbtree(page, is_pagecache);
 #endif
 	} else if(!correct_node && !delpage) {
 		mm->pgcache_miss_cnt += 1;
-		page->hetero = 0;
+		page->kloc = 0;
 		incr_global_stats(&g_cachemiss);
-	}else if(correct_node && (page->hetero == HETERO_PG_FLAG) 
+	}else if(correct_node && (page->kloc == HETERO_PG_FLAG) 
 			&& delpage) {
 		mm->pgcachedel++;
 		incr_global_stats(&g_cachedel);
-#ifdef CONFIG_HETERO_OBJAFF
+#ifdef CONFIG_KLOC_KNODE
 		remove_page_cache_rbtree(page, is_pagecache);
 #endif
 	}
 	/* Either if object affinity is disabled or page node is 
 	incorrect, then return */
-	if(!correct_node || !enbl_kloc_objaff)
+	if(!correct_node || !enbl_knode)
 		goto ret_pgcache_stat;
 
 ret_pgcache_stat:
 	return;
 }
-EXPORT_SYMBOL(update_hetero_pgcache);
+EXPORT_SYMBOL(kloc_update_pgcache);
 
 
 /* 
 * Update STAT 
 * TODO: Currently not setting HETERO_PG_FLAG for testing 
 */
-void update_hetero_pgbuff_stat(int nodeid, struct page *page, int delpage) 
+void kloc_update_pgbuff_stat(int nodeid, struct page *page, int delpage) 
 {
 	int correct_node = 0; 
 	struct mm_struct *mm = NULL;
@@ -2066,38 +1691,34 @@ void update_hetero_pgbuff_stat(int nodeid, struct page *page, int delpage)
 	if(!mm)
 		return;
 
-#ifdef HETERO_COLLECT_LIFETIME
-	page->hetero = HETERO_PG_FLAG;
-	update_page_life_time(page, delpage, 1);
-#else
-	if(page->hetero != HETERO_PG_FLAG)
+	if(page->kloc != HETERO_PG_FLAG)
 		return;
-#endif
+
 	//Check if page is in the correct node and 
 	//we are not deleting and only inserting the page
 	if(correct_node && !delpage) {
 		mm->pgbuff_hits_cnt += 1;
 		incr_global_stats(&g_buffhits);
-		page->hetero = HETERO_PG_FLAG;
+		page->kloc = HETERO_PG_FLAG;
 	}else if(!correct_node && !delpage) {
 		incr_global_stats(&g_buffmiss);
 		mm->pgbuff_miss_cnt += 1;
-		page->hetero = 0;
-	}else if(correct_node && (page->hetero == HETERO_PG_FLAG) 
+		page->kloc = 0;
+	}else if(correct_node && (page->kloc == HETERO_PG_FLAG) 
 			&& delpage) {
-#ifdef CONFIG_HETERO_STATS
+#ifdef CONFIG_KLOC_STATS
 		mm->pgbuffdel++;
 #endif		
 	}
 	//Either if object affinity is disabled or page node is 
 	//incorrect, then return
-	if(!correct_node || !enbl_kloc_objaff)
+	if(!correct_node || !enbl_knode)
 		goto ret_pgbuff_stat;
 
 ret_pgbuff_stat:
 	return;
 }
-EXPORT_SYMBOL(update_hetero_pgbuff_stat);
+EXPORT_SYMBOL(kloc_update_pgbuff_stat);
 
 
 /* 
@@ -2105,55 +1726,52 @@ EXPORT_SYMBOL(update_hetero_pgbuff_stat);
 * functions that do not explicity aim to place pages 
 * on heterogeneous memory
 */
-void update_hetero_pgbuff_stat_miss(void) 
+void update_kloc_pgbuff_stat_miss(void) 
 {
         current->mm->pgbuff_miss_cnt += 1;
 }
-EXPORT_SYMBOL(update_hetero_pgbuff_stat_miss);
+EXPORT_SYMBOL(update_kloc_pgbuff_stat_miss);
 
 
 /* 
  * Check if the designed node and current page location 
  * match. Responsibility of the requester to pass nodeid
  */
-int is_hetero_page(struct page *page, int nodeid){
+int is_kloc_page(struct page *page, int nodeid){
 
    if(page_to_nid(page) == nodeid) {
 	return 1;
    }
    return 0;
 }
-EXPORT_SYMBOL(is_hetero_page);
+EXPORT_SYMBOL(is_kloc_page);
 
 
-int is_hetero_journ_set(void){
+int is_kloc_journ_set(void){
 
-    //if(hetero_pid && current->pid == hetero_pid)
-    return enbl_hetero_journal;
+    //if(kloc_pid && current->pid == kloc_pid)
+    return enbl_kloc_journal;
     return 0;
 }
-EXPORT_SYMBOL(is_hetero_journ_set);
+EXPORT_SYMBOL(is_kloc_journ_set);
 
 
-
-
-
-int is_hetero_radix_set(void){
-    if(check_hetero_proc(current))
-    	return enbl_hetero_radix;
+int is_kloc_radix_set(void){
+    if(kloc_check_proc(current))
+    	return enbl_kloc_radix;
     return 0;
 }
-EXPORT_SYMBOL(is_hetero_radix_set);
+EXPORT_SYMBOL(is_kloc_radix_set);
 
 
-int is_hetero_kernel_set(void){
-    return enbl_hetero_kernel;
+int is_kloc_kernel_set(void){
+    return enbl_kloc_kernel;
     return 1;
 }
-EXPORT_SYMBOL(is_hetero_kernel_set);
+EXPORT_SYMBOL(is_kloc_kernel_set);
 
 int get_fastmem_node(void) {
-        return hetero_fastmem_node;
+        return kloc_fastmem_node;
 }
 
 int get_slowmem_node(void) {
@@ -2177,7 +1795,7 @@ static int migration_thread_fn(void *arg) {
 #endif
                 return 0;
         }
-        count = migrate_to_node_hetero(mm, get_fastmem_node(),
+        count = kloc_migrate_to_node(mm, get_fastmem_node(),
                         get_slowmem_node(),MPOL_MF_MOVE_ALL);
 
 #ifdef _ENABLE_HETERO_THREAD
@@ -2201,20 +1819,18 @@ static int migration_thread_fn(void *arg) {
 
 
 void 
-try_hetero_migration(void *map, gfp_t gfp_mask, int iskernel) {
+kloc_try_migration(void *map, gfp_t gfp_mask, int iskernel) {
 
 	unsigned long *target=0;
 	unsigned long *cachemiss=0;
         unsigned long *buffmiss=0;
 	unsigned long freemem_pages = 0;
 
-	return;
-
-	if(disabl_hetero_migrate) {
+	if(disabl_kloc_migrate) {
 		return;
 	}
 
-	if(!current->mm || (current->mm->hetero_task != HETERO_PROC))
+	if(!current->mm || (current->mm->kloc_task != HETERO_PROC))
 		return;
 
 	if(!g_cachemiss) {
@@ -2231,7 +1847,6 @@ try_hetero_migration(void *map, gfp_t gfp_mask, int iskernel) {
 	buffmiss = &current->mm->pgbuff_miss_cnt;
 	target = &current->mm->migrate_attempt;
 
-	//printk("%s:%d MIGRATE_THREAD_FUNC \n", __func__, __LINE__);
 	/* Check if we are well with in the threshold*/
 	if((*cachemiss +  *buffmiss) <  *target) {
 		return;
@@ -2239,14 +1854,12 @@ try_hetero_migration(void *map, gfp_t gfp_mask, int iskernel) {
 		*target = *target + g_migrate_freq;
 	}
 
-	//printk("%s:%d MIGRATE_THREAD_FUNC \n", __func__, __LINE__);
 #ifdef _ENABLE_HETERO_THREAD
 	if(!enbl_thrd_migrate)
 		goto sync_migrate;
 
 	if(MAXTHREADS <= thrd_idx)
 		return;
-	//print_hetero_stats(current);
 	THREADS[thrd_idx].thrd = kthread_run(migration_thread_fn,
 				current->mm, "HETEROTHRD");	
 
@@ -2256,40 +1869,40 @@ try_hetero_migration(void *map, gfp_t gfp_mask, int iskernel) {
 #endif
 
 sync_migrate:
-	print_hetero_stats(current);
-	migrate_to_node_hetero(current->mm, get_fastmem_node(),
+	kloc_stats(current);
+	kloc_migrate_to_node(current->mm, get_fastmem_node(),
 				get_slowmem_node(), MPOL_MF_MOVE_ALL);
 
         return;
 }
-EXPORT_SYMBOL(try_hetero_migration);
+EXPORT_SYMBOL(kloc_try_migration);
 
 
 void reset_all_flags(void)
 {
-    /*reset hetero allocate flags */
-    enbl_hetero_pgcache = 0;
-    enbl_hetero_buffer = 0; 
-    enbl_hetero_radix = 0;
-    enbl_hetero_journal = 0; 
-    enbl_hetero_kernel = 0;
-    enbl_hetero_net = 0;
-    enbl_hetero_pgcache_readahead=0;
+    /*reset kloc allocate flags */
+    enbl_kloc_pgcache = 0;
+    enbl_kloc_buffer = 0; 
+    enbl_kloc_radix = 0;
+    enbl_kloc_journal = 0; 
+    enbl_kloc_kernel = 0;
+    enbl_kloc_net = 0;
+    enbl_kloc_pgcache_readahead=0;
     /* Enable application defined context */
-    enbl_hetero_set_context = 0;
-    enbl_kloc_objaff = 0;	
-    hetero_pid = 0;
-    hetero_kernpg_cnt = 0;
-    hetero_usrpg_cnt = 0;
+    enbl_kloc_set_context = 0;
+    enbl_knode = 0;	
+    kloc_pid = 0;
+    kloc_kernpg_cnt = 0;
+    kloc_usrpg_cnt = 0;
 
     /* Reset KOBJ Stats */
-    enbl_hetero_trans = 0;
-    enbl_hetero_inode = 0;
-    enbl_hetero_dcache = 0;
-    enbl_hetero_sockbuff = 0;
-    enbl_hetero_bio = 0;
-    enbl_hetero_buffer = 0;
-    hetero_migrate_thresh = 0;
+    enbl_kloc_trans = 0;
+    enbl_kloc_inode = 0;
+    enbl_kloc_dcache = 0;
+    enbl_kloc_sockbuff = 0;
+    enbl_kloc_bio = 0;
+    enbl_kloc_buffer = 0;
+    kloc_migrate_thresh = 0;
 }
 
 
@@ -2302,15 +1915,15 @@ SYSCALL_DEFINE2(start_trace, int, flag, int, val)
 	int idx = 0;
 #endif
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
     switch(flag) {
 	case CLEAR_GLOBALCOUNT:
-	    printk("flag set to clear count %d\n", flag);
+	    //printk("flag set to clear count %d\n", flag);
 	    global_flag = CLEAR_GLOBALCOUNT;
 	    process_cleanup_rbtree();
 	    reset_all_flags();
-	    reset_hetero_stats(current);	
-#ifdef CONFIG_HETERO_OBJAFF
+	    reset_kloc_stats(current);	
+#ifdef CONFIG_KLOC_KNODE
 	    kloc_struct = NULL;
 #endif
 #ifdef HETERO_CPULISTS
@@ -2320,150 +1933,121 @@ SYSCALL_DEFINE2(start_trace, int, flag, int, val)
 	    break;
 
 	case COLLECT_TRACE:
-	    printk("flag is set to collect trace %d\n", flag);
 	    global_flag = COLLECT_TRACE;
 	    return global_flag;
 	    break;
 	case PRINT_GLOBAL_STATS:
-	    printk("flag is set to print stats %d\n", flag);
 	    global_flag = PRINT_GLOBAL_STATS;
 	    print_global_stats();
 	    break;
 	case PFN_TRACE:
-	    printk("flag is set to collect pfn trace %d\n", flag);
 	    global_flag = PFN_TRACE;
 	    return global_flag;
 	    break;
 	case PFN_STAT:
-	    printk("flag is set to print pfn stats %d\n", flag);
 	    print_pfn_hashtable();
 	    break;
 	case TIME_TRACE:
-	    printk("flag is set to collect time %d \n", flag);
 	    global_flag = TIME_TRACE;
 	    return global_flag;
 	    break;
 	case TIME_STATS:
-	    printk("flag is set to print time stats %d \n", flag);
 	    global_flag = TIME_STATS;
 	    print_rbtree_time_stat();
 	    break;
 	case TIME_RESET:
-	    printk("flag is set to reset time %d \n", flag);
-	    global_flag = TIME_RESET;
 	    rbtree_reset_time();
 	    break;
 	case COLLECT_ALLOCATE:
-	    printk("flag is set to collect hetero allocate  %d \n", flag);
 	    global_flag = COLLECT_ALLOCATE;
 	    return global_flag;
 	    break;
 	case PRINT_ALLOCATE:
-	    printk("flag is set to print hetero allocate stat %d \n", flag);
 	    global_flag = PRINT_ALLOCATE;
-	    //print_hetero_stats(current);
 	    print_global_stats();	
 	    break;
-	case HETERO_PGCACHE:
-	    printk("flag is set to enable HETERO_PGCACHE %d \n", flag);
-	    enbl_hetero_pgcache = 1;
+	case KLOC_PGCACHE:
+	    enbl_kloc_pgcache = 1;
 	    break;
-	case HETERO_BUFFER:
-	    printk("flag is set to enable HETERO_BUFFER %d \n", flag);
-	    enbl_hetero_buffer = 1;
+	case KLOC_BUFFER:
+	    enbl_kloc_buffer = 1;
 	    break;
-	case HETERO_JOURNAL:
-	    printk("flag is set to enable HETERO_JOURNAL %d \n", flag);
-	    enbl_hetero_journal = 1;
+	case KLOC_JOURNAL:
+	    enbl_kloc_journal = 1;
 	    break;
-	case HETERO_RADIX:
-	    printk("flag is set to enable HETERO_RADIX %d \n", flag);
-	    enbl_hetero_radix = 1;
+	case KLOC_RADIX:
+	    enbl_kloc_radix = 1;
 	    break;
-	case HETERO_FULLKERN:
-	    printk("flag is set to enable HETERO_FULLKERN %d \n", flag);
-	    enbl_hetero_kernel = 1;
+	case KLOC_FULLKERN:
+	    enbl_kloc_kernel = 1;
 	    break;
-	case HETERO_SET_FASTMEM_NODE:
-	    printk("flag to set FASTMEM node to %d \n", val);
-	    hetero_fastmem_node = val;
+	case KLOC_SET_FASTMEM_NODE:
+	    kloc_fastmem_node = val;
 	    break;
-	case HETERO_MIGRATE_FREQ:
+	case KLOC_MIGRATE_FREQ:
 	     g_migrate_freq = val;
-	     printk("flag to set MIGRATION FREQ to %d \n", g_migrate_freq);
 	     break;	
-	case HETERO_OBJ_AFF:
-#ifdef CONFIG_HETERO_OBJAFF
-	    enbl_kloc_objaff = 1;
-	    printk("flag enables HETERO_OBJAFF %d \n", enbl_kloc_objaff);
+	case KLOC_KNODE:
+#ifdef CONFIG_KLOC_KNODE
+	    enbl_knode = 1;
 #endif 
 	    break;	
-	case HETERO_DISABLE_MIGRATE:
-	     printk("flag to disable migration %d \n", val);
-	     disabl_hetero_migrate = 1;
+	case KLOC_DISABLE_MIGRATE:
+	     disabl_kloc_migrate = 1;
 	     break;	
-	case HETERO_MIGRATE_LISTCNT:
-	     printk("flag to MIGRATE_LISTCNT %d \n", val);
+	case KLOC_MIGRATE_LISTCNT:
 	     min_migrate_cnt = val;
 	     break;	
 
 	/* Set current file context */
-	case HETERO_SET_CONTEXT:
-	     printk("flag to set HETERO_SET_CONTEXT with fd %d \n", val);
-	     enbl_hetero_set_context = 1;
+	case KLOC_SET_CONTEXT:
+	     enbl_kloc_set_context = 1;
 	     break;
 
-	case HETERO_NET:
-	     printk("flag to set HETERO_NET with %d \n", val);
-	     enbl_hetero_net = 1;
+	case KLOC_NET:
+	     enbl_kloc_net = 1;
 	     break;		
 
-	case HETERO_PGCACHE_READAHEAD:
-	     printk("flag to set HETERO_PGCACHE_READAHEAD with %d \n", val);
-	     enbl_hetero_pgcache_readahead = 1;	
+	case KLOC_PGCACHE_READAHEAD:
+	     enbl_kloc_pgcache_readahead = 1;	
 	     break;	
 
-#ifdef HETERO_KOBJ_STAT
-	case HETERO_KOBJ_STAT_INFO:
-     	     printk("flag to set to HETERO_KOBJ_STAT with %d \n", val);
-	     if(val == HETERO_KOBJ_INODE)
-	     	enbl_hetero_inode=1;
-	     if(val == HETERO_KOBJ_BUFFHEAD)
-	     	enbl_hetero_buffhead=1;
-      	     if(val == HETERO_KOBJ_TRANS)
-	     	enbl_hetero_trans=1;
-	     if(val == HETERO_KOBJ_DCACHE)
-	     	enbl_hetero_dcache=1;
-	     if(val == HETERO_KOBJ_SOCKBUFF)
-	     	enbl_hetero_sockbuff=1;
-	     if(val == HETERO_KOBJ_BIO)
-		enbl_hetero_bio=1;
+#ifdef KLOC_KNODE_STAT
+	case KLOC_KNODE_STAT_INFO:
+	     if(val == KLOC_KNODE_INODE)
+	     	enbl_kloc_inode=1;
+	     if(val == KLOC_KNODE_BUFFHEAD)
+	     	enbl_kloc_buffhead=1;
+      	     if(val == KLOC_KNODE_TRANS)
+	     	enbl_kloc_trans=1;
+	     if(val == KLOC_KNODE_DCACHE)
+	     	enbl_kloc_dcache=1;
+	     if(val == KLOC_KNODE_SOCKBUFF)
+	     	enbl_kloc_sockbuff=1;
+	     if(val == KLOC_KNODE_BIO)
+		enbl_kloc_bio=1;
 	     break;
 #endif
-	case HETERO_MIGRATE_THRESH:
-		hetero_migrate_thresh = val;
-		printk("flag to set HETERO_MIGRATE_THRESH with %d \n", val);
+	case KLOC_MIGRATE_THRESH:
+		kloc_migrate_thresh = val;
 		break;
 
-	case HETERO_MIGRATE_THREADS:
+	case KLOC_MIGRATE_THREADS:
 		enbl_thrd_migrate = val;
-		printk("flag to set HETERO_MIGRATE_THREADS with %d \n", val);
 		break;
 
 	default:
-#ifdef CONFIG_HETERO_DEBUG
-	   hetero_dbgmask = 1;	
+#ifdef CONFIG_KLOC_DEBUG
+	   kloc_dbgmask = 1;	
 #endif
-	    hetero_pid = flag;
-	    current->mm->hetero_task = HETERO_PROC;
-	    printk("hetero_pid set to %d %d procname %s\n", hetero_pid,
-		current->pid, current->comm);			
+	    kloc_pid = flag;
+	    current->mm->kloc_task = HETERO_PROC;
 	    break;
     }
 #endif
 
-    if(!hetero_migrate_thresh)
-	hetero_migrate_thresh = HETERO_MIGRATE_THRESH;
+    if(!kloc_migrate_thresh)
+	kloc_migrate_thresh = KLOC_MIGRATE_THRESH;
 
     return 0;
 }
@@ -2486,28 +2070,23 @@ void cleanup_kloclist(void)
 	struct list_head *pcpu_list, *tmp = NULL;
 #endif
 	if(kloc_cleanedup) {
-		printk(KERN_ALERT "%s:%d KLOC NULL\n",__func__, __LINE__);
 		return 0;
 	}
 
 	if(!kloc_struct) {
-		printk(KERN_ALERT "%s:%d KLOC NULL\n",__func__, __LINE__);
 		return 0;
 	}
 
 	if(!kloc_struct->init) {
-		printk(KERN_ALERT "%s:%d KLOC NULL\n",__func__, __LINE__);
 		return 0;
 	}
 
         pcpu_list = kloc_struct->kloclist;
 	if(!pcpu_list) {
-                printk(KERN_ALERT "%s:%d KLOC NULL\n",__func__, __LINE__);
                 return 0;
         }
 #ifdef CONFIG_HETERO_PERCPU
         for_each_possible_cpu(cpu) {
-		//list_entries = this_cpu_ptr(pcpu_list);
 		list_entries = per_cpu_ptr(pcpu_list, cpu);
 #else
 		list_entries = pcpu_list;
@@ -2522,17 +2101,8 @@ void cleanup_kloclist(void)
 			inode->kloc_rblarge_init = 0;
 			inode->kloc_rblarge = RB_ROOT;
 
-			hetero_delete_inode(inode);
-			hetero_stat_erased_inodes++;
-
-#ifdef CONFIG_HETERO_DEBUG	
-			printk(KERN_ALERT "%s:%d inode-count %u " 
-				"hetero_stat_inodes %u "
-				"hetero_stat_erased_inodes %u \n", 
-				__func__, __LINE__, inode->i_ino, 
-				hetero_stat_inodes,
-				hetero_stat_erased_inodes);
-#endif
+			kloc_delete_inode(inode);
+			kloc_stat_erased_inodes++;
         	}
 		//FIXME: This is not required.
 #ifdef CONFIG_HETERO_PERCPU
@@ -2544,7 +2114,7 @@ void cleanup_kloclist(void)
 }
 
 
-void hetero_inactive_inode(struct inode *inode)
+void kloc_inactive_inode(struct inode *inode)
 {
 	if(!inode)
 		return;
@@ -2552,10 +2122,10 @@ void hetero_inactive_inode(struct inode *inode)
 	inode->is_kloc_active = 0;
 	return;
 }
-EXPORT_SYMBOL(hetero_inactive_inode);
+EXPORT_SYMBOL(kloc_inactive_inode);
 
 
-void hetero_delete_inode(struct inode *inode)
+void kloc_delete_inode(struct inode *inode)
 {
 	if(!inode)
 		return;
@@ -2564,15 +2134,15 @@ void hetero_delete_inode(struct inode *inode)
 		list_del(&inode->kloc_hlist_entry);
 		inode->hlist_entry_added = 0;
 
-		if(hetero_stat_inodes) {
-			hetero_stat_inodes--;
+		if(kloc_stat_inodes) {
+			kloc_stat_inodes--;
 		}
 	}
 	/* Make inode in-active */
 	inode->is_kloc_active = 0;
 	return;
 }
-EXPORT_SYMBOL(hetero_delete_inode);
+EXPORT_SYMBOL(kloc_delete_inode);
 
 
 void init_kloc_list(void) 
@@ -2586,10 +2156,11 @@ void init_kloc_list(void)
 	struct list_head *list;
 	list = kmalloc(sizeof(struct list_head), GFP_KERNEL);
 #endif
-	if(!list)
+	if(!list) {
         	printk(KERN_ALERT "%s:%d kloc_objs list NULL \n",
                                 __func__, __LINE__);
-	VM_BUG_ON(!list);
+		VM_BUG_ON(!list);
+	}
 
 #ifdef CONFIG_HETERO_PERCPU
 	for_each_possible_cpu(cpu)
@@ -2599,8 +2170,6 @@ void init_kloc_list(void)
 #endif
 	kloc_struct = kmalloc(sizeof(struct kloc_obj_list), GFP_KERNEL);
 	if(!kloc_struct) {
-		printk(KERN_ALERT "%s:%d kloc_struct alloc failed \n",
-				__func__, __LINE__);
 		return;
 	}
 
@@ -2658,9 +2227,6 @@ void iterate_cpulist(void)
 			return 0;
 
 		list_for_each_entry(inode, list_entries, kloc_hlist_entry) {
-			printk(KERN_ALERT "%s:%d inode-num %u inodes %d inode count %d\n", 
-					__func__, __LINE__, inode->i_ino, num_inodes, 
-					hetero_stat_inodes);
 			num_inodes++;
 		}
 
@@ -2715,50 +2281,11 @@ int add_percpu_kloc_list (struct list_head *entry)
 	 * Also, just an approximate count for stat purposes, 
 	 * as we do not do it atomically. 
 	 */
-#if 1//def CONFIG_HETERO_STATS
-	hetero_stat_inodes++;
+#ifdef CONFIG_KLOC_STATS
+	kloc_stat_inodes++;
 #endif
 	return 0;
 }
 #endif //HETERO_CPULISTS
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
-
-
-
-
-#if 0
-static int migration_thread_fn(void *arg) {
-
-	unsigned long count = 0;
-	struct mm_struct *mm = (struct mm_struct *)arg;
-	struct timeval start, end;
-
-        //do_gettimeofday(&start);
-	 migration_thrd_active = 1;
-
-	hetero_force_dbg("%s:%d MIGRATE_THREAD_FUNC \n", __func__, __LINE__);
-	while(migration_thrd_active) {
-
-		while(!spinlock) {
-			if (kthread_should_stop())
-                        	break;
-		}
-		//migration_thrd_active = 1;
-		if(!mm) {
-			return 0;
-		}	
-		count = migrate_to_node_hetero(mm, get_fastmem_node(), 
-			get_slowmem_node(),MPOL_MF_MOVE_ALL);
-		//migration_thrd_active = 0;
-		//do_gettimeofday(&end);
-		//migrate_time += timediff(&start, &end);
-		spinlock = 0;
-	}
-
-	hetero_force_dbg("%s:%d THREAD EXITING \n", __func__, __LINE__);
-	return 0;
-}
-#endif //CONFIG_HETERO_ENABLE
-
-
 

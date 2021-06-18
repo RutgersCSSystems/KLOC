@@ -266,10 +266,9 @@ static void __d_free_external_name(struct rcu_head *head)
 	mod_node_page_state(page_pgdat(virt_to_page(name)),
 			    NR_INDIRECTLY_RECLAIMABLE_BYTES,
 			    -ksize(name));
-#ifdef CONFIG_HETERO_MIGRATE
-	if(is_hetero_buffer_set()) {
-		printk(KERN_ALERT  "%s:%d\n", __FUNCTION__, __LINE__);
-		//vfree_hetero(name);
+#ifdef CONFIG_KLOC_MIGRATE
+	if(is_kloc_buffer_set()) {
+		//kloc_vfree(name);
 	}
 #endif
 	kfree(name);
@@ -1641,10 +1640,10 @@ struct dentry *__d_alloc(struct super_block *sb, const struct qstr *name)
 	char *dname;
 	int err;
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
         dentry = NULL;
-        if(is_hetero_buffer_set() && is_hetero_dcache()){
-                dentry = kmem_cache_alloc_hetero(dentry_cache, GFP_KERNEL);
+        if(is_kloc_buffer_set() && is_kloc_dcache()){
+                dentry = kmem_cache_alloc_kloc(dentry_cache, GFP_KERNEL);
         }
         if(!dentry)
 #endif
@@ -1664,15 +1663,14 @@ struct dentry *__d_alloc(struct super_block *sb, const struct qstr *name)
 		dname = dentry->d_iname;
 	} else if (name->len > DNAME_INLINE_LEN-1) {
 		size_t size = offsetof(struct external_name, name[1]);
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 		ext = NULL;
-                if(is_hetero_buffer_set() &&  is_hetero_dcache()){
-#ifdef CONFIG_HETERO_MIGRATE
-			printk(KERN_ALERT  "%s:%d\n", __FUNCTION__, __LINE__);
-                        ext = kmalloc_hetero_migrate(size + name->len, GFP_KERNEL_ACCOUNT);
+                if(is_kloc_buffer_set() &&  is_kloc_dcache()){
+#ifdef CONFIG_KLOC_MIGRATE
+                        ext = kloc_kmalloc_migrate(size + name->len, GFP_KERNEL_ACCOUNT);
                         if(!ext)
 #endif
-                        ext = kmalloc_hetero(size + name->len, GFP_KERNEL_ACCOUNT);
+                        ext = kmalloc_kloc(size + name->len, GFP_KERNEL_ACCOUNT);
                 }
                 if(!ext)
 #endif
@@ -1715,11 +1713,11 @@ struct dentry *__d_alloc(struct super_block *sb, const struct qstr *name)
 		err = dentry->d_op->d_init(dentry);
 		if (err) {
 			if (dname_external(dentry)) {
-#ifdef CONFIG_HETERO_MIGRATE
+#ifdef CONFIG_KLOC_MIGRATE
 				void *addr = NULL;
 				addr = (void *)external_name(dentry);
 				if(is_vmalloc_addr(addr))
-	                        	vfree_hetero(addr);
+	                        	kloc_vfree(addr);
 				else
 				
 #endif

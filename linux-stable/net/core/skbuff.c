@@ -124,18 +124,18 @@ static void skb_under_panic(struct sk_buff *skb, unsigned int sz, void *addr)
 #define kmalloc_reserve(size, gfp, node, pfmemalloc) \
 	 __kmalloc_reserve(size, gfp, node, _RET_IP_, pfmemalloc)
 
-#define kmalloc_reserve_hetero(size, gfp, node, pfmemalloc) \
-	 __kmalloc_reserve_hetero(size, gfp, node, _RET_IP_, pfmemalloc)
+#define kmalloc_reserve_kloc(size, gfp, node, pfmemalloc) \
+	 __kmalloc_reserve_kloc(size, gfp, node, _RET_IP_, pfmemalloc)
 
 
-static void *__kmalloc_reserve_hetero(size_t size, gfp_t flags, int node,
+static void *__kmalloc_reserve_kloc(size_t size, gfp_t flags, int node,
 			       unsigned long ip, bool *pfmemalloc)
 {
 	void *obj;
 	bool ret_pfmemalloc = false;
 
-#ifdef CONFIG_HETERO_ENABLE
-        if(is_hetero_buffer_set()){
+#ifdef CONFIG_KLOC_ENABLE
+        if(is_kloc_buffer_set()){
                 node = get_fastmem_node();
         }
 #endif
@@ -143,7 +143,7 @@ static void *__kmalloc_reserve_hetero(size_t size, gfp_t flags, int node,
 	 * Try a regular allocation, when that fails and we're not entitled
 	 * to the reserves, fail.
 	 */
-	obj = kmalloc_node_track_caller_hetero(size,
+	obj = kmalloc_node_track_caller_kloc(size,
 					flags | __GFP_NOMEMALLOC | __GFP_NOWARN,
 					node);
 	if (obj || !(gfp_pfmemalloc_allowed(flags)))
@@ -151,7 +151,7 @@ static void *__kmalloc_reserve_hetero(size_t size, gfp_t flags, int node,
 
 	/* Try again but now we are using pfmemalloc reserves */
 	ret_pfmemalloc = true;
-	obj = kmalloc_node_track_caller_hetero(size, flags, node);
+	obj = kmalloc_node_track_caller_kloc(size, flags, node);
 
 out:
 	if (pfmemalloc)
@@ -167,10 +167,8 @@ static void *__kmalloc_reserve(size_t size, gfp_t flags, int node,
 	void *obj;
 	bool ret_pfmemalloc = false;
 
-#ifdef CONFIG_HETERO_ENABLE
-        if(is_hetero_buffer_set()){
-		//dump_stack();
-		//printk(KERN_ALERT "%s : %d \n", __func__, __LINE__);
+#ifdef CONFIG_KLOC_ENABLE
+        if(is_kloc_buffer_set()){
                 node = get_fastmem_node();
         }
 #endif
@@ -234,12 +232,12 @@ struct sk_buff *__alloc_skb(unsigned int size, gfp_t gfp_mask,
 	if (sk_memalloc_socks() && (flags & SKB_ALLOC_RX))
 		gfp_mask |= __GFP_MEMALLOC;
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
         skb = NULL;
-	if(is_hetero_buffer_set() &&  is_hetero_sockbuff()){
+	if(is_kloc_buffer_set() &&  is_kloc_sockbuff()){
 		node = get_fastmem_node();
-     	        skb = kmem_cache_alloc_node_hetero(cache, gfp_mask & ~__GFP_DMA, node);
-#ifdef CONFIG_HETERO_MIGRATEXX
+     	        skb = kmem_cache_alloc_node_kloc(cache, gfp_mask & ~__GFP_DMA, node);
+#ifdef CONFIG_KLOC_MIGRATEXX
 		skb->is_migratable = 1;
 		skb->is_migratable=0;
 #endif
@@ -259,16 +257,16 @@ struct sk_buff *__alloc_skb(unsigned int size, gfp_t gfp_mask,
 	 */
 	size = SKB_DATA_ALIGN(size);
 	size += SKB_DATA_ALIGN(sizeof(struct skb_shared_info));
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
         data = NULL;
-	if(is_hetero_buffer_set()){
+	if(is_kloc_buffer_set()){
 		node = get_fastmem_node();
-#ifdef CONFIG_HETERO_MIGRATEXX
+#ifdef CONFIG_KLOC_MIGRATEXX
 		if(skb->is_migratable)
-			data = kmalloc_hetero_migrate(size, gfp_mask);
+			data = kloc_kmalloc_migrate(size, gfp_mask);
 		if(!data)
 #endif
-     	        data = kmalloc_reserve_hetero(size, gfp_mask, node, &pfmemalloc);
+     	        data = kmalloc_reserve_kloc(size, gfp_mask, node, &pfmemalloc);
 	}
 	if(!data)
 #endif
@@ -347,7 +345,7 @@ EXPORT_SYMBOL(__alloc_skb);
  *	Buffers may only be allocated from interrupts using a @gfp_mask of
  *	%GFP_ATOMIC.
  */
-struct sk_buff *__alloc_skb_hetero(unsigned int size, gfp_t gfp_mask,
+struct sk_buff *__alloc_skb_kloc(unsigned int size, gfp_t gfp_mask,
 			    int flags, int node, void *kloc_obj)
 {
 	struct kmem_cache *cache;
@@ -362,11 +360,11 @@ struct sk_buff *__alloc_skb_hetero(unsigned int size, gfp_t gfp_mask,
 	if (sk_memalloc_socks() && (flags & SKB_ALLOC_RX))
 		gfp_mask |= __GFP_MEMALLOC;
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
         skb = NULL;
-	if(is_hetero_buffer_set() && is_hetero_cacheobj(kloc_obj) &&  is_hetero_sockbuff()){
+	if(is_kloc_buffer_set() && is_kloc_cacheobj(kloc_obj) &&  is_kloc_sockbuff()){
 	        update_kloc_obj(cache, kloc_obj);
-     	        skb = kmem_cache_alloc_node_hetero(cache, gfp_mask & ~__GFP_DMA, node);
+     	        skb = kmem_cache_alloc_node_kloc(cache, gfp_mask & ~__GFP_DMA, node);
 	}
 	if(!skb)
 #endif
@@ -383,16 +381,16 @@ struct sk_buff *__alloc_skb_hetero(unsigned int size, gfp_t gfp_mask,
 	 */
 	size = SKB_DATA_ALIGN(size);
 	size += SKB_DATA_ALIGN(sizeof(struct skb_shared_info));
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
         data = NULL;
-	if(is_hetero_buffer_set() &&  is_hetero_sockbuff()) {
+	if(is_kloc_buffer_set() &&  is_kloc_sockbuff()) {
 		node = get_fastmem_node();
-#ifdef CONFIG_HETERO_MIGRATEXX
+#ifdef CONFIG_KLOC_MIGRATEXX
 		if(skb->is_migratable)
-			data = kmalloc_hetero_migrate(size, gfp_mask);
+			data = kloc_kmalloc_migrate(size, gfp_mask);
 		if(!data)
 #endif
-  	        data = kmalloc_reserve_hetero(size, gfp_mask, node, &pfmemalloc);
+  	        data = kmalloc_reserve_kloc(size, gfp_mask, node, &pfmemalloc);
 	}
 	if(!data)
 #endif
@@ -445,7 +443,7 @@ nodata:
 	skb = NULL;
 	goto out;
 }
-EXPORT_SYMBOL(__alloc_skb_hetero);
+EXPORT_SYMBOL(__alloc_skb_kloc);
 
 
 /**
@@ -695,9 +693,9 @@ skb_fail:
 EXPORT_SYMBOL(__napi_alloc_skb);
 
 
-#ifdef CONFIG_HETERO_NET_ENABLE
+#ifdef CONFIG_KLOC_NET
 /**
- * __build_skb_hetero - build a hetero network buffer
+ * __build_skb_kloc - build a hetero network buffer
  * @data: data buffer provided by caller
  * @frag_size: size of data, or 0 if head was kmalloced
  *
@@ -715,16 +713,16 @@ EXPORT_SYMBOL(__napi_alloc_skb);
  *  before giving packet to stack.
  *  RX rings only contains data buffers, not full skbs.
  */
-struct sk_buff *__build_skb_hetero(void *data, unsigned int frag_size, void *kloc_obj)
+struct sk_buff *__build_skb_kloc(void *data, unsigned int frag_size, void *kloc_obj)
 {
 	struct skb_shared_info *shinfo;
 	struct sk_buff *skb;
 	unsigned int size = frag_size ? : ksize(data);
 
- #ifdef CONFIG_HETERO_NET_ENABLE
+ #ifdef CONFIG_KLOC_NET
 	skb = NULL;
-	if (is_hetero_buffer_set() && is_hetero_cacheobj(kloc_obj)){
-		skb = kmem_cache_alloc_hetero(skbuff_head_cache, GFP_KERNEL);
+	if (is_kloc_buffer_set() && is_kloc_cacheobj(kloc_obj)){
+		skb = kmem_cache_alloc_kloc(skbuff_head_cache, GFP_KERNEL);
 	}
 	if (!skb)
  #endif
@@ -753,7 +751,7 @@ struct sk_buff *__build_skb_hetero(void *data, unsigned int frag_size, void *klo
 }
 
 /**
- *	__napi_alloc_skb_hetero - allocate hetero skbuff for rx in a specific NAPI instance
+ *	__napi_alloc_skb_kloc - allocate hetero skbuff for rx in a specific NAPI instance
  *	@napi: napi instance this buffer was allocated for
  *	@len: length to allocate
  *	@gfp_mask: get_free_pages mask, passed to alloc_skb and alloc_pages
@@ -766,7 +764,7 @@ struct sk_buff *__build_skb_hetero(void *data, unsigned int frag_size, void *klo
  *
  *	%NULL is returned if there is no free memory.
  */
-struct sk_buff *__napi_alloc_skb_hetero(struct napi_struct *napi, unsigned int len,
+struct sk_buff *__napi_alloc_skb_kloc(struct napi_struct *napi, unsigned int len,
 				 gfp_t gfp_mask, void *kloc_obj)
 {
 	struct napi_alloc_cache *nc = this_cpu_ptr(&napi_alloc_cache);
@@ -793,9 +791,9 @@ struct sk_buff *__napi_alloc_skb_hetero(struct napi_struct *napi, unsigned int l
 	if (unlikely(!data))
 		return NULL;
 
-#ifdef CONFIG_HETERO_NET_ENABLE
-	if (is_hetero_buffer_set() && is_hetero_cacheobj(kloc_obj)) {
-		skb = __build_skb_hetero(data, len, kloc_obj);
+#ifdef CONFIG_KLOC_NET
+	if (is_kloc_buffer_set() && is_kloc_cacheobj(kloc_obj)) {
+		skb = __build_skb_kloc(data, len, kloc_obj);
 	}
 	if (!skb)
 #endif
@@ -816,16 +814,16 @@ skb_success:
 skb_fail:
 	return skb;
 }
-EXPORT_SYMBOL(__napi_alloc_skb_hetero);
+EXPORT_SYMBOL(__napi_alloc_skb_kloc);
 
-/* build_skb_hetero() is wrapper over __build_skb_hetero(), that specifically
+/* build_skb_kloc() is wrapper over __build_skb_kloc(), that specifically
  * takes care of skb->head and skb->pfmemalloc
  * This means that if @frag_size is not zero, then @data must be backed
  * by a page fragment, not kmalloc() or vmalloc()
  */
-struct sk_buff *build_skb_hetero(void *data, unsigned int frag_size, void* kloc_obj)
+struct sk_buff *build_skb_kloc(void *data, unsigned int frag_size, void* kloc_obj)
 {
-	struct sk_buff *skb = __build_skb_hetero(data, frag_size, kloc_obj);
+	struct sk_buff *skb = __build_skb_kloc(data, frag_size, kloc_obj);
 
 	//printk(KERN_ALERT "allocating skb ... %s:%d\n", __FUNCTION__,__LINE__);
 
@@ -836,7 +834,7 @@ struct sk_buff *build_skb_hetero(void *data, unsigned int frag_size, void* kloc_
 	}
 	return skb;
 }
-EXPORT_SYMBOL(build_skb_hetero);
+EXPORT_SYMBOL(build_skb_kloc);
 
 #endif
 
@@ -890,10 +888,9 @@ static void skb_free_head(struct sk_buff *skb)
 		skb_free_frag(head);
 	}
 	else {
-#ifdef CONFIG_HETERO_MIGRATEXX
+#ifdef CONFIG_KLOC_MIGRATEXX
 		if(skb && skb->is_migratable) {
-			//printk(KERN_ALERT  "%s:%d\n", __FUNCTION__, __LINE__);
-			vfree_hetero(head);
+			kloc_vfree(head);
 		}
 		else
 #endif
@@ -1809,10 +1806,10 @@ int pskb_expand_head(struct sk_buff *skb, int nhead, int ntail,
 	if (skb_pfmemalloc(skb))
 		gfp_mask |= __GFP_MEMALLOC;
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
         data = NULL;
-        if(is_hetero_buffer_set() &&  is_hetero_sockbuff()){
-		data = kmalloc_reserve_hetero(size + SKB_DATA_ALIGN(sizeof(struct skb_shared_info)),
+        if(is_kloc_buffer_set() &&  is_kloc_sockbuff()){
+		data = kmalloc_reserve_kloc(size + SKB_DATA_ALIGN(sizeof(struct skb_shared_info)),
 			       gfp_mask, get_fastmem_node(), NULL);
         }
         if(!data)
@@ -5595,9 +5592,8 @@ struct sk_buff *alloc_skb_with_frags(unsigned long header_len,
 	gfp_t gfp_head;
 	int i;
 
-	if(is_hetero_buffer_set())
-		printk(KERN_ALERT  "%s:%d\n", __FUNCTION__, __LINE__);
-
+	//if(is_kloc_buffer_set())
+	//	printk(KERN_ALERT  "%s:%d\n", __FUNCTION__, __LINE__);
 	*errcode = -EMSGSIZE;
 	/* Note this test could be relaxed, if we succeed to allocate
 	 * high order pages...
@@ -5665,10 +5661,10 @@ static int pskb_carve_inside_header(struct sk_buff *skb, const u32 off,
 
 	if (skb_pfmemalloc(skb))
 		gfp_mask |= __GFP_MEMALLOC;
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
         data = NULL;
-        if(is_hetero_buffer_set() &&  is_hetero_sockbuff()){
-		data = kmalloc_reserve_hetero(size +
+        if(is_kloc_buffer_set() &&  is_kloc_sockbuff()){
+		data = kmalloc_reserve_kloc(size +
 			       SKB_DATA_ALIGN(sizeof(struct skb_shared_info)),
 			       gfp_mask, get_fastmem_node(), NULL);
         }
@@ -5798,10 +5794,10 @@ static int pskb_carve_inside_nonlinear(struct sk_buff *skb, const u32 off,
 
 	if (skb_pfmemalloc(skb))
 		gfp_mask |= __GFP_MEMALLOC;
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
         data = NULL;
-        if(is_hetero_buffer_set() && is_hetero_sockbuff()){
-		data = kmalloc_reserve_hetero(size +
+        if(is_kloc_buffer_set() && is_kloc_sockbuff()){
+		data = kmalloc_reserve_kloc(size +
 			       SKB_DATA_ALIGN(sizeof(struct skb_shared_info)),
 			       gfp_mask, get_fastmem_node(), NULL);
         }

@@ -827,7 +827,7 @@ struct buffer_head *alloc_page_buffers(struct page *page, unsigned long size,
 	struct buffer_head *bh, *head;
 	gfp_t gfp = GFP_NOFS;
 	long offset;
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 	void *kloc_obj = NULL;
         page->kloc_obj = NULL;
 #endif
@@ -839,20 +839,18 @@ struct buffer_head *alloc_page_buffers(struct page *page, unsigned long size,
 
 	while ((offset -= size) >= 0) {
 
-#ifdef CONFIG_HETERO_ENABLE
-
+#ifdef CONFIG_KLOC_ENABLE
 		bh = NULL;
 		page->kloc_obj = NULL;
 
-		if (is_hetero_buffer_set() && is_hetero_buffhead()) {
+		if (is_kloc_buffer_set() && is_kloc_buffhead()) {
 			if(page->mapping) {
 				kloc_obj = (void *)page->mapping->host;
 				struct inode *inode = (struct inode *)page->mapping->host;
-				bh = alloc_buffer_head_hetero(gfp, kloc_obj);
+				bh = alloc_buffer_head_kloc(gfp, kloc_obj);
 				page->kloc_obj = kloc_obj;
-				//debug_kloc_obj(kloc_obj);	
 			}else {
-				bh = alloc_buffer_head_hetero(gfp, NULL);
+				bh = alloc_buffer_head_kloc(gfp, NULL);
 			}
 		}
 		if (!bh)
@@ -864,9 +862,7 @@ struct buffer_head *alloc_page_buffers(struct page *page, unsigned long size,
 		bh->b_this_page = head;
 		bh->b_blocknr = -1;
 		head = bh;
-
 		bh->b_size = size;
-
 		/* Link the buffer to its page */
 		set_bh_page(bh, page, offset);
 	}
@@ -3379,13 +3375,6 @@ static void recalc_bh_state(void)
 	buffer_heads_over_limit = (tot > max_buffer_heads);
 }
 
-/* HETERO DELETE THIS
-static void add_to_hashtable_buffer_head(struct buffer_head *bh) {
-	unsigned long pfn = (__pa(bh) >> PAGE_SHIFT);
-	if (pfn <= max_pfn)
-		insert_pfn_hashtable(pfn);
-}
-*/
 
 struct buffer_head *alloc_buffer_head(gfp_t gfp_flags)
 {
@@ -3404,10 +3393,10 @@ EXPORT_SYMBOL(alloc_buffer_head);
 
 
 /* HeteroOS code */
-#ifdef CONFIG_HETERO_ENABLE
-struct buffer_head *alloc_buffer_head_hetero(gfp_t gfp_flags, void *kloc_obj)
+#ifdef CONFIG_KLOC_ENABLE
+struct buffer_head *alloc_buffer_head_kloc(gfp_t gfp_flags, void *kloc_obj)
 {
-        struct buffer_head *ret = kmem_cache_zalloc_hetero(bh_cachep, gfp_flags);
+        struct buffer_head *ret = kmem_cache_zalloc_kloc(bh_cachep, gfp_flags);
         if (ret) {
                 INIT_LIST_HEAD(&ret->b_assoc_buffers);
                 preempt_disable();
@@ -3420,7 +3409,7 @@ struct buffer_head *alloc_buffer_head_hetero(gfp_t gfp_flags, void *kloc_obj)
         }
         return ret;
 }
-EXPORT_SYMBOL(alloc_buffer_head_hetero);
+EXPORT_SYMBOL(alloc_buffer_head_kloc);
 #endif
 
 

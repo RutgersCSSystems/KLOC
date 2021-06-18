@@ -59,7 +59,7 @@
 #include <linux/suspend.h>
 #include <linux/ftrace.h>
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 #include <linux/mm.h>
 #endif
 
@@ -1445,7 +1445,7 @@ static void print_other_cpu_stall(struct rcu_state *rsp, unsigned long gpnum)
 	pr_err("INFO: %s detected stalls on CPUs/tasks:",
 	       rsp->name);
 
-	print_hetero_deadlock();
+	//print_kloc_deadlock();
 
 	print_cpu_stall_info_begin();
 	rcu_for_each_leaf_node(rsp, rnp) {

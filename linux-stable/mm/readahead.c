@@ -180,11 +180,11 @@ int __do_page_cache_readahead(struct address_space *mapping, struct file *filp,
 		if (page && !radix_tree_exceptional_entry(page))
 			continue;
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 		page = NULL;
-		if(mapping && is_hetero_pgcache_set() && is_hetero_pgcache_readahead_set()) {
+		if(mapping && is_kloc_pgcache_set() && is_kloc_pgcache_readahead_set()) {
 			if (is_kloc_obj(mapping->kloc_obj)) {
-		                page = __page_cache_alloc_hetero(gfp_mask, mapping);
+		                page = __page_cache_alloc_kloc(gfp_mask, mapping);
 			}		
 		}
 		if(!page)

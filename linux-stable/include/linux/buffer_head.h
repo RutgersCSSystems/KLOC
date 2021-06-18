@@ -196,9 +196,8 @@ struct buffer_head *__bread_gfp(struct block_device *,
 void invalidate_bh_lrus(void);
 struct buffer_head *alloc_buffer_head(gfp_t gfp_flags);
 
-/* HeteroOS code */
-#ifdef CONFIG_HETERO_ENABLE
-struct buffer_head *alloc_buffer_head_hetero(gfp_t gfp_flags, void *kloc_obj);
+#ifdef CONFIG_KLOC_ENABLE
+struct buffer_head *alloc_buffer_head_kloc(gfp_t gfp_flags, void *kloc_obj);
 #endif
 
 void free_buffer_head(struct buffer_head * bh);

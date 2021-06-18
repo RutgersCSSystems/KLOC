@@ -907,10 +907,10 @@ static int ext4_mb_init_cache(struct page *page, char *incore, gfp_t gfp)
 	/* allocate buffer_heads to read bitmaps */
 	if (groups_per_page > 1) {
 		i = sizeof(struct buffer_head *) * groups_per_page;
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 		bh = NULL;
-                if(is_hetero_buffer_set()) {
-			bh = kzalloc_hetero_buf(i, gfp);
+                if(is_kloc_buffer_set()) {
+			bh = kzalloc_kloc_buf(i, gfp);
                 }
 		if(!bh)
 #endif
@@ -2498,11 +2498,11 @@ int ext4_mb_add_groupinfo(struct super_block *sb, ext4_group_t group,
 	if (group % EXT4_DESC_PER_BLOCK(sb) == 0) {
 		metalen = sizeof(*meta_group_info) <<
 			EXT4_DESC_PER_BLOCK_BITS(sb);
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 		meta_group_info = NULL;
-		if(is_hetero_buffer_set()) {
+		if(is_kloc_buffer_set()) {
 			printk(KERN_ALERT  "%s:%d\n", __FUNCTION__, __LINE__);
-			meta_group_info = kmalloc_hetero(metalen, GFP_NOFS);
+			meta_group_info = kmalloc_kloc(metalen, GFP_NOFS);
 		}
 		if(!meta_group_info)
 #endif
@@ -2521,10 +2521,10 @@ int ext4_mb_add_groupinfo(struct super_block *sb, ext4_group_t group,
 		sbi->s_group_info[group >> EXT4_DESC_PER_BLOCK_BITS(sb)];
 	i = group & (EXT4_DESC_PER_BLOCK(sb) - 1);
 
-#ifdef CONFIG_HETERO_ENABLE 
+#ifdef CONFIG_KLOC_ENABLE 
 	 meta_group_info[i] = NULL;
-	 if(is_hetero_buffer_set()) {
-		meta_group_info[i] = kmem_cache_zalloc_hetero(cachep, GFP_NOFS);
+	 if(is_kloc_buffer_set()) {
+		meta_group_info[i] = kmem_cache_zalloc_kloc(cachep, GFP_NOFS);
 
 	}
 	if(! meta_group_info[i])
@@ -2557,15 +2557,15 @@ int ext4_mb_add_groupinfo(struct super_block *sb, ext4_group_t group,
 #ifdef DOUBLE_CHECK
 	{
 		struct buffer_head *bh;
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 		meta_group_info[i]->bb_bitmap = NULL;
-                if(is_hetero_buffer_set()) {
+                if(is_kloc_buffer_set()) {
 			printk(KERN_ALERT  "%s:%d\n", __FUNCTION__, __LINE__);
 			meta_group_info[i]->bb_bitmap =
-#ifdef CONFIG_HETERO_MIGRATEXX
-				kmalloc_hetero_migrate(sb->s_blocksize, GFP_NOFS);
+#ifdef CONFIG_KLOC_MIGRATEXX
+				kloc_kmalloc_migrate(sb->s_blocksize, GFP_NOFS);
 #else
-				kmalloc_hetero(sb->s_blocksize, GFP_NOFS);
+				kmalloc_kloc(sb->s_blocksize, GFP_NOFS);
 #endif
                 }
 		if(!meta_group_info[i]->bb_bitmap)
@@ -2702,14 +2702,14 @@ int ext4_mb_init(struct super_block *sb)
 
 	i = (sb->s_blocksize_bits + 2) * sizeof(*sbi->s_mb_offsets);
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 	sbi->s_mb_offsets = NULL;
-	if(is_hetero_buffer_set()) {
-#ifdef CONFIG_HETERO_MIGRATEXX //NO vfree_hetero support
-		sbi->s_mb_offsets = kmalloc_hetero(i, GFP_KERNEL); 
+	if(is_kloc_buffer_set()) {
+#ifdef CONFIG_KLOC_MIGRATEXX //NO kloc_vfree support
+		sbi->s_mb_offsets = kmalloc_kloc(i, GFP_KERNEL); 
 		if(!sbi->s_mb_offsets)
 #endif
-		 	sbi->s_mb_offsets = kmalloc_hetero(i, GFP_KERNEL);
+		 	sbi->s_mb_offsets = kmalloc_kloc(i, GFP_KERNEL);
 	}
 	if(!sbi->s_mb_offsets)
 #endif
@@ -2720,10 +2720,10 @@ int ext4_mb_init(struct super_block *sb)
 	}
 
 	i = (sb->s_blocksize_bits + 2) * sizeof(*sbi->s_mb_maxs);
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 	sbi->s_mb_maxs = NULL;
-	if(is_hetero_buffer_set()) {
-		sbi->s_mb_maxs = kmalloc_hetero(i, GFP_KERNEL);
+	if(is_kloc_buffer_set()) {
+		sbi->s_mb_maxs = kmalloc_kloc(i, GFP_KERNEL);
 	}
 	if(!sbi->s_mb_maxs)
 #endif
@@ -3779,10 +3779,10 @@ ext4_mb_new_inode_pa(struct ext4_allocation_context *ac)
 	BUG_ON(ac->ac_status != AC_STATUS_FOUND);
 	BUG_ON(!S_ISREG(ac->ac_inode->i_mode));
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 	pa = NULL;
-	if(is_hetero_buffer_set()) {
-		pa = kmem_cache_alloc_hetero(ext4_pspace_cachep, GFP_NOFS);
+	if(is_kloc_buffer_set()) {
+		pa = kmem_cache_alloc_kloc(ext4_pspace_cachep, GFP_NOFS);
 	}
 	if(!pa)
 #endif
@@ -3880,14 +3880,11 @@ ext4_mb_new_group_pa(struct ext4_allocation_context *ac)
 	BUG_ON(!S_ISREG(ac->ac_inode->i_mode));
 
 	BUG_ON(ext4_pspace_cachep == NULL);
-#ifdef CONFIG_HETERO_ENABLE
-	pa = kmem_cache_alloc_hetero(ext4_pspace_cachep, GFP_NOFS);
+#ifdef CONFIG_KLOC_ENABLE
+	pa = kmem_cache_alloc_kloc(ext4_pspace_cachep, GFP_NOFS);
 #else 
 	pa = kmem_cache_alloc(ext4_pspace_cachep, GFP_NOFS);
 #endif
-	//if (global_flag == PFN_TRACE)
-	//	add_to_hashtable_ext4_prealloc_space(pa);
-
 	if (pa == NULL)
 		return -ENOMEM;
 
@@ -4677,10 +4674,10 @@ ext4_fsblk_t ext4_mb_new_blocks(handle_t *handle,
 		}
 	}
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 	ac = NULL;
-	if(is_hetero_buffer_set())
-		ac = kmem_cache_zalloc_hetero(ext4_ac_cachep, GFP_NOFS);
+	if(is_kloc_buffer_set())
+		ac = kmem_cache_zalloc_kloc(ext4_ac_cachep, GFP_NOFS);
 	if(!ac)			
 #endif
 	ac = kmem_cache_zalloc(ext4_ac_cachep, GFP_NOFS);
@@ -5040,12 +5037,12 @@ do_more:
 		 * We use __GFP_NOFAIL because ext4_free_blocks() is not allowed
 		 * to fail.
 		 */
-#ifdef CONFIG_HETERO_ENABLE 
+#ifdef CONFIG_KLOC_ENABLE 
 		new_entry = NULL;
 		if (is_kloc_obj((void *)inode)){
 			update_kloc_obj(ext4_free_data_cachep, (void *)inode);
 		}
-		new_entry = kmem_cache_alloc_hetero(ext4_free_data_cachep,
+		new_entry = kmem_cache_alloc_kloc(ext4_free_data_cachep,
 				GFP_NOFS|__GFP_NOFAIL);
 		if(!new_entry)
 #endif

@@ -303,17 +303,14 @@ static inline int ext4_getfsmap_fill(struct list_head *meta_list,
 {
 	struct ext4_fsmap *fsm;
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 	fsm = NULL;
-#ifdef CONFIG_HETERO_MIGRATEXX
-	if(is_hetero_buffer_set()) {
-    		printk(KERN_ALERT  "%s:%d\n", __FUNCTION__, __LINE__);
+	if(is_kloc_buffer_set()) {
+		fsm = kmalloc_kloc(sizeof(*fsm), GFP_NOFS);
     	}
+	if(!fsm)
 #endif
-	fsm = kmalloc_hetero(sizeof(*fsm), GFP_NOFS);
-#else 
 	fsm = kmalloc(sizeof(*fsm), GFP_NOFS);
-#endif
 	if (!fsm)
 		return -ENOMEM;
 	fsm->fmr_device = 0;

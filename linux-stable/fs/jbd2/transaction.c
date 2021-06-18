@@ -406,22 +406,14 @@ repeat:
 	return 0;
 }
 
-#if 0
-void add_to_hashtable_handle_t(handle_t *handle) {
-	unsigned long pfn = (__pa(handle) >> PAGE_SHIFT);
-	if (pfn <= max_pfn)
-		insert_pfn_hashtable(pfn);
-}
-#endif
-
 /* Allocate a new handle.  This should probably be in a slab... */
 static handle_t *new_handle(int nblocks)
 {
 	handle_t *handle;	
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 	handle = NULL;
-	if(is_hetero_trans())
-		handle = jbd2_alloc_handle_hetero(GFP_NOFS);
+	if(is_kloc_trans())
+		handle = jbd2_alloc_handle_kloc(GFP_NOFS);
 	if(!handle)
 #endif
 	handle = jbd2_alloc_handle(GFP_NOFS);

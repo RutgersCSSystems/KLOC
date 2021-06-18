@@ -344,7 +344,7 @@ int walk_page_range(unsigned long start, unsigned long end,
 
 
 /**
- * walk_page_range_hetero - walk page table with caller specific callbacks
+ * walk_page_range_kloc - walk page table with caller specific callbacks
  * @start: start address of the virtual address range
  * @end: end address of the virtual address range
  * @walk: mm_walk structure defining the callbacks and the target address space
@@ -378,14 +378,14 @@ int walk_page_range(unsigned long start, unsigned long end,
  *   access to vma's data.
  */
 //FIXME: Make this function fully independent.
-int walk_page_range_hetero(unsigned long start, unsigned long end,
+int walk_page_range_kloc(unsigned long start, unsigned long end,
 		    struct mm_walk *walk, int iskernel_pages)
 {
 	int err = 0;
 	unsigned long next;
 	struct vm_area_struct *vma;
 	struct queue_pages *qp = walk->private;
-#ifdef CONFIG_HETERO_RBTREE
+#ifdef CONFIG_KLOC_RBTREE
 	int runonce = 0;
 #endif
 	if (start >= end)
@@ -433,7 +433,7 @@ int walk_page_range_hetero(unsigned long start, unsigned long end,
 	} while (start = next, start < end);
 	return err;
 }
-//EXPORT_SYMBOL(walk_page_range_hetero);
+//EXPORT_SYMBOL(walk_page_range_kloc);
 
 
 int walk_page_vma(struct vm_area_struct *vma, struct mm_walk *walk)

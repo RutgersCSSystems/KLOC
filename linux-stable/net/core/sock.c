@@ -1467,18 +1467,18 @@ static struct sock *sk_prot_alloc(struct proto *prot, gfp_t priority,
 
 	if (slab != NULL) {
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
                sk = NULL;
-               if(is_hetero_buffer_set()) 
+               if(is_kloc_buffer_set()) 
 	       {
-#ifdef CONFIG_HETERO_MIGRATEXX
-		   sk =  kmalloc_hetero_migrate(sizeof(struct sock), priority & ~__GFP_ZERO);
-		   //sk =  kmem_cache_alloc_hetero(slab, priority & ~__GFP_ZERO);
+#ifdef CONFIG_KLOC_MIGRATEXX
+		   sk =  kloc_kmalloc_migrate(sizeof(struct sock), priority & ~__GFP_ZERO);
+		   //sk =  kmem_cache_alloc_kloc(slab, priority & ~__GFP_ZERO);
 		   if(sk)
 			   sk->is_migratable=1;
 		   if(!sk)
 #endif
-                   sk =  kmem_cache_alloc_hetero(slab, priority & ~__GFP_ZERO);
+                   sk =  kmem_cache_alloc_kloc(slab, priority & ~__GFP_ZERO);
 		}
                	if(!sk)
 #endif
@@ -1489,17 +1489,17 @@ static struct sock *sk_prot_alloc(struct proto *prot, gfp_t priority,
 		if (priority & __GFP_ZERO)
 			sk_prot_clear_nulls(sk, prot->obj_size);
 	} else {
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
                sk = NULL;
-               if(is_hetero_buffer_set()) {
-#ifdef CONFIG_HETERO_MIGRATEXX
-			sk = kmalloc_hetero_migrate(prot->obj_size, priority);
-			//sk =  kmem_cache_alloc_hetero(slab, priority & ~__GFP_ZERO);
+               if(is_kloc_buffer_set()) {
+#ifdef CONFIG_KLOC_MIGRATEXX
+			sk = kloc_kmalloc_migrate(prot->obj_size, priority);
+			//sk =  kmem_cache_alloc_kloc(slab, priority & ~__GFP_ZERO);
 			if(sk)
 				sk->is_migratable=1;
 			if(!sk)
 #endif
-       			sk = kmalloc_hetero(prot->obj_size, priority);
+       			sk = kmalloc_kloc(prot->obj_size, priority);
 		}
                if(!sk)
 #endif
@@ -1523,9 +1523,9 @@ out_free:
 	if (slab != NULL)
 		kmem_cache_free(slab, sk);
 	else
-#ifdef CONFIG_HETERO_MIGRATEXX
+#ifdef CONFIG_KLOC_MIGRATEXX
 		if(sk->is_migratable)
-			vfree_hetero(sk);
+			kloc_vfree(sk);
 		else
 			kfree(sk);
 #else
@@ -1546,9 +1546,9 @@ static void sk_prot_free(struct proto *prot, struct sock *sk)
 	mem_cgroup_sk_free(sk);
 	security_sk_free(sk);
 
-#ifdef CONFIG_HETERO_MIGRATEXX
+#ifdef CONFIG_KLOC_MIGRATEXX
 	if (sk->is_migratable) 
-		vfree_hetero(sk);
+		kloc_vfree(sk);
 	else 
 		kfree(sk);
 #else
@@ -2036,18 +2036,17 @@ void *sock_kmalloc(struct sock *sk, int size, gfp_t priority)
 		 */
 		atomic_add(size, &sk->sk_omem_alloc);
 
-#ifdef CONFIG_HETERO_ENABLE
-	       
+#ifdef CONFIG_KLOC_ENABLE
 		mem = NULL;
 
-               if(is_hetero_buffer_set()) {
+               if(is_kloc_buffer_set()) {
 
-#ifdef CONFIG_HETERO_MIGRATEXX
+#ifdef CONFIG_KLOC_MIGRATEXX
 		   if(sk->is_migratable)
-		   	mem = kmalloc_hetero_migrate(size, priority);  
+		   	mem = kloc_kmalloc_migrate(size, priority);  
 		   if(!mem)
 #endif
-                   mem = kmalloc_hetero(size, priority);
+                   mem = kmalloc_kloc(size, priority);
 		}
               	if(!mem)
 #endif
@@ -2072,9 +2071,9 @@ static inline void __sock_kfree_s(struct sock *sk, void *mem, int size,
 	if (nullify)
 		kzfree(mem);
 	else
-#ifdef CONFIG_HETERO_MIGRATEXX
+#ifdef CONFIG_KLOC_MIGRATEXX
 		if(sk->is_migratable)
-			vfree_hetero(mem);
+			kloc_vfree(mem);
 		else
 			kfree(mem);
 #else

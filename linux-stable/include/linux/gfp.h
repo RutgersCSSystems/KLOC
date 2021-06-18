@@ -474,25 +474,25 @@ __alloc_pages_node(int nid, gfp_t gfp_mask, unsigned int order)
 }
 
 
-//#ifdef CONFIG_HETERO_ENABLE
+//#ifdef CONFIG_KLOC_ENABLE
 struct page *
-__alloc_pages_nodemask_hetero(gfp_t gfp_mask, unsigned int order, int preferred_nid,
+__alloc_pages_nodemask_kloc(gfp_t gfp_mask, unsigned int order, int preferred_nid,
 							nodemask_t *nodemask);
 
 static inline struct page *
-__alloc_pages_hetero(gfp_t gfp_mask, unsigned int order, int preferred_nid)
+__alloc_pages_kloc(gfp_t gfp_mask, unsigned int order, int preferred_nid)
 {
 
-	return __alloc_pages_nodemask_hetero(gfp_mask, order, preferred_nid, NULL);
+	return __alloc_pages_nodemask_kloc(gfp_mask, order, preferred_nid, NULL);
 }
 
 static inline struct page *
-__alloc_pages_node_hetero(int nid, gfp_t gfp_mask, unsigned int order)
+__alloc_pages_node_kloc(int nid, gfp_t gfp_mask, unsigned int order)
 {
         VM_BUG_ON(nid < 0 || nid >= MAX_NUMNODES);
         VM_WARN_ON((gfp_mask & __GFP_THISNODE) && !node_online(nid));
 
-        return __alloc_pages_hetero(gfp_mask, order, nid);
+        return __alloc_pages_kloc(gfp_mask, order, nid);
 }
 
 /*
@@ -500,10 +500,10 @@ __alloc_pages_node_hetero(int nid, gfp_t gfp_mask, unsigned int order)
  * prefer the current CPU's closest node. Otherwise node must be valid and
  * online.
  */
-static inline struct page *alloc_pages_hetero_node(int nid, gfp_t gfp_mask,
+static inline struct page *alloc_pages_kloc_node(int nid, gfp_t gfp_mask,
 						unsigned int order)
 {
-	return __alloc_pages_node_hetero(nid, gfp_mask, order);
+	return __alloc_pages_node_kloc(nid, gfp_mask, order);
 }
 //#endif
 
@@ -526,14 +526,14 @@ static inline struct page *alloc_pages_node(int nid, gfp_t gfp_mask,
 extern struct page *alloc_pages_current(gfp_t gfp_mask, unsigned order);
 
 
-extern struct page *alloc_pages_current_hetero(gfp_t gfp, unsigned order, 
+extern struct page *alloc_pages_current_kloc(gfp_t gfp, unsigned order, 
 					       int nid);
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 static inline struct page *
-alloc_pages_hetero(gfp_t gfp_mask, unsigned int order, int nid)
+alloc_pages_kloc(gfp_t gfp_mask, unsigned int order, int nid)
 {
-	return alloc_pages_current_hetero(gfp_mask, order, nid);
+	return alloc_pages_current_kloc(gfp_mask, order, nid);
 }
 #endif
 
@@ -551,8 +551,8 @@ extern struct page *alloc_pages_vma(gfp_t gfp_mask, int order,
 #define alloc_pages(gfp_mask, order) \
 		alloc_pages_node(numa_node_id(), gfp_mask, order)
 
-#define alloc_pages_hetero(gfp_mask, order) \
-		alloc_pages_hetero_node(get_fastmem_node(), gfp_mask, order)
+#define alloc_pages_kloc(gfp_mask, order) \
+		alloc_pages_kloc_node(get_fastmem_node(), gfp_mask, order)
 
 #define alloc_pages_vma(gfp_mask, order, vma, addr, node, false)\
 	alloc_pages(gfp_mask, order)

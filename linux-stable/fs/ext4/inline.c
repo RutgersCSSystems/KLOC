@@ -344,8 +344,8 @@ static int ext4_update_inline_data(handle_t *handle, struct inode *inode,
 	BUG_ON(is.s.not_found);
 
 	len -= EXT4_MIN_INLINE_DATA_SIZE;
-#ifdef CONFIG_HETERO_ENABLE
-	value = kzalloc_hetero_buf(len, GFP_NOFS);
+#ifdef CONFIG_KLOC_ENABLE
+	value = kzalloc_kloc_buf(len, GFP_NOFS);
 #else 
 	value = kzalloc(len, GFP_NOFS);
 #endif
@@ -1185,14 +1185,14 @@ static int ext4_convert_inline_data_nolock(handle_t *handle,
 	int inline_size;
 
 	inline_size = ext4_get_inline_size(inode);
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 	buf = NULL;
-	if(is_hetero_buffer_set()) {
-#ifdef CONFIG_HETERO_MIGRATEXX
-		buf = kmalloc_hetero_migrate(inline_size, GFP_NOFS);
+	if(is_kloc_buffer_set()) {
+#ifdef CONFIG_KLOC_MIGRATEXX
+		buf = kloc_kmalloc_migrate(inline_size, GFP_NOFS);
 		if(!buf)
 #endif
-		buf = kmalloc_hetero(inline_size, GFP_NOFS);
+		buf = kmalloc_kloc(inline_size, GFP_NOFS);
 	}
 	if(!buf)
 #endif
@@ -1371,14 +1371,14 @@ int htree_inlinedir_to_tree(struct file *dir_file,
 	}
 
 	inline_size = ext4_get_inline_size(inode);
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 	dir_buf = NULL;
-	if(is_hetero_buffer_set()) {
-#ifdef CONFIG_HETERO_MIGRATEXX
-                dir_buf = kmalloc_hetero_migrate(inline_size, GFP_NOFS);
+	if(is_kloc_buffer_set()) {
+#ifdef CONFIG_KLOC_MIGRATEXX
+                dir_buf = kloc_kmalloc_migrate(inline_size, GFP_NOFS);
                 if(!dir_buf)
 #endif
-		dir_buf = kmalloc_hetero(inline_size, GFP_NOFS);
+		dir_buf = kmalloc_kloc(inline_size, GFP_NOFS);
 	}
 	if(!dir_buf)
 #endif
@@ -1491,11 +1491,8 @@ int ext4_read_inline_dir(struct file *file,
 	}
 
 	inline_size = ext4_get_inline_size(inode);
-#ifdef CONFIG_HETERO_ENABLE
-	if(is_hetero_buffer_set()) {
-		printk(KERN_ALERT "%s : %d \n", __func__, __LINE__);
-	}
-	dir_buf = kmalloc_hetero(inline_size, GFP_NOFS);
+#ifdef CONFIG_KLOC_ENABLE
+	dir_buf = kmalloc_kloc(inline_size, GFP_NOFS);
 #else 
 	dir_buf = kmalloc(inline_size, GFP_NOFS);
 #endif
@@ -2013,16 +2010,11 @@ int ext4_inline_data_truncate(struct inode *inode, int *has_inline)
 			BUG_ON(is.s.not_found);
 
 			value_len = le32_to_cpu(is.s.here->e_value_size);
-#ifdef CONFIG_HETERO_ENABLE
-			if(is_hetero_buffer_set()) {
-				printk(KERN_ALERT "%s : %d \n", __func__, __LINE__);
-			}
-			value = kmalloc_hetero(value_len, GFP_NOFS);
+#ifdef CONFIG_KLOC_ENABLE
+			value = kmalloc_kloc(value_len, GFP_NOFS);
 #else 
 			value = kmalloc(value_len, GFP_NOFS);
 #endif
-			//if (global_flag == PFN_TRACE)
-			//	add_to_hashtable_void(value);
 
 			if (!value) {
 				err = -ENOMEM;

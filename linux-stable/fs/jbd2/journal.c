@@ -991,7 +991,7 @@ struct jbd2_stats_proc_session {
 	struct transaction_stats_s *stats;
 	int start;
 	int max;
-#ifdef CONFIG_HETERO_MIGRATE
+#ifdef CONFIG_KLOC_MIGRATE
 	int is_migratable;
 #endif
 };
@@ -1061,20 +1061,19 @@ static int jbd2_seq_info_open(struct inode *inode, struct file *file)
 	int rc, size;
 
 
-#ifdef CONFIG_HETERO_ENABLE
-#ifdef CONFIG_HETERO_MIGRATE
+#ifdef CONFIG_KLOC_ENABLE
+#ifdef CONFIG_KLOC_MIGRATE
         /* Insert the page to KLOC RBTREE */
 	struct page *page = NULL;
 	s = NULL;
-	if (inode->is_hetero == HETERO_INIT) { 
-		printk(KERN_ALERT "%s:%d \n", __func__, __LINE__);
-		s = kmalloc_hetero_wrap(sizeof(*s), inode);
+	if (inode->is_kloc == HETERO_INIT) { 
+		s = kloc_kmalloc_wrap(sizeof(*s), inode);
 	        if(s) 
 			s->is_migratable = HETERO_INIT;
 	}
 #endif
         if(!s)
-		s =  kmalloc_hetero(size, GFP_KERNEL);
+		s =  kmalloc_kloc(size, GFP_KERNEL);
 	if(!s)
 #endif
 	s = kmalloc(sizeof(*s), GFP_KERNEL);
@@ -1085,9 +1084,9 @@ static int jbd2_seq_info_open(struct inode *inode, struct file *file)
 	size = sizeof(struct transaction_stats_s);
 	s->stats = kmalloc(size, GFP_KERNEL);
 	if (s->stats == NULL) {
-#ifdef CONFIG_HETERO_MIGRATE
+#ifdef CONFIG_KLOC_MIGRATE
 		if(s && s->is_migratable == HETERO_INIT) {
-			vfree_hetero_page(s);
+			kloc_vfree_page(s);
 			s->is_migratable = 0;
 		}else 
 #endif
@@ -1105,9 +1104,9 @@ static int jbd2_seq_info_open(struct inode *inode, struct file *file)
 		m->private = s;
 	} else {
 		kfree(s->stats);
-#ifdef CONFIG_HETERO_MIGRATE
+#ifdef CONFIG_KLOC_MIGRATE
 		if(s && s->is_migratable == HETERO_INIT) {
-			vfree_hetero_page(s);
+			kloc_vfree_page(s);
 			s->is_migratable = 0;
 		}else 
 #endif
@@ -1122,9 +1121,9 @@ static int jbd2_seq_info_release(struct inode *inode, struct file *file)
 	struct seq_file *seq = file->private_data;
 	struct jbd2_stats_proc_session *s = seq->private;
 	kfree(s->stats);
-#ifdef CONFIG_HETERO_MIGRATE
+#ifdef CONFIG_KLOC_MIGRATE
 	if(s && s->is_migratable == HETERO_INIT) {
-		vfree_hetero_page(s);
+		kloc_vfree_page(s);
 		s->is_migratable = 0;
 	}else 
 #endif
@@ -1217,13 +1216,6 @@ static journal_t *journal_init_common(struct block_device *bdev,
 	journal->j_maxlen = len;
 	n = journal->j_blocksize / sizeof(journal_block_tag_t);
 	journal->j_wbufsize = n;
-
-#ifdef CONFIG_HETERO_ENABLE
-	//if (is_hetero_buffer_set()) {
-		printk(KERN_ALERT "%s : %d \n", __func__, __LINE__);
-	//}
-#endif
-
 	journal->j_wbuf = kmalloc_array(n, sizeof(struct buffer_head *),
 					GFP_KERNEL);
 	if (!journal->j_wbuf)

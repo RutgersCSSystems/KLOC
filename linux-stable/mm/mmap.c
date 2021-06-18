@@ -1692,14 +1692,14 @@ unsigned long mmap_region(struct file *file, unsigned long addr,
 	struct rb_node **rb_link, *rb_parent;
 	unsigned long charged = 0;
 
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
         if(current && current->mm &&
-                current->mm->hetero_task == HETERO_PROC && 
+                current->mm->kloc_task == HETERO_PROC && 
 		file && file->f_mapping)  {
                 set_fsmap_kloc_obj(file->f_mapping);
         }
         if(current && current->mm && current->comm && !strcmp(current->comm, "java"))  {
-		current->mm->hetero_task = HETERO_PROC;
+		current->mm->kloc_task = HETERO_PROC;
         }
 
 #endif
@@ -3136,8 +3136,8 @@ void exit_mmap(struct mm_struct *mm)
 		vma = remove_vma(vma);
 	}
 	vm_unacct_memory(nr_accounted);
-#ifdef CONFIG_HETERO_ENABLE
-	is_hetero_exit(current);
+#ifdef CONFIG_KLOC_ENABLE
+	is_kloc_exit(current);
 #endif
 }
 

@@ -205,22 +205,19 @@ struct page {
         struct rb_node rb_node;
 
 	/* HeteroOS code */
-#ifdef CONFIG_HETERO_ENABLE
-	int hetero;
+#ifdef CONFIG_KLOC_ENABLE
+	int kloc;
 
-#ifdef CONFIG_HETERO_OBJAFF
+#ifdef CONFIG_KLOC_KNODE
 	void *kloc_obj;
-	int is_hetero_rbtree;
-	int is_hetero_vmalloc;
+	int is_kloc_rbtree;
+	int is_kloc_vmalloc;
 #endif
         /* group service_tree member */
-	//struct list_head hetero_list;
-#ifdef CONFIG_HETERO_STATS
-        //struct timeval hetero_create_time;
-        //struct timeval hetero_del_time;
-        unsigned long hetero_create_time;
-        unsigned long hetero_del_time;
-	/* Added to count hetero page type stats 
+#ifdef CONFIG_KLOC_STATS
+        unsigned long kloc_create_time;
+        unsigned long kloc_del_time;
+	/* Added to count kloc page type stats 
 	* FIXME: Remove after eval or find better way
 	*/
 	int page_type;
@@ -339,8 +336,8 @@ struct vm_area_struct {
 	} shared;
 
         /* HeteroOS code */
-#ifdef CONFIG_HETERO_ENABLE
-        int hetero;
+#ifdef CONFIG_KLOC_ENABLE
+        int kloc;
 #endif
 	/*
 	 * A file's MAP_PRIVATE vma can be in both i_mmap tree and anon_vma
@@ -383,37 +380,12 @@ struct core_state {
 };
 
 struct kioctx_table;
+
 struct mm_struct {
 	struct vm_area_struct *mmap;		/* list of VMAs */
 	struct rb_root mm_rb;
 	u32 vmacache_seqnum;                   /* per-thread vmacache */
 
-#ifdef CONFIG_HETERO_ENABLE
-        unsigned                        hetero_task;
-        //void                            *kloc_obj;
-	unsigned long 			pgcache_miss_cnt;
-	unsigned long 			pgcache_hits_cnt;
-        unsigned long 			pgbuff_miss_cnt;
-	unsigned long 			pgbuff_hits_cnt;	
-	struct rb_root 			objaff_cache_rbroot;
-	struct rb_root 			objaff_pgbuff_rbroot;
-	spinlock_t 			objaff_cache_lock;
-	spinlock_t 			objaff_kbuff_lock;
-	int 				objaff_root_init;
-	unsigned long                   objaff_kbuff_len;
-	unsigned long                   objaff_cache_len;
-	/* Kernel buffer and cache pages deleted */
-	unsigned long 			pgbuffdel;
-	unsigned long 			pgcachedel;
-	unsigned long			pages_migrated;
-	int 				thrd_idx;
-#endif
-
-#ifdef CONFIG_HETERO_STATS
-	unsigned long			migrate_attempt;
-	long 				avg_kbufpage_life;
-	long 				avg_cachepage_life;
-#endif
 
 #ifdef CONFIG_MMU
 	unsigned long (*get_unmapped_area) (struct file *filp,
@@ -563,6 +535,33 @@ struct mm_struct {
 #if IS_ENABLED(CONFIG_HMM)
 	/* HMM needs to track a few things per mm */
 	struct hmm *hmm;
+#endif
+
+#ifdef CONFIG_KLOC_ENABLE
+        unsigned                        kloc_task;
+        //void                            *kloc_obj;
+	struct rb_root 			knode_cache_rbroot;
+	struct rb_root 			knode_pgbuff_rbroot;
+	spinlock_t 			knode_cache_lock;
+	spinlock_t 			knode_kbuff_lock;
+	int 				knode_root_init;
+	unsigned long                   knode_kbuff_len;
+	unsigned long                   knode_cache_len;
+	/* Kernel buffer and cache pages deleted */
+	unsigned long 			pgbuffdel;
+	unsigned long 			pgcachedel;
+	unsigned long			pages_migrated;
+	int 				thrd_idx;
+#endif
+
+#ifdef CONFIG_KLOC_STATS
+	unsigned long			migrate_attempt;
+	long 				avg_kbufpage_life;
+	long 				avg_cachepage_life;
+	unsigned long 			pgcache_miss_cnt;
+	unsigned long 			pgcache_hits_cnt;
+        unsigned long 			pgbuff_miss_cnt;
+	unsigned long 			pgbuff_hits_cnt;	
 #endif
 } __randomize_layout;
 

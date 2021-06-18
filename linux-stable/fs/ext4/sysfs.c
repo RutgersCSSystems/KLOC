@@ -433,14 +433,11 @@ int __init ext4_init_sysfs(void)
 	ext4_root = kobject_create_and_add("ext4", fs_kobj);
 	if (!ext4_root)
 		return -ENOMEM;
-#ifdef CONFIG_HETERO_ENABLE
-	ext4_feat = kzalloc_hetero_buf(sizeof(*ext4_feat), GFP_KERNEL);
+#ifdef CONFIG_KLOC_ENABLE
+	ext4_feat = kzalloc_kloc_buf(sizeof(*ext4_feat), GFP_KERNEL);
 #else 
 	ext4_feat = kzalloc(sizeof(*ext4_feat), GFP_KERNEL);
 #endif 
-	//if (global_flag == PFN_TRACE)
-	//	add_to_hashtable_kobject(ext4_feat);
-	
 	if (!ext4_feat) {
 		ret = -ENOMEM;
 		goto root_err;

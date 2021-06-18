@@ -32,8 +32,8 @@ extern void show_regs(struct pt_regs *);
  */
 extern void show_stack(struct task_struct *task, unsigned long *sp);
 
-#ifdef CONFIG_HETERO_MIGRATE
-extern void hetero_show_stack(struct task_struct *task, unsigned long *sp);
+#ifdef CONFIG_KLOC_MIGRATE
+extern void kloc_show_stack(struct task_struct *task, unsigned long *sp);
 #endif
 
 extern void sched_show_task(struct task_struct *p);

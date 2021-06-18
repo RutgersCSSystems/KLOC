@@ -380,14 +380,11 @@ skip:
 		goto failed;
 	}
 
-#ifdef CONFIG_HETERO_ENABLE
-	mmpd_data = kmalloc_hetero(sizeof(*mmpd_data), GFP_KERNEL);
+#ifdef CONFIG_KLOC_ENABLE
+	mmpd_data = kmalloc_kloc(sizeof(*mmpd_data), GFP_KERNEL);
 #else 
 	mmpd_data = kmalloc(sizeof(*mmpd_data), GFP_KERNEL);
 #endif
-	//if (global_flag == PFN_TRACE)
-	//	add_to_hashtable_mmpd_data(mmpd_data);
-
 	if (!mmpd_data) {
 		ext4_warning(sb, "not enough memory for mmpd_data");
 		goto failed;

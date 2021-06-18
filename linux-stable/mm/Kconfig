@@ -149,32 +149,36 @@ config NO_BOOTMEM
 config MEMORY_ISOLATION
 	bool
 
-config HETERO_ENABLE
+
+#
+# KLOC Configurations
+#
+config KLOC_ENABLE
         def_bool y
 
-config HETERO_STATS
-	def_bool y
-	depends on HETERO_ENABLE
-
-config HETERO_DEBUG
+config KLOC_DEBUG
         def_bool n
-	depends on HETERO_ENABLE
+	depends on KLOC_ENABLE
 
-config HETERO_MIGRATE
+config KLOC_MIGRATE
         def_bool y
-        depends on HETERO_ENABLE
+        depends on KLOC_ENABLE
 
-config HETERO_OBJAFF
-        def_bool y
-        depends on HETERO_ENABLE
-
-config HETERO_RBTREE
+config KLOC_STATS
 	def_bool y
-	depends on HETERO_ENABLE && HETERO_OBJAFF
+	depends on KLOC_ENABLE
+
+config KLOC_KNODE
+        def_bool y
+        depends on KLOC_ENABLE
+
+config KLOC_RBTREE
+	def_bool y
+	depends on KLOC_ENABLE && KLOC_KNODE
 	
-config HETERO_NET_ENABLE
+config KLOC_NET
 	def_bool y
-	depends on HETERO_ENABLE
+	depends on KLOC_ENABLE
 
 
 

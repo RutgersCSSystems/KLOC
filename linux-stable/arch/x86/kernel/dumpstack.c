@@ -69,7 +69,7 @@ static void printk_stack_address(unsigned long address, int reliable,
 	printk("%s %s%pB\n", log_lvl, reliable ? "" : "? ", (void *)address);
 }
 
-static void hetero_printk_stack_address(unsigned long address, int reliable,
+static void kloc_printk_stack_address(unsigned long address, int reliable,
 				 char *log_lvl)
 {
 	touch_nmi_watchdog();
@@ -233,7 +233,7 @@ next:
 int g_stack = 0; 
 int MAX=1000;
 
-void hetero_show_trace_log_lvl(struct task_struct *task, struct pt_regs *regs,
+void kloc_show_trace_log_lvl(struct task_struct *task, struct pt_regs *regs,
 			unsigned long *stack, char *log_lvl)
 {
 	struct unwind_state state;
@@ -346,8 +346,8 @@ void hetero_show_trace_log_lvl(struct task_struct *task, struct pt_regs *regs,
 			real_addr = ftrace_graph_ret_addr(task, &graph_idx,
 							  addr, stack);
 			if (real_addr != addr)
-				hetero_printk_stack_address(addr, 0, log_lvl);
-			hetero_printk_stack_address(real_addr, reliable, log_lvl);
+				kloc_printk_stack_address(addr, 0, log_lvl);
+			kloc_printk_stack_address(real_addr, reliable, log_lvl);
 
 			g_stack++;
 
@@ -394,7 +394,7 @@ void show_stack(struct task_struct *task, unsigned long *sp)
 	show_trace_log_lvl(task, NULL, sp, KERN_DEFAULT);
 }
 
-void hetero_show_stack(struct task_struct *task, unsigned long *sp)
+void kloc_show_stack(struct task_struct *task, unsigned long *sp)
 {
 	task = task ? : current;
 
@@ -405,7 +405,7 @@ void hetero_show_stack(struct task_struct *task, unsigned long *sp)
 	if (!sp && task == current)
 		sp = get_stack_pointer(current, NULL);
 
-	hetero_show_trace_log_lvl(task, NULL, sp, KERN_DEFAULT);
+	kloc_show_trace_log_lvl(task, NULL, sp, KERN_DEFAULT);
 }
 
 

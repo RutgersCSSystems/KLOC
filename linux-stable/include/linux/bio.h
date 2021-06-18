@@ -431,17 +431,17 @@ static inline struct bio *bio_alloc(gfp_t gfp_mask, unsigned int nr_iovecs)
 }
 
 /* heteroOS code */
-#ifdef CONFIG_HETERO_ENABLE
-extern struct bio *bio_alloc_bioset_hetero(gfp_t, unsigned int, 
+#ifdef CONFIG_KLOC_ENABLE
+extern struct bio *bio_alloc_bioset_kloc(gfp_t, unsigned int, 
 					   struct bio_set *, void *);
 
-static inline struct bio *bio_alloc_hetero(gfp_t gfp_mask, unsigned int nr_iovecs, 
+static inline struct bio *bio_alloc_kloc(gfp_t gfp_mask, unsigned int nr_iovecs, 
 					   void *kloc_obj)
 {
-#ifdef CONFIG_HETERO_MIGRATE
-	return bio_alloc_bioset_hetero(gfp_mask, nr_iovecs, NULL, kloc_obj);
+#ifdef CONFIG_KLOC_MIGRATE
+	return bio_alloc_bioset_kloc(gfp_mask, nr_iovecs, NULL, kloc_obj);
 #else	
-	return bio_alloc_bioset_hetero(gfp_mask, nr_iovecs, fs_bio_set, kloc_obj);
+	return bio_alloc_bioset_kloc(gfp_mask, nr_iovecs, fs_bio_set, kloc_obj);
 #endif
 
 }
@@ -755,7 +755,7 @@ struct bio_set {
 	struct bio_list		rescue_list;
 	struct work_struct	rescue_work;
 	struct workqueue_struct	*rescue_workqueue;
-#ifdef CONFIG_HETERO_ENABLE
+#ifdef CONFIG_KLOC_ENABLE
 	void			*kloc_obj;
 #endif
 };
