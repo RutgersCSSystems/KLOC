@@ -127,6 +127,39 @@ scripts/compile_nokvm.sh
 scripts/compile_sharedlib.sh
 ```
 
+### Enable throttling by changing bandwidth of a NUMA node 
+Throttling using Quartz is only supported in older Haswell systems.
+
+Step 1: Run the throttling script
+
+```
+ source scripts/setvars.sh 
+ scripts/throttle.sh
+```
+
+Step 2: For modifying bandwidth of throttled node, open the following file
+
+```
+     vim shared_libs/quartz/nvmemul.ini
+```
+
+Step 3: Change the read and write to same bandwidth values
+```
+        bandwidth:
+        {
+            enable = true;
+            model = "/tmp/bandwidth_model";
+            read = 5000;
+            write = 5000;
+        };
+   ```
+Step 4: Run the throttling script again to check the value
+
+```
+ scripts/throttle.sh
+```
+
+
 ### Compiling and Running RocksDB
 
 ```
@@ -173,35 +206,6 @@ Now launch the QEMU
 
 
 
-### Changing bandwidth of a NUMA node 
 
-Step 1: Run the throttling script
-
-```
- source scripts/setvars.sh 
- scripts/throttle.sh
-```
-
-Step 2: For modifying bandwidth of throttled node, open the following file
-
-```
-     vim $APPBENCH/shared_libs/quartz/nvmemul.ini
-```
-
-Step 3: Change the read and write to same bandwidth values
-```
-        bandwidth:
-        {
-            enable = true;
-            model = "/tmp/bandwidth_model";
-            read = 5000;
-            write = 5000;
-        };
-   ```
-Step 4: Run the throttling script again to check the value
-
-```
- $APPBENCH/throttle.sh
-```
 
 
