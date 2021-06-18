@@ -195,12 +195,6 @@ void enable_kernstat_info(void)
 void dest() {
     fprintf(stderr, "application termination...\n");
     syscall(__NR_start_trace, PRINT_STATS);
-    /*a = syscall(__NR_start_trace, CLEAR_COUNT);
-    a = syscall(__NR_start_trace, PFN_STAT);
-    a = syscall(__NR_start_trace, TIME_STATS);
-    a = syscall(__NR_start_trace, TIME_RESET);
-    syscall(__NR_start_trace, PRINT_ALLOCATE, 0);
-    syscall(__NR_start_trace, CLEAR_COUNT, 0);*/
 }
 
 void con() {
@@ -212,8 +206,6 @@ void con() {
 #ifndef _DISABLE_HETERO
     if(!setinit) {
         fprintf(stderr, "initiating tracing...\n");
-	/*syscall(__NR_start_trace, CLEAR_COUNT, 0);
-        syscall(__NR_start_trace, COLLECT_ALLOCATE, 0);*/
         syscall(__NR_start_trace, HETERO_PGCACHE, 0);
         syscall(__NR_start_trace, HETERO_BUFFER, 0);
         syscall(__NR_start_trace, HETERO_JOURNAL, 0);
@@ -231,14 +223,10 @@ void con() {
 	enbl_hetero_pgcache_readahead_set();
 	enbl_threaded_migration();
 
-	/*detailed kernel object placement*/
-	//enable_kernstat_info();
-
         //Register KILL
         memset(&action, 0, sizeof(struct sigaction));
         action.sa_handler = sig_handler;
         sigaction(SIGKILL, &action, NULL);
-        //setinit = 1;
      } 
 #endif
  	
