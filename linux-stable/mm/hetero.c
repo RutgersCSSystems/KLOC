@@ -481,10 +481,10 @@ is_kloc_exit(struct task_struct *task)
 	kloc_stats(task);
 #ifdef _ENABLE_HETERO_THREAD
 	if(enbl_thrd_migrate) {
-		spin_lock(&kthread_lock);
+		//spin_lock(&kthread_lock);
 		if(thrd_idx)
 			thrd_idx--;
-		spin_unlock(&kthread_lock);
+		//spin_unlock(&kthread_lock);
 	}
 #endif
     }
@@ -725,7 +725,7 @@ void  set_inode_kloc_obj(struct inode *inode)
 #ifdef CONFIG_KLOC_RBTREE
 	//Initialize per-process inode RBtree
 	if(current->kloc_rbinode_init != HETERO_INIT) {
-		spin_lock_init(&current->kloc_rblock);
+		//spin_lock_init(&current->kloc_rblock);
 		current->kloc_rbinode = RB_ROOT;
 		current->kloc_rbinode_cnt = 0;
 		current->kloc_rbinode_init = HETERO_INIT;
@@ -738,7 +738,7 @@ void  set_inode_kloc_obj(struct inode *inode)
 		inode->kloc_rblarge_cnt = 0;
 		inode->kloc_rblarge_init = HETERO_INIT;
 
-		spin_lock_init(&inode->kloc_rblock_large);
+		//spin_lock_init(&inode->kloc_rblock_large);
 
 		//Add the inode to process' inode tree
 		//FIXME: What about remove inode?
@@ -751,7 +751,7 @@ void  set_inode_kloc_obj(struct inode *inode)
 		inode->kloc_rbsmall = RB_ROOT;
 		inode->kloc_rbsmall_cnt = 0;
 
-		spin_lock_init(&inode->kloc_rblock_small);
+		//spin_lock_init(&inode->kloc_rblock_small);
 
 		//Add the inode to process' inode tree
 		//FIXME: What about remove inode?
@@ -971,16 +971,18 @@ void process_cleanup_rbtree(void) {
                 if(!inode)
                         continue;
 
+		printk(KERN_ALERT "%s:%d \n", __func__, __LINE__);
+
 		/* 
 		 * Clean up large and small inode lists
 		 */
-		spin_lock(&inode->kloc_rblock_large);
+		//spin_lock(&inode->kloc_rblock_large);
 		inode_cleanup_rblarge(inode);
-		spin_unlock(&inode->kloc_rblock_large);
+		//spin_unlock(&inode->kloc_rblock_large);
 
-		spin_lock(&inode->kloc_rblock_small);
+		//spin_lock(&inode->kloc_rblock_small);
 		inode_cleanup_rbsmall(inode);
-		spin_unlock(&inode->kloc_rblock_small);
+		//spin_unlock(&inode->kloc_rblock_small);
 
 		inode->kloc_rblarge_init = 0;
 		//inode->kloc_rblarge = NULL;
@@ -990,16 +992,16 @@ void process_cleanup_rbtree(void) {
 		//inode->kloc_rbsmall = NULL;
 		inode->kloc_rbsmall_cnt = 0;
 
-		spin_lock_init(&inode->kloc_rblock_large);
-		spin_lock_init(&inode->kloc_rblock_small);
+		//spin_lock_init(&inode->kloc_rblock_large);
+		//spin_lock_init(&inode->kloc_rblock_small);
 
-		spin_lock(&current->kloc_rblock);
+		//spin_lock(&current->kloc_rblock);
 	 	rb_erase(rb_inode, &current->kloc_rbinode);
 		if(rb_inode) {
         	        kfree(rb_inode);
                 	rb_inode = NULL;
 	        }
-		spin_unlock(&current->kloc_rblock);
+		//spin_unlock(&current->kloc_rblock);
 	}
 }
 
@@ -1009,6 +1011,9 @@ void process_cleanup_rbtree(void) {
  */
 bool kloc_rbinode_insert(struct rb_root *root, struct inode *inode)
 {
+
+	return false;
+
 
 	struct kloc_rbinode *data = 
 		kmalloc(sizeof(struct kloc_rbinode), GFP_KERNEL);
@@ -1021,7 +1026,6 @@ bool kloc_rbinode_insert(struct rb_root *root, struct inode *inode)
 	while(*link) {
 		parent = *link;
 		this_node = rb_entry(parent, struct kloc_rbinode, rbnode);
-
 		if(this_node->inode->i_ino > inode->i_ino) {
 			link = &(*link)->rb_left;
 		}
@@ -1031,7 +1035,6 @@ bool kloc_rbinode_insert(struct rb_root *root, struct inode *inode)
 		else
 			link = &(*link)->rb_right;
 	}
-
 	rb_link_node(&data->rbnode, parent, link);
 	rb_insert_color(&data->rbnode, root);
 	return true;
@@ -1256,17 +1259,17 @@ insert_page_cache_rbtree(struct page *page, int is_pagecache)
 					inode->kloc_rblarge_init = HETERO_INIT;
 					inode->kloc_rblarge = RB_ROOT;
 					inode->kloc_rblarge_cnt = 0;
-					spin_lock_init(&inode->kloc_rblock_large);
+					//spin_lock_init(&inode->kloc_rblock_large);
 				}
 
-				spin_lock(&inode->kloc_rblock_large);
+				//spin_lock(&inode->kloc_rblock_large);
 
 				if(kloc_rb_insert_cache(&inode->kloc_rblarge, page)
 						== true) {
 					inode->kloc_rblarge_cnt++;
 				}
 
-				spin_unlock(&inode->kloc_rblock_large);
+				//spin_unlock(&inode->kloc_rblock_large);
 			}
 		}
 	}
@@ -1283,9 +1286,9 @@ void remove_page_cache_rbtree(struct page *page, int is_pagecache)
 		if(inode) {
 			if(is_pagecache) {
 
-				spin_lock(&inode->kloc_rblock_large);
+				//spin_lock(&inode->kloc_rblock_large);
 				kloc_rb_remove(&inode->kloc_rblarge, page);
-				spin_unlock(&inode->kloc_rblock_large);
+				//spin_unlock(&inode->kloc_rblock_large);
 
 				if(inode->kloc_rblarge_cnt > 0)
 					inode->kloc_rblarge_cnt--;
@@ -1513,15 +1516,15 @@ int insert_kaddr_rbtree(struct page *page, void *kaddr)
 				inode->kloc_rbsmall_init = HETERO_INIT;
 				inode->kloc_rbsmall = RB_ROOT;
 				inode->kloc_rbsmall_cnt = 0;
-				spin_lock_init(&inode->kloc_rblock_small);
+				//spin_lock_init(&inode->kloc_rblock_small);
 			}
 
-			spin_lock(&inode->kloc_rblock_small);
+			//spin_lock(&inode->kloc_rblock_small);
 			if(kloc_rb_insert_kaddr(&inode->kloc_rbsmall, kaddr)
 					== true) {
 				inode->kloc_rbsmall_cnt++;
 			}
-			spin_unlock(&inode->kloc_rblock_small);
+			//spin_unlock(&inode->kloc_rblock_small);
 		}
 	}
 }
@@ -1550,7 +1553,7 @@ void remove_kaddr_rbtree(struct page *page, void *kaddr)
 	}
 
 	if(inode->kloc_rbsmall_cnt % 200 == 0) {
-		try_kernel_page_migration(inode);
+		//try_kernel_page_migration(inode);
 	}
 
 }
@@ -1646,7 +1649,7 @@ kloc_update_pgcache(int nodeid, struct page *page, int delpage)
 		mm->pgcache_hits_cnt += 1;
 		page->kloc = HETERO_PG_FLAG;
 		incr_global_stats(&g_cachehits);
-#ifdef CONFIG_KLOC_KNODE
+#ifdef CONFIG_KLOC_KNODE_DISABLE
 		insert_page_cache_rbtree(page, is_pagecache);
 #endif
 	} else if(!correct_node && !delpage) {
@@ -1657,7 +1660,7 @@ kloc_update_pgcache(int nodeid, struct page *page, int delpage)
 			&& delpage) {
 		mm->pgcachedel++;
 		incr_global_stats(&g_cachedel);
-#ifdef CONFIG_KLOC_KNODE
+#ifdef CONFIG_KLOC_KNODE_DISABLE
 		remove_page_cache_rbtree(page, is_pagecache);
 #endif
 	}
@@ -1789,9 +1792,9 @@ static int migration_thread_fn(void *arg) {
 
         if(!mm) {
 #ifdef _ENABLE_HETERO_THREAD
-		spin_lock(&kthread_lock);
+		//spin_lock(&kthread_lock);
 		thrd_idx--;
-		spin_unlock(&kthread_lock);
+		//spin_unlock(&kthread_lock);
 #endif
                 return 0;
         }
@@ -1799,10 +1802,10 @@ static int migration_thread_fn(void *arg) {
                         get_slowmem_node(),MPOL_MF_MOVE_ALL);
 
 #ifdef _ENABLE_HETERO_THREAD
-        spin_lock(&kthread_lock);
+        //spin_lock(&kthread_lock);
 	if(thrd_idx)
 		thrd_idx--;
-        spin_unlock(&kthread_lock); 
+        //spin_unlock(&kthread_lock); 
 #endif
         //do_gettimeofday(&end);
         //migrate_time += timediff(&start, &end);
@@ -1863,15 +1866,16 @@ kloc_try_migration(void *map, gfp_t gfp_mask, int iskernel) {
 	THREADS[thrd_idx].thrd = kthread_run(migration_thread_fn,
 				current->mm, "HETEROTHRD");	
 
-	spin_lock(&kthread_lock);
+	//spin_lock(&kthread_lock);
 	thrd_idx++;
-	spin_unlock(&kthread_lock);
+	//spin_unlock(&kthread_lock);
 #endif
 
 sync_migrate:
 	kloc_stats(current);
-	kloc_migrate_to_node(current->mm, get_fastmem_node(),
-				get_slowmem_node(), MPOL_MF_MOVE_ALL);
+	
+	//kloc_migrate_to_node(current->mm, get_fastmem_node(),
+	//			get_slowmem_node(), MPOL_MF_MOVE_ALL);
 
         return;
 }
@@ -1918,7 +1922,7 @@ SYSCALL_DEFINE2(start_trace, int, flag, int, val)
 #ifdef CONFIG_KLOC_ENABLE
     switch(flag) {
 	case CLEAR_GLOBALCOUNT:
-	    //printk("flag set to clear count %d\n", flag);
+	    printk("flag set to clear count %d\n", flag);
 	    global_flag = CLEAR_GLOBALCOUNT;
 	    process_cleanup_rbtree();
 	    reset_all_flags();

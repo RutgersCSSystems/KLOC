@@ -5,8 +5,8 @@ APP=""
 #TYPE="SSD"
 TYPE="RAMDISK"
 CAPACITY=4000
-<<<<<<< HEAD
-APP="filebench"
+#APP="filebench"
+APP="rocksdb"
 #APP="redis"
 
 SETUP(){
