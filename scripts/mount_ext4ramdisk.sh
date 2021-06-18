@@ -3,7 +3,6 @@
 #requires size as input
 #xfs
 PREFIX="numactl --membind=0"
-#DISKSZ=58000
 DISKSZ=$1
 
 rm -rf $APPBENCH/shared_data
@@ -15,4 +14,4 @@ sudo $PREFIX mkfs.ext4 -F /mnt/ramdisk/ext4.image
 sudo mkdir /mnt/ext4ramdisk
 sudo mount -o loop /mnt/ramdisk/ext4.image /mnt/ext4ramdisk
 sudo chown -R $USER /mnt/ext4ramdisk
-#sudo ln -s /mnt/ext4ramdisk $APPBENCH/shared_data
+sudo ln -s /mnt/ext4ramdisk $APPBENCH/shared_data

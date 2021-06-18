@@ -1,14 +1,17 @@
-export NVMBASE=$PWD
+export BASE=$PWD
+export NVMBASE=$BASE
+export OUTPUTDIR=$NVMBASE/results
 ######## DO NOT CHANGE BEYOUND THIS ###########
 #Pass the release name
 export OS_RELEASE_NAME=$1
 export KERN_SRC=$NVMBASE/linux-stable
 #CPU parallelism
-export PARA="-j36"
+export PARA="-j32"
 export VER="4.17.0"
 #export VER="4.18.0-2-amd64"
 
-export GITBRANCH="fixes"
+export TEST_TMPDIR=/mnt/pmemdir
+export GITBRANCH="master"
 
 #QEMU
 export QEMU_IMG=$NVMBASE
@@ -42,26 +45,6 @@ export APPPREFIX="" #"numactl --preferred=0 /usr/bin/time -v"
 #export APPPREFIX="perf record -e instructions,mem-loads,mem-stores --vmlinux=/lib/modules/4.17.0/build/vmlinux -I 1000"
 #export APPPREFIX="numactl --membind=1"
 #export APP_PREFIX="numactl --membind=1"
-export OUTPUTDIR=$NVMBASE/results/INODELRU
-#export OUTPUTDIR=$NVMBASE/results/CAMERA/MEMUSE
-export TEST_TMPDIR=/mnt/pmemdir
-
-
-
-
-export CODE="$APPBENCH/apps/butterflyeffect/code"
-export CSRC=$CODE/cassandra
-export SERVERS=`ifconfig | grep "inet addr" | head -1 | awk '{print $2}' | cut -d ":" -f2`
-export YCSBHOME=$CODE/mapkeeper/ycsb/YCSB
-export DATASRC=""
-
-
-#ln -s /usr/bin/ccache /usr/local/bin/gcc
-# ccache for Linux development
-export CC="gcc"
-export CXX="g++"
-# Set cache size
-
 
 
 

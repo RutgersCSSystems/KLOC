@@ -1,141 +1,310 @@
 #!/bin/bash
 set -x
+cd $BASE
+APP=""
+#TYPE="SSD"
+TYPE="RAMDISK"
+CAPACITY=4000
+<<<<<<< HEAD
+APP="filebench"
+#APP="redis"
 
-RUNNOW=1
-RUNSCRIPT=run.sh
-mkdir $OUTPUTDIR
-sudo dmesg -c &> del.txt
-
-USAGE(){
-echo "./app \$maxhotpage \$BW \$outputdir \$app"
+SETUP(){
+	$BASE/scripts/clear_cache.sh
+	cd $SHARED_LIBS/initiator
+	make clean
 }
 
-RUNAPP(){
-  #rm $OUTPUTDIR/$APP
-  FLAGPATH=$NVMBASE"/flags/"$APP
-  let value=`cat "$FLAGPATH"`
-  if [ $value == 0 ]; then
-	  echo "$APP NOW RUNNING"
-	  cd $APPBASE
-	  $APPBASE/$RUNSCRIPT $RUNNOW $OUTPUTDIR/$APP &> $OUTPUTDIR/$APP
-	  echo "******************"  &>> $OUTPUTDIR/$APP
-	  echo "KERNEL  DMESG"  &>> $OUTPUTDIR/$APP
-	  echo "******************"  &>> $OUTPUTDIR/$APP 	
-	  echo "  "  &>> $OUTPUTDIR/$APP
-	  sudo dmesg -c &>> $OUTPUTDIR/$APP
-	  echo 1 > $FLAGPATH
-  else
-	  echo "$APP ALREADY RUN"	
-  fi
+THROTTLE() {
+	source scripts/setvars.sh
+	cp $SCRIPTS/nvmemul-throttle.ini $QUARTZ/nvmemul.ini
+	$SCRIPTS/install_quartz.sh
+	#$SCRIPTS/throttle.sh
+	#$SCRIPTS/throttle.sh
+}
+
+DISABLE_THROTTLE() {
+	source scripts/setvars.sh
+	cp $SCRIPTS/nvmemul-nothrottle.ini $QUARTZ/nvmemul.ini
+	$SCRIPTS/throttle.sh
+	#$SCRIPTS/throttle.sh
 }
 
 
-intexit() {
-    # Kill all subprocesses (all processes in the current process group)
-    kill -HUP -$$
+SETUPEXTRAM() {
+
+	kill -9 `pidof neo4j`
+	sudo killall java
+	sudo kill -9 `pidof neo4j`
+	sudo kill -9 `pidof postgres`
+	sudo kilall postgres
+	sudo /etc/init.d/mysql stop
+	sudo dmesg -c
+
+        sudo rm -rf  /mnt/ext4ramdisk/*
+	$SCRIPTS/umount_ext4ramdisk.sh
+	sudo rm -rf  /mnt/ext4ramdisk/*
+	sudo rm -rf  /mnt/ext4ramdisk/
+	
+        sleep 5
+	NUMAFREE=`numactl --hardware | grep "node 0 free:" | awk '{print $4}'`
+	let DISKSZ=$NUMAFREE-$CAPACITY
+	echo $DISKSZ"*************"
+	$SCRIPTS/umount_ext4ramdisk.sh
+	$SCRIPTS/mount_ext4ramdisk.sh $DISKSZ
+
+	#Enable for Ramdisk
+	if [ "RAMDISK" = "$TYPE" ]
+	then
+		echo "Running for RAMDISK"
+		sudo ln -s /mnt/ext4ramdisk $APPBENCH/shared_data
+	else
+		#Enable for SSD
+		echo "Running for SSD"
+		mkdir $APPBENCH/shared_data
+	fi
 }
 
-hupexit() {
-    # HUP'd (probably by intexit)
-    echo
-    echo "Interrupted"
-    exit
+COMPILE_SHAREDLIB() {
+	#Compile shared libs
+	cd $SHARED_LIBS/initiator
+	make clean
+	make CFLAGS=$DEPFLAGS
+	sudo make install
 }
 
-trap hupexit HUP
-trap intexit INT
+RUNAPP() {
 
-#if [ -z "$1" ]
-# then	
-#  USAGE 
-#  exit
-#fi
+	echo $OUTPUT
+        #Run application
+        cd $BASE
+        if [ "$APP" = "rocksdb" ]
+        then
+                $APPBENCH/apps/RocksDB/run.sh &> $OUTPUT
+		echo "Writing output to "$OUTPUT
+		mv $OUTPUTDIR/redis* 
+        fi
 
-#$NVMBASE/scripts/copy_data.sh
+	if [ "$APP" = "filebench" ]
+	then
+		$APPBENCH/apps/filebench/run.sh &> $OUTPUT
+	fi
 
-if [ -z "$4" ]
+        if [ "$APP" = "redis" ]
+        then
+                $APPBENCH/apps/redis-5.0.5/src/run.sh &> $OUTPUT
+        fi
+        sudo dmesg -c &>> $OUTPUT
+}
+
+
+SET_RUN_APP() {	
+	BASE=$OUTPUTDIR
+	mkdir $OUTPUTDIR/$1
+	export OUTPUTDIR=$OUTPUTDIR/$1
+
+	if [ "RAMDISK" = "$TYPE" ]
+	then
+		echo "Running for RAMDISK"
+		OUTPUT="$OUTPUTDIR/$APP-RAMDISK"
+	else
+		echo "Running for SSD"
+		OUTPUT="$OUTPUTDIR/$APP-SSD"
+	fi
+
+	echo $OUTPUTDIR
+
+        $BASE/scripts/clear_cache.sh
+        cd $SHARED_LIBS/initiator
+        make clean
+	make CFLAGS="$2"
+	sudo make install
+
+	RUNAPP
+	$SCRIPTS/rocksdb_extract_result.sh
+	$SCRIPTS/clear_cache.sh
+
+	#cp -r $OUTPUTDIR $BASE/"CAP"$CAPACITY-$TYPE/$1
+	export OUTPUTDIR=$BASE
+
+	set +x
+}
+
+#OUTPUTDIR=$OUTPUT
+mkdir -f -p $OUTPUTDIR
+
+if [ -z "$2" ]
   then
-        APPBASE=$APPBENCH/apps/filebench
-        APP=filebench
-        RUNAPP
-	$NVMBASE/scripts/reset.sh
-	exit	
-
-	APPBASE=$APPBENCH/redis-3.0.0/src
-	APP=redis
-	echo "running $APP..."
-	RUNAPP
-	$NVMBASE/scripts/reset.sh
-
-	APPBASE=$APPBENCH/apps/rocksdb
-	APP=db_bench
-	RUNAPP
-	$NVMBASE/scripts/reset.sh
-	exit
-
-	APPBASE=$APPBENCH/apps/memcached_client
-	APP=memcached
-	RUNAPP
-	export LD_PRELOAD=$SHARED_LIBS/construct/libmigration.so
-	/bin/ls
-	export LD_PRELOAD=""
-        $NVMBASE/scripts/reset.sh
-        exit
-
-
-
-
-	
-	APPBASE=$APPBENCH/apps/leveldb
-	APP=leveldb
-	echo "running $APP..."
-	RUNAPP
-
-
-
-	
-	#APPBASE=$APPBENCH/apps/fio
-	#APP=fio
-	#echo "running $APP ..."
-	#RUNAPP
-
-	APPBASE=$APPBENCH/graphchi
-	APP=graphchi
-	RUNAPP
-	# We need data files
-	$SCRIPTS/createdata.sh
-	rm $SHARED_DATA/com-orkut.ungraph.txt.*
-
-	APPBASE=$APPBENCH/Metis
-	APP=Metis
-	$SCRIPTS/createdata.sh
-	RUNAPP
-
-	#APPBASE=$APPBENCH/memcached/memtier_benchmark
-	#APP=memcached
-	#echo "running $APP ..."
-	#RUNAPP
-	#exit
-
-	#RUNSCRIPT="runfcreate.sh"
-        #APP=fcreate
-        #RUNAPP
-        #RUNSCRIPT=run.sh
-
-	#APPBASE=$APPBENCH/apps/mongo-perf
-	#APP=mongodb
-	#RUNAPP
-
-
-	#APPBASE=$APPBENCH/xstream_release
-	#APP=xstream_release
-	#scp -r $HOSTIP:$SHARED_DATA*.ini $APPBASE
-        #cp $APPBASE/*.ini $SHARED_DATA
-	#RUNAPP
-
+    THROTTLE
+  else
+    echo "Don't throttle"
 fi
 
-finish:
-$NVMBASE/scripts/reset.sh
-#currentDate=`date +"%D %T"`
-set +x
+SETUPEXTRAM
+
+#### NAIVE PLACEMENT #############
+export APPPREFIX="numactl  --preferred=0"
+$BASE/scripts/clear_cache.sh
+SET_RUN_APP "naive-$TYPE" "-D_DISABLE_MIGRATE"
+
+sleep 10
+
+$BASE/scripts/clear_cache.sh
+SET_RUN_APP "KLOC-$TYPE" "-D_MIGRATE -D_PREFETCH -D_OBJAFF -D_NET"
+$BASE/scripts/clear_cache.sh
+
+exit
+
+export APPPREFIX="numactl --membind=1"
+$SCRIPTS/umount_ext4ramdisk.sh
+sleep 5
+$SCRIPTS/mount_ext4ramdisk.sh 24000
+SET_RUN_APP "slowmem-only-$TYPE" "-D_SLOWONLY -D_DISABLE_MIGRATE -D_NET"
+
+sleep 10
+
+$SCRIPTS/umount_ext4ramdisk.sh
+sleep 5
+$SCRIPTS/mount_ext4ramdisk.sh 24000
+DISABLE_THROTTLE
+export APPPREFIX="numactl --membind=0"
+SET_RUN_APP "optimal-$TYPE" "-D_DISABLE_HETERO  -D_DISABLE_MIGRATE"
+
+sleep 10
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#### WITH PREFETCH #############
+#export APPPREFIX="numactl  --preferred=1"
+$BASE/scripts/clear_cache.sh
+SET_RUN_APP "slowmem-obj-affinity-prefetch-$TYPE" "-D_MIGRATE -D_PREFETCH -D_OBJAFF -D_NET"
+$BASE/scripts/clear_cache.sh
+exit
+
+
+
+
+#### NAIVE PLACEMENT #############
+#export APPPREFIX=""
+#$BASE/scripts/clear_cache.sh
+#SET_RUN_APP "naive-nonuma-os-fastmem-$TYPE" "-D_DISABLE_MIGRATE"
+
+
+
+
+
+export APPPREFIX="numactl  --preferred=0"
+$BASE/scripts/clear_cache.sh
+SET_RUN_APP "slowmem-migration-only-$TYPE" "-D_MIGRATE -D_NET"
+
+
+
+
+
+
+
+
+exit
+
+
+
+
+$SCRIPTS/umount_ext4ramdisk.sh
+sleep 5
+$SCRIPTS/mount_ext4ramdisk.sh 24000
+DISABLE_THROTTLE
+export APPPREFIX="numactl --membind=0"
+SET_RUN_APP "optimal-os-fastmem-$TYPE" "-D_DISABLE_HETERO  -D_DISABLE_MIGRATE"
+exit
+
+
+
+
+export APPPREFIX="numactl --membind=1"
+$SCRIPTS/umount_ext4ramdisk.sh
+sleep 5
+$SCRIPTS/mount_ext4ramdisk.sh 24000
+SET_RUN_APP "slowmem-only-$TYPE" "-D_SLOWONLY -D_DISABLE_MIGRATE -D_NET"
+exit
+
+#### OBJAFF NO PREFETCH #############
+export APPPREFIX="numactl  --preferred=0"
+SETUPEXTRAM
+$BASE/scripts/clear_cache.sh
+SET_RUN_APP "slowmem-obj-affinity-nomig-$TYPE" "-D_DISABLE_MIGRATE -D_OBJAFF"
+exit
+
+
+
+
+
+
+
+
+
+#### OBJ AFFINITY NO MIGRATION NO PREFETCH #############
+
+$SCRIPTS/umount_ext4ramdisk.sh
+sleep 5
+$SCRIPTS/mount_ext4ramdisk.sh 24000
+DISABLE_THROTTLE
+export APPPREFIX="numactl --membind=0"
+SET_RUN_APP "optimal-os-fastmem-$TYPE" "-D_DISABLE_HETERO  -D_DISABLE_MIGRATE"
+
+
+exit
+
+
+
+#### WITHOUT PREFETCH #############
+export APPPREFIX="numactl  --preferred=0"
+SETUPEXTRAM
+$BASE/scripts/clear_cache.sh
+SET_RUN_APP "slowmem-obj-affinity-$TYPE" "-D_MIGRATE -D_OBJAFF -D_NET"
+$BASE/scripts/clear_cache.sh
+
+
+
+
+
+mkdir $OUTPUTDIR/slowmem-only
+OUTPUT="slowmem-only/$APP"
+SETUP
+make CFLAGS="-D_SLOWONLY"
+export APPPREFIX="numactl --membind=1"
+$SCRIPTS/umount_ext4ramdisk.sh
+sleep 5
+$SCRIPTS/mount_ext4ramdisk.sh 24000
+RUNAPP 
+$SCRIPTS/rocksdb_extract_result.sh
+$SCRIPTS/clear_cache.sh
+exit
+
+#Don't do any migration
+
+
+
+
+#mkdir $OUTPUTDIR/fastmem-only
+exit
+#Disable hetero for fastmem only mode
+#make CFLAGS="-D_DISABLE_HETERO"
