@@ -176,29 +176,4 @@ GETAPPS
 INSTALL_CMAKE
 INSTALL_GFLAGS
 INSTALL_ROCKSDB
-INSTALL_FILEBENCH
-INSTALL_REDIS
-exit
-
-
-INSTALL_CASSANDRA
-exit
-
-#$SCRIPTS/set_spark.sh
-exit
-
-#INSTALL_SYSBENCH
-#INSTALL_MYSQL
-# Set variable, setup packages and generate data
-source scripts/setvars.sh
-$SCRIPTS/compile_sharedlib.sh
-#$APPBENCH/setup.sh
-#$APPBENCH/compile_all.sh
-#Compile Linux Kernel
-cd $KERN_SRC
-$SCRIPTS/compile_deb.sh
-#Changing bandwidth of a NUMA node
-$APPBENCH/install_quartz.sh
-$APPBENCH/throttle.sh
-$APPBENCH/throttle.sh
 exit
