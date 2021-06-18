@@ -117,16 +117,27 @@ We have an installation script to do this, which works on the Ubuntu machines.
 scripts/set_appbench.sh
 ```
 
-But if you are using a different OS flavor and versions, you could try th following
+Compiling the OS and restarting. 
+```
+scripts/compile_deb.sh
+scripts/compile_nokvm.sh
+```
 
 #### Installing the shared library
+```
+scripts/compile_sharedlib.sh
+```
+
+### Compiling and Running RocksDB
 
 ```
+cd $APPBENCH/apps/RocksDB
+./build_rocksdb.sh
+./run.sh
 ```
 
 
-
-### Compiling and launching QEMU 
+### Compiling and launching QEMU  (only for QEMU)
 
 From the NVM source directory set the environment variables.
 trusty specifies the host systems linux version/codename 
@@ -162,34 +173,6 @@ Now launch the QEMU
 
 
 
-### Automatically Tracing an application
-
-To enable tracing and disable or stop tracing without modifying 
-an application, use the following steps
-
-1. Compile a shared library with methods to handle application launch.<br />
-This is just a one time operation to install the shared library
-
-```
- source scripts/setvars.sh "trusty"
- scripts/compile_sharedlib.sh
-```
-2. Install the shared library in QEMU. Again, this is one time operation. <br />
-Note: Make sure your QEMU is not running
-
-```
- scripts/copy_data_to_qemu.sh shared_libs/construct/libmigration.so mountdir/usr/lib/
-```
-
-3. Once you have installed the libraries first time, any time you run  <br />
-an application, either do a LD_PRELOAD or link the library when compiling  <br />
-from inside the QEMU
-
-```
-//RUN this inside QEMU
- LD_PRELOAD=/usr/lib/libmigration.so ./APP
-```
-
 
 ### Changing bandwidth of a NUMA node 
 
@@ -223,10 +206,4 @@ Step 4: Run the throttling script again to check the value
  $APPBENCH/throttle.sh
 ```
 
-### Compiling and Running RocksDB
 
-```
-cd $APPBENCH/apps/RocksDB
-./build_rocksdb.sh
-./run.sh
-```
