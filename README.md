@@ -109,9 +109,8 @@ scripts/setvars.sh
 ```
 
 
-### Compiling all kernel shared libraries, and applications
-
-We have an installation script to do this, which works on the Ubuntu machines.
+### Compiling libraries and applications
+More applications to be added. Currently, the script only supports debian packages. 
 
 ```
 scripts/set_appbench.sh
