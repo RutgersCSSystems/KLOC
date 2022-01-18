@@ -35,8 +35,8 @@ apply='0x2'
 RUNSTREAM() {
   #Compile stream
   cd $NVMBASE/bench/stream && make clean && make
-  numactl --membind=0 stream/stream_c.exe &> throttle.out
-  numactl --membind=1 stream/stream_c.exe &>> throttle.out
+  numactl --membind=0 bench/stream/stream_c.exe &> throttle.out
+  numactl --membind=1 bench/stream/stream_c.exe &>> throttle.out
   cd $NVMBASE
 }
 

@@ -10,8 +10,8 @@ cd build
 rm CMakeCache.txt
 cmake ..
 make clean all
-sudo $SHARED_LIBS/quartz/scripts/setupdev.sh unload
-sudo $SHARED_LIBS/quartz/scripts/setupdev.sh load
+sudo bash $SHARED_LIBS/quartz/scripts/setupdev.sh unload
+sudo bash $SHARED_LIBS/quartz/scripts/setupdev.sh load
 echo performance | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
 echo 2 | sudo tee /sys/devices/cpu/rdpmc
 $SCRIPTS/throttle.sh

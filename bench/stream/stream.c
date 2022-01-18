@@ -53,7 +53,7 @@
  *          at least 20 clock-ticks.  This will provide rate estimates
  *          that should be good to about 5% precision.
  */
-#define N    20000000
+#define N    40000000
 #ifndef N
 #   define N	8000000
 #endif
